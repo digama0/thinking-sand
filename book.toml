@@ -1,5 +1,5 @@
 [book]
-title = "hwverif — How to verify a computer down to physics"
+title = "thinking-sand — how to verify a computer down to physics"
 authors = ["Mario Carneiro"]
 language = "en"
 src = "src"
@@ -10,6 +10,6 @@ build-dir = "book"
 [output.html]
 # Project-site path on GitHub Pages; only used for the 404 page's absolute links.
 # Adjust if the repository is published under a different name.
-site-url = "/hwverif/"
+site-url = "/thinking-sand/"
 default-theme = "light"
 preferred-dark-theme = "navy"

@@ -1,6 +1,8 @@
-# hwverif
+# thinking-sand
 
 ### How to verify a computer down to physics
+
+> *We tricked sand into thinking. This repository is the audit of the trick.*
 
 A scoping study. **Not** an attempt to carry out the proof — an attempt to determine how each phase *would* be done, what it would rest on, and what is genuinely unknown. The intended output is a roadmap: paper-length per layer, book-length overall.
 
