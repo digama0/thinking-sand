@@ -1,15 +1,8 @@
 # Overview — the mathematical content
 
-> *"If you wish to make an apple pie from scratch, you must first invent the universe."*
-> — Carl Sagan, *Cosmos*
-
 ## Background
 
-Between "my program ran correctly" and "electrons obey Maxwell's equations" stands a tower of trust: the instruction set means what its manual says; the processor implements the instruction set; the netlist computes what the RTL describes; the digital story the netlist tells is what the analog circuit actually settles to; the circuit is what the geometry realises; the geometry is what the fab printed; and the transistors do what the device models claim. Industrial practice verifies one or two storeys of this tower and takes the rest on faith — reasonably, but the faith is unaudited. This book is a scoping study for auditing *all of it*: what it would take to produce a machine-checked proof that one specific, physical, purchasable chip runs its programs correctly, starting from field equations over the silicon and ending at the instruction set.
-
-It is not the proof. Carrying the proof out is a decade-scale project; the deliverable here is the map — for each of eight layers, what the theorem is, how it would be proved, what it rests on, and what is genuinely unknown. The organising principle is that with unbounded proof capacity, everything merely hard collapses to time, and what remains — the assumptions no proof can reach — *is* the result; that ledger is the [axiom register](axioms.md). The study is grounded throughout in the shipped artifacts of a chip that has actually been fabricated — the [Caravel](https://github.com/efabless/caravel) harness on SkyWater's open 130 nm process, carrying the [picorv32](https://github.com/YosysHQ/picorv32) RISC-V core — and the numbers measured off those artifacts, including a few genuine gaps found in the shipped design, are in [Findings](findings.md).
-
-The rest of this page is the mathematical front door: the statement the project is trying to establish, and how it dispatches into layers. Project structure, the target-selection rationale, and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md).
+The [introduction](introduction.md) set the scene — the tower of trust, how the industry establishes correctness today, the validation-not-design plan, the Caravel/picorv32 target, and the eight layers in prose. This page is the mathematical front door: the statement the project is trying to establish, the named objects at the layer seams, and the dispatch of the proof into layers with their prices. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md).
 
 ## The top-level statement
 
@@ -58,13 +51,13 @@ Everything merely hard collapses to time. What survives is what is *not* a theor
 
 **Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [Axioms](axioms.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
 
-**Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every chapter — this overview, each layer chapter, and every numbered sub-chapter — opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch (the layer chapters' are brief orientations; the sub-chapters' do the real teaching). Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
+**Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every chapter after the [introduction](introduction.md) (which is background throughout) opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch (the layer chapters' are brief orientations; the sub-chapters' do the real teaching). Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
 
 ## The dispatch
 
 Each layer's named obligations. This is the proof skeleton; the layer documents are the expansions.
 
-Five layers are **theorems**, three are **definitions** — marked, because a definition line in the chain below is an object being supplied, not a claim being proved. (The tables here run bottom-up, L0→L7, following the composition; the book's chapters run top-down, L7→L0, because the material gets progressively crunchier as you descend — start wherever suits.)
+Five layers are **theorems**, three are **definitions** — marked, because a definition line in the chain below is an object being supplied, not a claim being proved. (The tables here run bottom-up, L0→L7, following the composition; the book's chapters run top-down, L7→L0 — start wherever suits.)
 
 | layer | kind | establishes / supplies | named obligations | effort |
 |---|---|---|---|---|

@@ -12,7 +12,7 @@ One more translation. The pad voltage is an analog quantity; calling it "0" or "
 
 ## Statement
 
-Define the two objects the overview's top-level statement quantifies over. The ISA is not the top: an ISA transition system does not produce pad traces, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. Before L7 existed, that map was used by the overview while being defined by nobody.
+Define the two objects the overview's top-level statement quantifies over — the map from architecture to pad-level observable behaviour that, before this layer existed, the overview used while nobody defined it.
 
 ```
 Sys(F)  =  traces at the pads of:

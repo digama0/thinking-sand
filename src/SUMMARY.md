@@ -1,5 +1,6 @@
 # Summary
 
+[Introduction](introduction.md)
 [Overview — the mathematical content](overview.md)
 
 ---

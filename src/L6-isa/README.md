@@ -8,7 +8,7 @@ An ISA — instruction set architecture — is the contract between hardware and
 
 ## Statement
 
-What L5's theorem is *stated against*. Three components with three different epistemic characters: a **received** base (Sail, ratified — S2 small), an **authored** extension (the custom IRQ spec — S3, the sharpest surviving specification axiom), and a **register of choices** where the standard is deliberately open (S4). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: **move the core to the iCEBreaker and L6 survives byte-for-byte while L7 is replaced wholesale.**
+What L5's theorem is *stated against*: `Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices`, its three components carrying the three fidelity axioms — **S2** (the ratified import's small residue), **S3** (the authored IRQ spec, the sharpest surviving specification axiom), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: **move the core to the iCEBreaker and L6 survives byte-for-byte while L7 is replaced wholesale.**
 
 ## Subcomponents
 

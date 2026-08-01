@@ -8,7 +8,7 @@ Before anything can be proved about the RTL, the RTL must *mean* something. Veri
 
 ## Statement
 
-A semantics for **the synthesisable subset this design actually uses** — not for Verilog. Defined directly as a simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), *not* via the event scheduler of the Verilog LRM (Language Reference Manual); the relationship to the LRM is the scheduler-independence claim, probed by adequacy checks and stateable as a theorem. The subset is measured: 19 sites needing care, and the categories that make Verilog semantics awful are absent.
+A semantics for **the synthesisable subset this design actually uses** — not for Verilog: the simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), with the relationship to the LRM's event scheduler isolated as the scheduler-independence claim — probed by adequacy checks, stateable as a theorem. The subset is measured: 19 sites needing care, and the categories that make Verilog semantics awful are absent.
 
 ## Subcomponents
 

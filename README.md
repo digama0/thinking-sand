@@ -10,7 +10,7 @@
 
 **What it is not**: the proof itself. Carrying it out is a decade-scale project; the deliverable here is the map — for each of eight layers, what the theorem is, how it would be proved, what it rests on, and what is genuinely unknown. Paper-length per layer, book-length overall. The organising principle: with unbounded proof capacity, everything merely hard collapses to time, and what remains — the assumptions no proof can reach — *is* the result. That ledger is [Axioms](src/axioms.md). The study is grounded throughout in the shipped artifacts of a chip that has actually been fabricated; the numbers measured off them, including a few genuine gaps found in the shipped design, are in [Findings](src/findings.md).
 
-**Where to read**: [overview.md](src/overview.md) is the mathematical content — the top-level statement and how the eight layers compose into it — and is the front page of the rendered book. This file covers project structure and tooling. Unfamiliar terms are in the [glossary](src/glossary.md).
+**Where to read**: the [introduction](src/introduction.md) — history, context, the target, and the layer tour — is the front page of the rendered book; [overview.md](src/overview.md) is the mathematical content, the top-level statement and how the eight layers compose into it. This file covers project structure and tooling. Unfamiliar terms are in the [glossary](src/glossary.md).
 
 The framing throughout is **validation of an existing design**, not design of a new one. We assume the designers applied best practices that produce the error bounds needed to push the argument through; the job is to check that assumption, not to re-engineer the artifact. In practice, we may find that the original designers cut corners and so we may need to make minor modifications to get the theorem to hold. But we would like to lean on the wisdom of the elders whenever possible.
 
@@ -30,6 +30,7 @@ The flow that produced the shipped artifacts is [OpenLane](https://github.com/Th
 
 | | |
 |---|---|
+| [introduction.md](src/introduction.md) | the setup: the tower of trust, history and practice, the target, the layers in prose |
 | **[overview.md](src/overview.md)** | the statement, the dispatch, how the layers compose |
 | [axioms.md](src/axioms.md) | what the result would rest on — plus M1–M8, the open mathematics, kept separate |
 | [findings.md](src/findings.md) | every number measured off the real artifacts, with provenance |
@@ -90,7 +91,7 @@ Pure-Python GDSII record parsers — the format is simple enough that a dependen
 tools/build-book.sh          # needs mdbook; renders to book/index.html
 ```
 
-The book's sources live in [`src/`](src/overview.md) (the conventional mdBook layout), with [SUMMARY.md](src/SUMMARY.md) as the table of contents and **the overview as the front page** — this README stays at the root as the GitHub landing page and is not a chapter. The script checks SUMMARY and the chapter set agree in both directions (mdBook rewrites `.md` links to `.html` unconditionally, so a present-but-unlisted file would 404), builds, and copies `tools/` into the output so the raw-file links above resolve on Pages; `data/` stays outside `src/` because mdBook copies everything under its source directory into the output. [A GitHub Actions workflow](.github/workflows/book.yml) builds and deploys to GitHub Pages on every push to `master`; enable Pages with source "GitHub Actions" in the repository settings once a remote exists.
+The book's sources live in [`src/`](src/overview.md) (the conventional mdBook layout), with [SUMMARY.md](src/SUMMARY.md) as the table of contents and **the introduction as the front page** — this README stays at the root as the GitHub landing page and is not a chapter. The script checks SUMMARY and the chapter set agree in both directions (mdBook rewrites `.md` links to `.html` unconditionally, so a present-but-unlisted file would 404), builds, and copies `tools/` into the output so the raw-file links above resolve on Pages; `data/` stays outside `src/` because mdBook copies everything under its source directory into the output. [A GitHub Actions workflow](.github/workflows/book.yml) builds and deploys to GitHub Pages on every push to `master`; enable Pages with source "GitHub Actions" in the repository settings once a remote exists.
 
 ## Where to start work
 

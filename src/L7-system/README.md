@@ -10,7 +10,7 @@ The chapters build exactly that. [00](00-sys-and-obs.md) defines the two top-lev
 
 ## Statement
 
-The ISA is not the top: the overview's statement is about **pad-level traces**, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. This layer owns that map — `Sys(F) = ISA ⊕ memory map ⊕ XIP ⊕ UART ⊕ pad configuration`, rendered as timed pad traces, and `obs` as the physical observation ([00](00-sys-and-obs.md)). The boundary test with L6: **move the core to the iCEBreaker and L6 survives byte-for-byte while this layer is replaced wholesale** — L7 is *this chip*.
+This layer owns the map from architecture to observable behaviour — `Sys(F) = ISA ⊕ memory map ⊕ XIP ⊕ UART ⊕ pad configuration`, rendered as timed pad traces, and `obs` as the physical observation ([00](00-sys-and-obs.md)). The boundary test with L6: **move the core to the iCEBreaker and L6 survives byte-for-byte while this layer is replaced wholesale** — L7 is *this chip*.
 
 ## Subcomponents
 
