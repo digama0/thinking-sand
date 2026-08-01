@@ -2,7 +2,7 @@
 
 The jargon net for the whole book — hardware-flow terms first (in the order a design passes through the flow), then verification, timing, physics/mathematics, and reliability/test vocabularies. Terms are used throughout the layer documents without re-explanation; textbook-depth treatments are in the [reading list](reading-list.md).
 
-**Design description**
+## Design description
 
 | | |
 |---|---|
@@ -11,7 +11,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **ISA** | Instruction Set Architecture — the programmer-visible contract the whole project is proving the chip meets |
 | **SoC** | System on Chip — core plus memory and peripherals on one die |
 
-**The cell library and process**
+## The cell library and process
 
 | | |
 |---|---|
@@ -21,7 +21,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **BSIM** | the fitted compact model giving a transistor's current from its terminal voltages. The project's one physical axiom (E1) |
 | **PVT corner** | a (process, voltage, temperature) extreme the design must work at; SKY130 HD ships 17 |
 
-**Physical implementation**
+## Physical implementation
 
 | | |
 |---|---|
@@ -33,7 +33,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **OPC** | Optical Proximity Correction — deliberately distorting the mask so the *printed* shape matches intent |
 | **fill / decap / tap / antenna diode** | non-logic cells inserted for density, supply stability, well biasing and process protection. **~85% of instances** |
 
-**Checks**
+## Checks
 
 | | |
 |---|---|
@@ -44,7 +44,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **SDC** | the timing-constraint file. Also carries *exceptions* — human claims that a path need not be checked, which no tool verifies |
 | **CEC** | Combinational Equivalence Check — proving two netlists compute the same function |
 
-**Physics and reliability**
+## Physics and reliability
 
 | | |
 |---|---|
@@ -58,7 +58,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **BOR** | Brown-Out Reset — a supervisor that asserts reset whenever the supply *sags* below operating minimum, closing the gray band between "logic misbehaves" and "state is lost" that a ramp-only POR leaves open. Fail-safe by construction: below its own validity range, reset is the passive default |
 | **MCU** | microcontroller — a commodity single-chip computer (STM32, AVR). Cited here as precedent: every MCU ships a BOR, so the gray-band fix is a solved industrial problem, not a research item |
 
-**Verification and refinement**
+## Verification and refinement
 
 | | |
 |---|---|
@@ -83,7 +83,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **ternary / X-prop** | simulation over {0,1,X}; sound for unknownness precisely because `X∧¬X=X` — it never asserts consistency between two reads of the same unknown |
 | **symbolic simulation** | running a circuit on symbolic expressions rather than values; the outputs are theorems over all inputs at once |
 
-**Tools and artifacts of this design**
+## Tools and artifacts of this design
 
 | | |
 |---|---|
@@ -101,7 +101,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **LRM** | the Verilog Language Reference Manual — the event-driven semantics this project deliberately does *not* formalise (L4/00) |
 | **Tcl** | the scripting language EDA tools embed; an SDC file is a Tcl *program*, which is why it must be elaborated before it can be analysed |
 
-**Timing, in more detail**
+## Timing, in more detail
 
 | | |
 |---|---|
@@ -117,7 +117,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **latch inference** | Verilog silently converting an incomplete combinational block into a state element — the classic way RTL grows unintended memory (L4/02) |
 | **blocking / non-blocking** | Verilog's `=` vs `<=`: immediate sequential update vs two-phase simultaneous commit; the distinction that makes clocked logic order-independent |
 
-**Physics and mathematics**
+## Physics and mathematics
 
 | | |
 |---|---|
@@ -136,7 +136,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **CMP** | chemical-mechanical polishing, which planarises each layer; its sensitivity to pattern density is why fill cells exist |
 | **Poisson, twice** | the *equation* (electrostatics — L0, L1) and the *process* (random arrivals — SEU, defects) are unrelated results by the same mathematician; both are load-bearing here, and context always disambiguates |
 
-**Reliability and test**
+## Reliability and test
 
 | | |
 |---|---|
