@@ -52,7 +52,7 @@ This is worth stating as a general pattern: **several DRC rules are secretly the
 
 ## First experiments
 
-- Take `inv_1`: extract its transistor netlist (`magic`/`netgen`), attach an interval-valued device model, and derive the terminal enclosure. This is the unit that gets multiplied by 400 — measuring it decides whether L0 is two years or five.
+- Take `inv_1`: extract its transistor netlist (`magic`/`netgen`), attach an interval-valued device model, and derive the terminal enclosure. This is the unit that gets multiplied by 400 — measuring it decides where in its one-to-three-year range L0 lands.
 - Check how coarse the device enclosure can be while still yielding positive noise margin. If the margin is large (it should be, at 1.8 V), E1's precision requirement is weak, which materially reduces what must be assumed.
 
 ## Effort

@@ -39,4 +39,4 @@ Monolithic is not a defect here: the core is one module, one FSM, everything loc
 
 ## Effort
 
-The heart of the 3–5-year estimate — yet the *volume* is small: the genuinely irreducible content is plausibly a few hundred lines of clauses plus the glue lemma. The years are the surrounding machinery (symbolic simulation, bitvector automation, the stuttering framework), not the thinking.
+The heart of the layer's estimate — yet the *volume* is small: the genuinely irreducible content is plausibly a few hundred lines of clauses plus the glue lemma. The years are the surrounding machinery (symbolic simulation, bitvector automation, the stuttering framework), not the thinking.

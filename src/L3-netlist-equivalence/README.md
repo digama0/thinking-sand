@@ -48,7 +48,7 @@ Everything reduces to the register boundary. Only ports and state elements need 
 
 ## Effort
 
-1–2 years; the most likely place for an early concrete result after L2's SDC work. Cost scales with the certificate *trail length*, not the design size.
+6–9 months; the most likely place for an early concrete result after L2's SDC work. Cost scales with the certificate *trail length*, not the design size.
 
 ## Reading
 

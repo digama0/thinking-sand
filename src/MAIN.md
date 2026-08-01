@@ -58,16 +58,16 @@ Five layers are **theorems**, three are **definitions** — marked, because a de
 
 | layer | kind | establishes / supplies | named obligations | effort |
 |---|---|---|---|---|
-| **[L0](L0-device-physics/)** | theorem | `Field(d) ⊑ Contracts(N)`; the error model is Poisson | **M3** lumping/composition · **M7** regime decomposition (I)(P)(A) · **M1** device uniqueness · CCC cut discipline · **M8** metastable eigenvalue | 2–5 yr |
-| **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 | 4–6 yr |
-| **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification | 2–3 yr |
-| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 1–2 yr |
-| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | 19 enumerated Verilog sites | ~1 yr |
-| **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 3–5 yr |
-| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices | 1–2 yr |
-| **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~1 yr |
+| **[L0](L0-device-physics/)** | theorem | `Field(d) ⊑ Contracts(N)`; the error model is Poisson | **M3** lumping/composition · **M7** regime decomposition (I)(P)(A) · **M1** device uniqueness · CCC cut discipline · **M8** metastable eigenvalue | 1–3 yr |
+| **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 | 2–4 yr |
+| **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification | 1–1.5 yr |
+| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 6–9 mo |
+| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | 19 enumerated Verilog sites | 3–6 mo |
+| **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 1–2 yr |
+| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices | 6–9 mo |
+| **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~6 mo |
 
-**The effort accounting.** Figures are for one competent person; the naive sequential sum is **15–25 person-years**, before sharing and before the FPGA alternative (which deletes L1). Layer totals exceed the sum of their subcomponents' figures by roughly 2× throughout: the subcomponent estimates are *marginal* costs assuming the layer's shared machinery exists — harnesses, automation, formal libraries — and the totals include building it. L5 states this split explicitly; it holds everywhere.
+**The effort accounting.** Figures are for one competent person and are the **sums of the subcomponent estimates**. The original per-layer figures — seeded before the decomposition at "a few years each" — ran roughly 2× higher; scoping the pieces is precisely what revised them, and the sums reflect the better understanding, so they replaced the anchors. One cross-cutting cost is priced separately because no layer owns it: **shared infrastructure** — the hybrid proof framework itself, bitvector automation, symbolic simulation, and the LRAT/PAC checker integrations — **1–2 person-years**, consumed by every theorem layer. Naive sequential total: **8–15 person-years**, before the FPGA alternative (which deletes L1's 2–4).
 
 Note one deliberate inversion: L3's theorem *consumes* L4's object, so proof order is not layer order. The numbering is by artifact altitude — netlist below RTL — not by logical dependency.
 

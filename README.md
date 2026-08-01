@@ -40,16 +40,16 @@ Layers, bottom-up:
 
 | | | effort |
 |---|---|---|
-| **L0** [device physics](src/L0-device-physics/README.md) | transistor network ⟹ Boolean function; the error model | 2–5 yr |
-| **L1** [geometry](src/L1-geometry/README.md) | GDS ⟹ netlist + RC enclosures; DRC as theorem hypotheses | 4–6 yr |
-| **L2** [timing](src/L2-timing/README.md) | timing closure ⟹ the synchronous abstraction is sound | 2–3 yr |
-| **L3** [netlist equivalence](src/L3-netlist-equivalence/README.md) | shipped netlist ≡ RTL, by certificate not search | 1–2 yr |
-| **L4** [RTL semantics](src/L4-rtl-semantics/README.md) | the synthesisable subset this design actually uses | 1 yr |
-| **L5** [microarchitecture](src/L5-microarchitecture/README.md) | RTL refines the ISA — the irreducible content | 3–5 yr |
-| **L6** [ISA](src/L6-isa/README.md) | what the specification *is*, including the parts that don't exist | 1–2 yr |
-| **L7** [system](src/L7-system/README.md) | `Sys(F)` and `obs` — the pad-trace spec the top statement quantifies over | 1 yr |
+| **L0** [device physics](src/L0-device-physics/README.md) | transistor network ⟹ Boolean function; the error model | 1–3 yr |
+| **L1** [geometry](src/L1-geometry/README.md) | GDS ⟹ netlist + RC enclosures; DRC as theorem hypotheses | 2–4 yr |
+| **L2** [timing](src/L2-timing/README.md) | timing closure ⟹ the synchronous abstraction is sound | 1–1.5 yr |
+| **L3** [netlist equivalence](src/L3-netlist-equivalence/README.md) | shipped netlist ≡ RTL, by certificate not search | 6–9 mo |
+| **L4** [RTL semantics](src/L4-rtl-semantics/README.md) | the synthesisable subset this design actually uses | 3–6 mo |
+| **L5** [microarchitecture](src/L5-microarchitecture/README.md) | RTL refines the ISA — the irreducible content | 1–2 yr |
+| **L6** [ISA](src/L6-isa/README.md) | what the specification *is*, including the parts that don't exist | 6–9 mo |
+| **L7** [system](src/L7-system/README.md) | `Sys(F)` and `obs` — the pad-trace spec the top statement quantifies over | ~6 mo |
 
-Effort figures are for one competent person and are guesses. All eight layers are decomposed into numbered subcomponent files, one per major proof obligation. Each layer README opens with a **spec block** — spec below, spec above, theorem or definition — keyed to [MAIN's spec tower](src/MAIN.md#the-spec-tower).
+Effort figures are for one competent person and are the sums of the per-subcomponent estimates (the pre-decomposition guesses ran ~2× higher; the decomposition revised them). Shared infrastructure — the proof framework, automation, checker integrations — is priced separately in MAIN at 1–2 yr; sequential total ≈ 8–15 person-years. All eight layers are decomposed into numbered subcomponent files, one per major proof obligation. Each layer README opens with a **spec block** — spec below, spec above, theorem or definition — keyed to [MAIN's spec tower](src/MAIN.md#the-spec-tower).
 
 ## Tooling
 

@@ -66,7 +66,7 @@ The overall deliverable, restated: **every solution of the field problem lies wi
 
 ## Effort
 
-2–5 years — the swing is exactly the per-cell cost that [03](03-cell-enclosures.md)'s first experiment prices. Dominated by [03](03-cell-enclosures.md) and [04](04-lumping-composition.md). The Boolean-function-per-cell result is the load-bearing output; the error model is smaller but needs probabilistic machinery nothing else in the project requires.
+1–3 years — the swing is exactly the per-cell cost that [03](03-cell-enclosures.md)'s first experiment prices. Dominated by [03](03-cell-enclosures.md) and [04](04-lumping-composition.md). The Boolean-function-per-cell result is the load-bearing output; the error model is smaller but needs probabilistic machinery nothing else in the project requires.
 
 ## Reading
 

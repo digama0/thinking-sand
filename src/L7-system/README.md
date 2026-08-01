@@ -45,7 +45,7 @@ Two definitions and four consequences. [00](00-sys-and-obs.md) fixes the objects
 
 ## Effort
 
-~1 year, definitional. The risk profile matches L6: errors here are invisible to every layer below and produce a true theorem about the wrong system.
+~6 months, definitional. The risk profile matches L6: errors here are invisible to every layer below and produce a true theorem about the wrong system.
 
 ## Reading
 

@@ -43,7 +43,7 @@ Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (ratifi
 
 ## Effort
 
-1–2 years. Small in proof content, disproportionate in consequence: an error here is invisible to every layer below and produces a true theorem about the wrong machine.
+6–9 months. Small in proof content, disproportionate in consequence: an error here is invisible to every layer below and produces a true theorem about the wrong machine.
 
 ## Reading
 

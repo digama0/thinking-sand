@@ -57,12 +57,12 @@ The difference is that inside a cell the problem is coupled to nonlinear boundar
 ## First experiments
 
 - **`inv_1`, end to end.** GDS → extracted transistor netlist → interval device model → intra-cell parasitics → DAE enclosure → compare against the shipped `.lib` entry. The shipped table gives you an oracle: if your enclosure does not contain SPICE's value, something is wrong on one side.
-- Measure the cost. This is the unit multiplied by 400 × 17 corners, and it decides whether L0 is two years or five.
+- Measure the cost. This is the unit multiplied by 400 × 17 corners, and it decides where in its one-to-three-year range L0 lands.
 - Check whether the enclosure width is dominated by the device model, the parasitics, or the integration — that tells you where to spend effort.
 
 ## Effort
 
-The dominant item of L0: the per-cell unit × ~400 cells × 17 corners. Its first experiment prices it, and the answer is the layer's two-to-five-year swing.
+The dominant item of L0: the per-cell unit × ~400 cells × 17 corners. Its first experiment prices it, and the answer sets where in its one-to-three-year range the layer lands.
 
 ## Reading
 

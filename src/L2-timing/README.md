@@ -48,7 +48,7 @@ Alongside it, two mechanical censuses that other files consume: library-wide tab
 
 ## Effort
 
-2–3 years for the layer; the entry-point experiments are weeks. The theory is concentrated in 01 + 06; the rest is verified-algorithm work and measurement.
+1–1.5 years for the layer; the entry-point experiments are weeks. The theory is concentrated in 01 + 06; the rest is verified-algorithm work and measurement.
 
 ## Reading
 

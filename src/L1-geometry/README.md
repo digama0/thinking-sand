@@ -104,7 +104,7 @@ Two of the six are **not properties of the geometry alone** — interleaving nee
 
 ## Effort
 
-4–6 years, and the widest error bars in the project. (1) could be six months or could be a thesis. **The FPGA alternative deletes this entire layer.**
+2–4 years, and the widest error bars in the project. (1) could be six months or could be a thesis. **The FPGA alternative deletes this entire layer.**
 
 ## Reading
 
