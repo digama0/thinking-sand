@@ -31,7 +31,7 @@ Composition is a *traversal*, not a sum: both table arguments are context-depend
 
 The verified version is not a transcription of an industrial engine; these must be done differently.
 
-**1. Interpolation must use the enclosing box, all four corners.** `cell_fall` is non-monotone in input slew at two grid points of the *simplest cell in the library* (measured — FINDINGS). Bilinear interpolation between samples is a model choice, not a bound; the sound rule is the max/min over all four surrounding grid points, and even that is a bound only given an inter-sample variation assumption, which E2's discharge route (L0/03) must supply as a derivative bound on the table.
+**1. Interpolation must use the enclosing box, all four corners.** `cell_fall` is non-monotone in input slew at two grid points of the *simplest cell in the library* (measured — Findings). Bilinear interpolation between samples is a model choice, not a bound; the sound rule is the max/min over all four surrounding grid points, and even that is a bound only given an inter-sample variation assumption, which E2's discharge route (L0/03) must supply as a derivative bound on the table.
 
 **2. Worst-slew merging is conservative only under monotonicity.** Graph-based STA propagates a single merged (worst) slew at reconvergence. "Worst slew ⟹ worst delay" is exactly the monotonicity that the measured tables violate. The sound options: propagate slew *intervals*, or fall back to path-based analysis on the paths where the table is non-monotone. This is M4 surfacing inside the algorithm, not just in the corner methodology.
 

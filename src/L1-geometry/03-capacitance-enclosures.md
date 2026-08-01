@@ -52,7 +52,7 @@ Convex duality. The upper bound is the **Dirichlet principle**: `φ_V` minimises
 
 The upper bound is easy — any conforming FEM solution is an admissible `u`. The lower bound needs a *divergence-free* `j`, which a raw FEM gradient is not.
 
-**Equilibrated flux reconstruction** ([Ern–Vohralík](../BIBLIOGRAPHY.md#ern-vohralik-2015)) is built for exactly this: it post-processes a FEM solution into a certified `H(div)`-conforming, divergence-free flux, with fully computable constants and no unknown interpolation factors. So a single solve yields both an admissible `u` and an admissible `j`, hence the bracket.
+**Equilibrated flux reconstruction** ([Ern–Vohralík](../bibliography.md#ern-vohralik-2015)) is built for exactly this: it post-processes a FEM solution into a certified `H(div)`-conforming, divergence-free flux, with fully computable constants and no unknown interpolation factors. So a single solve yields both an admissible `u` and an admissible `j`, hence the bracket.
 
 This is the concrete answer to "how would this actually be computed", and it is why the lower bound — usually the hard half — is not an obstacle.
 
@@ -72,7 +72,7 @@ This also means the right object was never a point geometry: "∀ geometries wit
 `∇φ` diverges like `r^(−1/3)` at a right-angle conductor corner — precisely where the capacitance concentrates. Consequences:
 
 - Total energy is **finite** (`|∇φ|² ~ r^(−2/3)`, and `∫r^(−2/3)·r dr` converges near an edge), so the variational framework is intact; `φ ∈ H¹` regardless.
-- But convergence *rates* degrade, and verified quadrature must handle **integrable singularities of known exponent**. The exponents are analytic ([Grisvard](../BIBLIOGRAPHY.md#grisvard-1985)), so graded meshes or singular enrichment work. Engineering, not research — but it must be done, because the naive quadrature bound is infinite exactly where the answer lives.
+- But convergence *rates* degrade, and verified quadrature must handle **integrable singularities of known exponent**. The exponents are analytic ([Grisvard](../bibliography.md#grisvard-1985)), so graded meshes or singular enrichment work. Engineering, not research — but it must be done, because the naive quadrature bound is infinite exactly where the answer lives.
 
 ## A cheaper decomposition: 2D may be exact
 
@@ -99,4 +99,4 @@ Years, dominated by obligation 1. But the accuracy requirement being soft means 
 
 ## Reading
 
-[Pólya & Szegő](../BIBLIOGRAPHY.md#polya-szego-1951), *Isoperimetric Inequalities in Mathematical Physics* — rigorous capacity bounds by exactly this method. [Nakao, Plum, Watanabe](../BIBLIOGRAPHY.md#nakao-plum-watanabe-2019) for verified elliptic numerics. [Ern–Vohralík](../BIBLIOGRAPHY.md#ern-vohralik-2015) for the equilibrated flux.
+[Pólya & Szegő](../bibliography.md#polya-szego-1951), *Isoperimetric Inequalities in Mathematical Physics* — rigorous capacity bounds by exactly this method. [Nakao, Plum, Watanabe](../bibliography.md#nakao-plum-watanabe-2019) for verified elliptic numerics. [Ern–Vohralík](../bibliography.md#ern-vohralik-2015) for the equilibrated flux.

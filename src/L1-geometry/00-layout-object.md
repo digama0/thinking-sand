@@ -18,7 +18,7 @@ Nothing here is deep. It is written out because every subsequent statement — t
 
 **Layers.** A finite set `𝓛`, with a distinguished *mask assignment* `col : 𝓛 → Masks` (multiple patterning; singleton in the SKY130 case).
 
-**Drawn layout.** `D : 𝓛 → 𝒫(ℝ²)`, each `D_ℓ` a finite union of simple polygons with vertices in `(δ·ℤ)²` where δ is the database unit (**exactly 1 nm** in SKY130 — measured, FINDINGS). Obtained from GDS by flattening the SREF/AREF hierarchy.
+**Drawn layout.** `D : 𝓛 → 𝒫(ℝ²)`, each `D_ℓ` a finite union of simple polygons with vertices in `(δ·ℤ)²` where δ is the database unit (**exactly 1 nm** in SKY130 — measured, Findings). Obtained from GDS by flattening the SREF/AREF hierarchy.
 
 **Colour.** `c_D : ℝ² → 2^𝓛`, `c_D(x) = {ℓ : x ∈ D_ℓ}`. Finitely many values, and only a small subset of `2^𝓛` is realised — the "sparse colouring" of the coloured-image model.
 

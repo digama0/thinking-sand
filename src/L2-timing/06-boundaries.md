@@ -36,7 +36,7 @@ The bottom rung deserves its formal statement because it is where determinism en
 
 > First flop: deliberately exempted from the window hypothesis; on violation its output is unconstrained ([00](00-timed-model.md)'s escape hatch) but **restoration drives it to a rail** with `P(unresolved after t) ≈ (T₀/T_c)·e^{−t/τ}`, τ the metastable saddle's unstable eigenvalue (M8, an enclosure modulo E1). Second flop: its window hypothesis is established by ordinary STA on the flop-to-flop path — a full period of settling.
 
-No assumption about the input's *phase* survives. The irreducible external assumptions are **rate**: pulses shorter than a period can be missed outright, and the arrival statistics enter the MTBF. Both are P6-class environment facts, which is exactly where P1's residue was already filed. `N_sync · P_meta(T)` in MAIN's ε is the sum of these per-boundary terms.
+No assumption about the input's *phase* survives. The irreducible external assumptions are **rate**: pulses shorter than a period can be missed outright, and the arrival statistics enter the MTBF. Both are P6-class environment facts, which is exactly where P1's residue was already filed. `N_sync · P_meta(T)` in the overview's ε is the sum of these per-boundary terms.
 
 Per-frame **clock recovery** (UART RX) is a hybrid rung: synchronise once on the start edge (paying P1 once per frame), then rely on *frequency tolerance* — ±2–3% over ~10 bit periods — rather than phase. This is where P6's clock-accuracy bound does quantitative work.
 

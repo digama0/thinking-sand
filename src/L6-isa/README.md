@@ -2,6 +2,10 @@
 
 > **Supplies:** `ISA = Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices` — the transition system L5 proves refinement against, and the core of [L7](../L7-system/README.md)'s `Sys(F)`. **Consumes:** the RISC-V standard, the shipped configuration (L4). **Kind: definition** — specification authoring, not proof; the layer where being wrong is least detectable.
 
+## Background
+
+An ISA — instruction set architecture — is the contract between hardware and software: the instructions, their encodings, and their exact effects on architectural state. This layer fixes that contract as a mathematical object, because L5's refinement theorem is only as meaningful as the spec it refines against. The object has three components with three different levels of trust: the officially ratified formal model of RISC-V is *imported* ([00](00-sail-base.md)); the custom interrupt machinery picorv32 substitutes for the standard's — which has no specification anywhere — must be *authored*, the most error-prone artifact in the project ([01](01-irq-spec.md)); and where the standard is deliberately loose, the choices this implementation embodies are *recorded* rather than silently assumed ([02](02-underspecification.md)). A totality sweep ([03](03-coverage.md)) then makes the spec answer for all 2³² instruction words, not just the meaningful ones.
+
 ## Statement
 
 What L5's theorem is *stated against*. Three components with three different epistemic characters: a **received** base (Sail, ratified — S2 small), an **authored** extension (the custom IRQ spec — S3, the sharpest surviving specification axiom), and a **register of choices** where the standard is deliberately open (S4). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: **move the core to the iCEBreaker and L6 survives byte-for-byte while L7 is replaced wholesale.**
@@ -25,7 +29,7 @@ What L5's theorem is *stated against*. Three components with three different epi
 
 ## The layer's shape
 
-Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (ratified model, structured encoding space), [03](03-coverage.md) turns the remaining width into independent SAT-shaped typing, and the *thinking* is deliberately concentrated into two small artifacts — [01](01-irq-spec.md)'s authored spec and [02](02-underspecification.md)'s choices — because those are the two places an error is invisible downstream. The honest end statement this layer serves: not "picorv32 is correct" but *the device refines **this** specification, modulo **these** axioms* — with unbounded proof capacity the axiom list is the achievement, which is why AXIOMS.md precedes any proof.
+Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (ratified model, structured encoding space), [03](03-coverage.md) turns the remaining width into independent SAT-shaped typing, and the *thinking* is deliberately concentrated into two small artifacts — [01](01-irq-spec.md)'s authored spec and [02](02-underspecification.md)'s choices — because those are the two places an error is invisible downstream. The honest end statement this layer serves: not "picorv32 is correct" but *the device refines **this** specification, modulo **these** axioms* — with unbounded proof capacity the axiom list is the achievement, which is why axioms.md precedes any proof.
 
 **The ISA is rightly silent about power**: its reset section is the power-on hook (X ⊑ reset nondeterminism), prefix-closed small-step refinement is the power-off hook; everything else power-shaped is L7's epoch model. Resist adding power events here — the layering is doing its job.
 
@@ -47,4 +51,4 @@ Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (ratifi
 
 ## Reading
 
-`sail-riscv` and the [Sail language papers](../BIBLIOGRAPHY.md#sail-2019). The RISC-V unprivileged spec itself — Volume I is short and readable, and [00](00-sail-base.md)'s tour is a map into it. ARM's [CHERI/Morello](../BIBLIOGRAPHY.md#morello-2022) work — the best existing example of an ISA-level property proved against a *shipping* architecture spec. picorv32's README for the custom-instruction prose S3 formalises.
+`sail-riscv` and the [Sail language papers](../bibliography.md#sail-2019). The RISC-V unprivileged spec itself — Volume I is short and readable, and [00](00-sail-base.md)'s tour is a map into it. ARM's [CHERI/Morello](../bibliography.md#morello-2022) work — the best existing example of an ISA-level property proved against a *shipping* architecture spec. picorv32's README for the custom-instruction prose S3 formalises.

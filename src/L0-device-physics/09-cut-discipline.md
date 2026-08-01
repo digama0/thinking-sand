@@ -16,7 +16,7 @@ This is a narrow document. An earlier draft collected *all* the combinatorial ob
 
 ## The object: channel-connected components
 
-Bryant's decomposition ([BIBLIOGRAPHY](../BIBLIOGRAPHY.md#bryant-1984)). Partition nodes by connectivity through **source/drain** terminals; transistor **gates** are unidirectional inputs and therefore the boundaries.
+Bryant's decomposition ([Bibliography](../bibliography.md#bryant-1984)). Partition nodes by connectivity through **source/drain** terminals; transistor **gates** are unidirectional inputs and therefore the boundaries.
 
 ```
 inside a CCC   : bidirectional; needs full switch-level analysis; charge sharing possible
@@ -74,4 +74,4 @@ Gated on the library transistor extraction shared with [03](03-cell-enclosures.m
 
 ## Reading
 
-[Bryant](../BIBLIOGRAPHY.md#bryant-1984) on switch-level simulation and the channel-connected-component decomposition — the source of the cut discipline. [Melham](../BIBLIOGRAPHY.md#melham-1993) for transistor-level CMOS in HOL.
+[Bryant](../bibliography.md#bryant-1984) on switch-level simulation and the channel-connected-component decomposition — the source of the cut discipline. [Melham](../bibliography.md#melham-1993) for transistor-level CMOS in HOL.

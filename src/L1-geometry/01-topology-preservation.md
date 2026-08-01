@@ -122,4 +122,4 @@ That is the soundness of running LVS on drawn geometry — the inference the who
 
 ## Reading
 
-Serra, *Image Analysis and Mathematical Morphology*, for the Minkowski calculus. [Grisvard](../BIBLIOGRAPHY.md#grisvard-1985) for what corner geometry does to the regularity that route (ii) would need.
+Serra, *Image Analysis and Mathematical Morphology*, for the Minkowski calculus. [Grisvard](../bibliography.md#grisvard-1985) for what corner geometry does to the regularity that route (ii) would need.

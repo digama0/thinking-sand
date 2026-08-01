@@ -1,6 +1,10 @@
 # L2 — Timing and the synchronous abstraction
 
-> **Spec below:** `Contracts(N)` — the timed contract network (L0 + L1). **Spec above:** `Mealy(N)` — the discrete machine ([MAIN](../MAIN.md#the-spec-tower)). **Kind: theorem** (M5), carrying one of the two † conditioning marks in MAIN's chain.
+> **Spec below:** `Contracts(N)` — the timed contract network (L0 + L1). **Spec above:** `Mealy(N)` — the discrete machine ([the overview](../overview.md#the-spec-tower)). **Kind: theorem** (M5), carrying one of the two † conditioning marks in the overview's chain.
+
+## Background
+
+Everything above this layer treats the chip as a discrete machine stepping once per clock; everything below knows it is a continuous system in which signals race through gates at analog speeds and arrive when they arrive. The **synchronous discipline** — storage elements that sample only at clock edges, given a full period for the racing to settle — is what connects the two pictures, and this layer proves that it does: the bridge theorem ([01](01-bridge-theorem.md)) turns "the design meets timing" into "the discrete abstraction is sound," checked by a verified static timing analysis ([02](02-verified-sta.md)) over certified delay tables ([03](03-corners.md)), conditional on the human-asserted path exceptions being justified ([04](04-sdc-exceptions.md)). The edges of the story get their own chapters: the clock's generation and distribution ([05](05-clock.md)), the boundaries where the world's timing meets the chip's ([06](06-boundaries.md)) — one of the two places genuine probability enters the project — and the analog interference terms kept out of every interface ([07](07-crosstalk-power.md)).
 
 ## Statement
 
@@ -27,7 +31,7 @@ Everything above L2 presupposes this and nobody has written it down. It is the h
 
 ## Axioms introduced
 
-**P1** (synchronisers resolve — the per-boundary ledger is [06](06-boundaries.md)'s), **P6** (environment), **X5** (PLL limit cycle — [05](05-clock.md)). Formerly also E4 (split: empirical half → P4, mathematical half → M4) and E5 (subsumed by E2's and E3's discharge routes); see [AXIOMS](../AXIOMS.md#discharged-and-retired). Findings F1–F4 are *unestablished hypotheses of the bridge theorem*, not axioms.
+**P1** (synchronisers resolve — the per-boundary ledger is [06](06-boundaries.md)'s), **P6** (environment), **X5** (PLL limit cycle — [05](05-clock.md)). Formerly also E4 (split: empirical half → P4, mathematical half → M4) and E5 (subsumed by E2's and E3's discharge routes); see [Axioms](../axioms.md#discharged-and-retired). Findings F1–F4 are *unestablished hypotheses of the bridge theorem*, not axioms.
 
 ## The recurring structure, seen from this layer
 
@@ -52,4 +56,4 @@ Alongside it, two mechanical censuses that other files consume: library-wide tab
 
 ## Reading
 
-[Lööw](../BIBLIOGRAPHY.md#loow-2021)'s HOL4 Verilog semantics and the Silver/Lutsig stack — closest prior art for a verified path from RTL to netlist; note it stops short of the bridge statement. Standard STA texts for the algorithm — none state the soundness bridge. McGeer & Brayton for the false-path/viability criterion ([04](04-sdc-exceptions.md)). [Zgliczyński](../BIBLIOGRAPHY.md#zgliczynski-1997), [Galias](../BIBLIOGRAPHY.md#galias-2001), [Demir–Mehrotra–Roychowdhury](../BIBLIOGRAPHY.md#demir-mehrotra-roychowdhury-2000) for [05](05-clock.md)'s oscillator contract; [Marino](../BIBLIOGRAPHY.md#marino-1981) for why [06](06-boundaries.md)'s ε is irreducible.
+[Lööw](../bibliography.md#loow-2021)'s HOL4 Verilog semantics and the Silver/Lutsig stack — closest prior art for a verified path from RTL to netlist; note it stops short of the bridge statement. Standard STA texts for the algorithm — none state the soundness bridge. McGeer & Brayton for the false-path/viability criterion ([04](04-sdc-exceptions.md)). [Zgliczyński](../bibliography.md#zgliczynski-1997), [Galias](../bibliography.md#galias-2001), [Demir–Mehrotra–Roychowdhury](../bibliography.md#demir-mehrotra-roychowdhury-2000) for [05](05-clock.md)'s oscillator contract; [Marino](../bibliography.md#marino-1981) for why [06](06-boundaries.md)'s ε is irreducible.

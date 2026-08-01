@@ -22,7 +22,7 @@ B3 is the honest end statement and the reason this project is about a computer r
 
 ## X4 as a dial, not a monolith
 
-Each B-level's theorem is conditional on precisely its batch: B1 none; B2 the on-die models (DFFRAM — openable, per L3/02 — housekeeping, the XIP controller's RTL side); B3 the off-die world (flash chip datasheet, pad-ring IO cells, `simple_por`, the board supervisor). This batching is what keeps X4 honest in AXIOMS: "the devices meet their datasheets" is never assumed wholesale, only per claim.
+Each B-level's theorem is conditional on precisely its batch: B1 none; B2 the on-die models (DFFRAM — openable, per L3/02 — housekeeping, the XIP controller's RTL side); B3 the off-die world (flash chip datasheet, pad-ring IO cells, `simple_por`, the board supervisor). This batching is what keeps X4 honest in Axioms: "the devices meet their datasheets" is never assumed wholesale, only per claim.
 
 ## What each step buys and costs
 

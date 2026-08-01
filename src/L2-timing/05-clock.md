@@ -16,10 +16,10 @@ Produce the clock arrival function `arr : Flop → interval` that [00](00-timed-
 
 Caravel's clock is either the external pad clock or the on-die `digital_pll` — a **ring oscillator**: a deliberate combinational loop, the one circuit that cannot live inside the synchronous abstraction it powers. Measured (L3's W1/W3): `pll.ringosc` contains the netlist's *only* cycle and its *only* multi-driver nets, so the excision is provably minimal — the black-box boundary is exactly the oscillator, not a convenience region around it.
 
-What replaces the black box is a contract with two parts (AXIOMS X5, M8):
+What replaces the black box is a contract with two parts (Axioms X5, M8):
 
-1. **Frequency**: the oscillator has a stable limit cycle with period in a stated interval — a computer-assisted-proof target of standard type: interval Poincaré maps ([Zgliczyński](../BIBLIOGRAPHY.md#zgliczynski-1997), [Galias](../BIBLIOGRAPHY.md#galias-2001)) over E1's interval device model. The `itrim` delay-trim mux (the 26 tri-state nets) parameterises the period.
-2. **Phase diffusion**: along the limit cycle the zero Floquet exponent means *no restoration in phase* — thermal noise accumulates as a Wiener process ([Demir–Mehrotra–Roychowdhury](../BIBLIOGRAPHY.md#demir-mehrotra-roychowdhury-2000)). Jitter is the one place thermal noise survives to the macroscopic ledger; its coefficient is derivable (M8), its budget lands in P6 and inside `arr`'s interval width.
+1. **Frequency**: the oscillator has a stable limit cycle with period in a stated interval — a computer-assisted-proof target of standard type: interval Poincaré maps ([Zgliczyński](../bibliography.md#zgliczynski-1997), [Galias](../bibliography.md#galias-2001)) over E1's interval device model. The `itrim` delay-trim mux (the 26 tri-state nets) parameterises the period.
+2. **Phase diffusion**: along the limit cycle the zero Floquet exponent means *no restoration in phase* — thermal noise accumulates as a Wiener process ([Demir–Mehrotra–Roychowdhury](../bibliography.md#demir-mehrotra-roychowdhury-2000)). Jitter is the one place thermal noise survives to the macroscopic ledger; its coefficient is derivable (M8), its budget lands in P6 and inside `arr`'s interval width.
 
 ## Distribution
 

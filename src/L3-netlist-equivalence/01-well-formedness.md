@@ -31,7 +31,7 @@ The undriven reads localise to macro boundaries: `mgmt_buffers` 631, `gpio_contr
 
 ## W4 caught the tool
 
-First run: 118 violations, all `conb_1` — a constant *generator* (drives `HI`/`LO`) misfiled as inert filler. Correcting the classification gave 0 and brought the physical total to exactly 235,566, independently matching FINDINGS' census. The inertness check catching a misclassification of its own configuration is the argument for having it: [02](02-licensed-deletions.md)'s 85.5% deletion rests entirely on this property.
+First run: 118 violations, all `conb_1` — a constant *generator* (drives `HI`/`LO`) misfiled as inert filler. Correcting the classification gave 0 and brought the physical total to exactly 235,566, independently matching Findings' census. The inertness check catching a misclassification of its own configuration is the argument for having it: [02](02-licensed-deletions.md)'s 85.5% deletion rests entirely on this property.
 
 ## What W1+W2 buy beyond the semantics
 

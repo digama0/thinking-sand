@@ -1,6 +1,10 @@
 # L1 — Geometry, manufacturing, and extraction
 
-> **Spec below:** the drawn layout `D` (GDS) and the as-fabricated family `A` it stands for ([00](00-layout-object.md)). **Spec above:** the netlist `N` with per-net RC enclosures — the geometric half of `Contracts(N)` ([MAIN](../MAIN.md#the-spec-tower)). **Kind: theorem** — for *every* `A` in the E7 tolerance family, the geometry realises exactly `N` and its RC lies in the exported intervals.
+> **Spec below:** the drawn layout `D` (GDS) and the as-fabricated family `A` it stands for ([00](00-layout-object.md)). **Spec above:** the netlist `N` with per-net RC enclosures — the geometric half of `Contracts(N)` ([the overview](../overview.md#the-spec-tower)). **Kind: theorem** — for *every* `A` in the E7 tolerance family, the geometry realises exactly `N` and its RC lies in the exported intervals.
+
+## Background
+
+The design is a stack of 2D polygon layers; the chip is what a fab printed from them — imprecisely, but within published tolerances. This layer connects the two: the drawn geometry realises exactly the intended circuit, for *every* chip in the tolerance family rather than the ideal one. The sandwich theorem ([01](01-topology-preservation.md)) is what makes design-rule checking on the drawing sound for the fabricated silicon; extraction and LVS ([02](02-extraction-lvs.md)) read the circuit back out of the polygons; the capacitance enclosures ([03](03-capacitance-enclosures.md)) turn geometry into certified electrical intervals for L2; the screening argument ([04](04-screening.md)) is the open problem that makes any of that computable at all; and the geometric checks ([05](05-geometric-checks.md)) discharge safety conditions that other layers can only state. [00](00-layout-object.md) opens with how a chip is physically built and what a layout formally is.
 
 ## Statement
 
@@ -14,11 +18,11 @@ This is the largest and least-charted layer. On the FPGA alternative it disappea
 
 ## Interfaces
 
-**Consumes:** GDS, process stack, DRC deck. **Exports:** the netlist `N` (the shared object of [MAIN's tower](../MAIN.md#the-spec-tower) — the same `N` that L2 times and L3 compares), per-net RC enclosures and a sparse coupling graph plus one aggregate ε (into `Contracts(N)`).
+**Consumes:** GDS, process stack, DRC deck. **Exports:** the netlist `N` (the shared object of [the overview's tower](../overview.md#the-spec-tower) — the same `N` that L2 times and L3 compares), per-net RC enclosures and a sparse coupling graph plus one aggregate ε (into `Contracts(N)`).
 
 ## Axioms introduced
 
-**E7** (as-fabricated geometry within the tolerance family — now also carrying the sandwich's (H3)), **P4** (variation within corners), **P5** (defect coverage), **X3** (T→theorem: retires when M2 lands). Formerly also E3 (discharged — [03](03-capacitance-enclosures.md)'s enclosures are its route) and E6 (retired: yield, not per-die correctness); see [AXIOMS](../AXIOMS.md#discharged-and-retired).
+**E7** (as-fabricated geometry within the tolerance family — now also carrying the sandwich's (H3)), **P4** (variation within corners), **P5** (defect coverage), **X3** (T→theorem: retires when M2 lands). Formerly also E3 (discharged — [03](03-capacitance-enclosures.md)'s enclosures are its route) and E6 (retired: yield, not per-die correctness); see [Axioms](../axioms.md#discharged-and-retired).
 
 ## Subcomponents
 
@@ -71,7 +75,7 @@ Caveats: bias is density-dependent so r = r(x); line-end pullback and corner rou
 
 **LER does not sever wires; defects do.** Severing requires roughness to consume the full width — Gaussian-tail suppressed. The sandwich with r = bias + 4σ is effectively deterministic. Topology changes are Poisson defects handled by test (P5). *Same continuous/discrete split as L0.*
 
-**Extraction is pattern matching against a field-solver-characterised library** — template matching on cross-sectional images, with the rule deck as a trained model. The replacement is **rigorous enclosures**: Dirichlet principle gives upper bounds from any trial potential, Thomson's principle gives lower bounds from any trial flux field, so any pair of trial fields yields a two-sided bracket. Verified-numerics machinery for elliptic BVPs is mature ([Nakao, Plum, Watanabe](../BIBLIOGRAPHY.md#nakao-plum-watanabe-2019)). And the accuracy requirement is *soft*: ~5% vs field solver, against 10–20% derates already carried — so crude-but-rigorous bounds suffice, which is unusual and makes this viable.
+**Extraction is pattern matching against a field-solver-characterised library** — template matching on cross-sectional images, with the rule deck as a trained model. The replacement is **rigorous enclosures**: Dirichlet principle gives upper bounds from any trial potential, Thomson's principle gives lower bounds from any trial flux field, so any pair of trial fields yields a two-sided bracket. Verified-numerics machinery for elliptic BVPs is mature ([Nakao, Plum, Watanabe](../bibliography.md#nakao-plum-watanabe-2019)). And the accuracy requirement is *soft*: ~5% vs field solver, against 10–20% derates already carried — so crude-but-rigorous bounds suffice, which is unusual and makes this viable.
 
 **2D may be exactly solvable.** Schwarz–Christoffel mapping gives closed-form multiconductor capacitance for piecewise-linear 2D cross-sections in terms of elliptic integrals; verified numerics then only handles the 3D corrections. Better decomposition than treating everything as a 3D PDE.
 
@@ -108,4 +112,4 @@ Two of the six are **not properties of the geometry alone** — interleaving nee
 
 ## Reading
 
-[Pólya & Szegő](../BIBLIOGRAPHY.md#polya-szego-1951), *Isoperimetric Inequalities in Mathematical Physics* (1951) — rigorous capacity bounds. [Nakao, Plum, Watanabe](../BIBLIOGRAPHY.md#nakao-plum-watanabe-2019), *Numerical Verification Methods and Computer-Assisted Proofs for PDEs*. [Driscoll](../BIBLIOGRAPHY.md#driscoll-trefethen-2002) on Schwarz–Christoffel.
+[Pólya & Szegő](../bibliography.md#polya-szego-1951), *Isoperimetric Inequalities in Mathematical Physics* (1951) — rigorous capacity bounds. [Nakao, Plum, Watanabe](../bibliography.md#nakao-plum-watanabe-2019), *Numerical Verification Methods and Computer-Assisted Proofs for PDEs*. [Driscoll](../bibliography.md#driscoll-trefethen-2002) on Schwarz–Christoffel.

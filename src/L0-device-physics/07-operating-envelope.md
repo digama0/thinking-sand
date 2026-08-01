@@ -81,7 +81,7 @@ with δ a physical length (oxide thickness, mean free path). Mollified constrain
 | **A** pointwise | oxide breakdown: `‖∇φ‖_∞ < E_ox` on oxide regions | L^∞ ball on ∇φ, restricted to a subdomain | **yes** |
 | **B** nonlinear line integral | avalanche: `∫ α(|∇φ|) ds < 1` along field lines, α = A·exp(−B/E) | sublevel set of a monotone nonlinear functional | no, but **monotone** |
 | **C** smoothed quadratic | thermal: `(G_th * σ|∇φ|²) < T_max` | quadratic in ∇φ, convolved with the thermal Green's function | **yes** |
-| **D** time-integrated | electromigration: `∫|J|ⁿ dt < threshold` ([Black](../BIBLIOGRAPHY.md#black-1969), n≈2) | a condition on *trajectories*, not states | — |
+| **D** time-integrated | electromigration: `∫|J|ⁿ dt < threshold` ([Black](../bibliography.md#black-1969), n≈2) | a condition on *trajectories*, not states | — |
 | **E** structural | latch-up (V5), rail contention (V1) | property of the **operator/domain**, not of any solution | — |
 
 Three observations:
@@ -142,4 +142,4 @@ The structural checks: days each (V1 shared with L3). The mollified-constraint f
 
 ## Reading
 
-[Sze & Ng](../BIBLIOGRAPHY.md#sze-ng-2007), *Physics of Semiconductor Devices* — avalanche breakdown, the ionisation-integral criterion, and [Chynoweth](../BIBLIOGRAPHY.md#chynoweth-1958)'s `α(E) = A·exp(−B/E)`; also second breakdown. [Troutman](../BIBLIOGRAPHY.md#troutman-1986), *Latchup in CMOS Technology: The Problem and Its Cure* (1986) — the standard monograph on the thyristor structure and the role of taps and guard rings. [Black](../BIBLIOGRAPHY.md#black-1969) (1969) for the electromigration law behind V6. Note that these are normally presented as reliability engineering, and the reframing as side conditions of well-posedness is this project's angle rather than the field's.
+[Sze & Ng](../bibliography.md#sze-ng-2007), *Physics of Semiconductor Devices* — avalanche breakdown, the ionisation-integral criterion, and [Chynoweth](../bibliography.md#chynoweth-1958)'s `α(E) = A·exp(−B/E)`; also second breakdown. [Troutman](../bibliography.md#troutman-1986), *Latchup in CMOS Technology: The Problem and Its Cure* (1986) — the standard monograph on the thyristor structure and the role of taps and guard rings. [Black](../bibliography.md#black-1969) (1969) for the electromigration law behind V6. Note that these are normally presented as reliability engineering, and the reframing as side conditions of well-posedness is this project's angle rather than the field's.

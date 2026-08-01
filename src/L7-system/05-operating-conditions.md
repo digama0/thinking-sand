@@ -10,7 +10,7 @@ So hypotheses of lower-layer theorems turn out to depend on *register state*, wh
 
 ## Statement
 
-`Sys(F)` must take a stance on every software-reachable knob that can invalidate a lower layer's hypotheses — the theorem-shaped version of a datasheet's "recommended operating conditions" table. An S4-class authored choice; deciding it early keeps MAIN's metatheorem free of design-specific side conditions on `F`.
+`Sys(F)` must take a stance on every software-reachable knob that can invalidate a lower layer's hypotheses — the theorem-shaped version of a datasheet's "recommended operating conditions" table. An S4-class authored choice; deciding it early keeps the overview's metatheorem free of design-specific side conditions on `F`.
 
 ## The pattern, and its known instances
 

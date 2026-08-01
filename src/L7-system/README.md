@@ -1,10 +1,16 @@
 # L7 — The system specification
 
-> **Supplies:** `Sys(F)` and `obs` — the two objects [MAIN](../MAIN.md)'s top-level statement quantifies over. **Consumes:** `ISA` (L6), device datasheet models (X4). **Kind: definition** — specification authoring, not proof.
+> **Supplies:** `Sys(F)` and `obs` — the two objects [the overview](../overview.md)'s top-level statement quantifies over. **Consumes:** `ISA` (L6), device datasheet models (X4). **Kind: definition** — specification authoring, not proof.
+
+## Background
+
+This is the first layer of the book and the top of the tower, and it answers a question that sounds administrative but is foundational: what is the end-to-end theorem *about*? Not the ISA — an instruction set has no pins, and no statement about it mentions a physical object. The only interface a chip has with the world is its **pads**, the few dozen metal contacts the package's pins bond to, so the top-level specification must be a set of allowed pad-signal histories, and everything standing between the processor core and the pads becomes spec rather than scenery: the memory map, the flash chip the program executes from, the UART the output leaves by, the pad-configuration machinery, and the power supply's arrivals, sags, and departures.
+
+The chapters build exactly that. [00](00-sys-and-obs.md) defines the two top-level objects; [01](01-boundary.md) decides which physical object the claim is about (core, SoC, or the device you can hold); [02](02-bus-contract.md) writes the promises core and fabric exchange; [03](03-memory-map-devices.md) models the peripherals; [04](04-power-epochs.md) handles power, including brown-out; [05](05-operating-conditions.md) fences off the configurations the theorems don't cover. Each chapter's own Background introduces its protocols and mechanisms from scratch.
 
 ## Statement
 
-The ISA is not the top: MAIN's statement is about **pad-level traces**, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. This layer owns that map — `Sys(F) = ISA ⊕ memory map ⊕ XIP ⊕ UART ⊕ pad configuration`, rendered as timed pad traces, and `obs` as the physical observation ([00](00-sys-and-obs.md)). The boundary test with L6: **move the core to the iCEBreaker and L6 survives byte-for-byte while this layer is replaced wholesale** — L7 is *this chip*.
+The ISA is not the top: the overview's statement is about **pad-level traces**, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. This layer owns that map — `Sys(F) = ISA ⊕ memory map ⊕ XIP ⊕ UART ⊕ pad configuration`, rendered as timed pad traces, and `obs` as the physical observation ([00](00-sys-and-obs.md)). The boundary test with L6: **move the core to the iCEBreaker and L6 survives byte-for-byte while this layer is replaced wholesale** — L7 is *this chip*.
 
 ## Subcomponents
 
@@ -19,7 +25,7 @@ The ISA is not the top: MAIN's statement is about **pad-level traces**, and the 
 
 ## Interfaces
 
-**Consumes:** `ISA` (L6), L4's configuration record, the SoC RTL and Caravel docs (as [03](03-memory-map-devices.md)'s raw material), X4's models per B-level. **Exports:** `Sys(F)` and `obs` to MAIN; the bus contract and `B` to L5; the configuration objects to F4/F6's resolution; the epoch requirements to the board (supervisor, sequencing).
+**Consumes:** `ISA` (L6), L4's configuration record, the SoC RTL and Caravel docs (as [03](03-memory-map-devices.md)'s raw material), X4's models per B-level. **Exports:** `Sys(F)` and `obs` to the overview; the bus contract and `B` to L5; the configuration objects to F4/F6's resolution; the epoch requirements to the board (supervisor, sequencing).
 
 ## Axioms introduced
 

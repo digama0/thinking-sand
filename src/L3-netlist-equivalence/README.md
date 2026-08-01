@@ -2,6 +2,10 @@
 
 > **Spec below:** `Mealy(N)` — the shipped netlist's discrete machine. **Spec above:** `⟦RTL⟧` — L4's transition system. **Kind: theorem.** Note the proof-order inversion: this theorem *consumes* L4's object, so it is proved after L4 despite sitting below it in the tower — numbering is artifact altitude, not logical dependency. (The book's top-down reading order happens to agree: L4's chapters precede these.)
 
+## Background
+
+Synthesis compiled the hand-written RTL into the netlist that was actually fabricated: 275,608 standard-cell instances with mangled names and aggressively restructured logic. This layer proves the compilation preserved meaning — not by trusting the tool, but by checking certificates the tool's run can be made to emit. The route: define the netlist's semantics ([00](00-netlist-object.md)), check it is electrically sane ([01](01-well-formedness.md) — already run, clean), delete the 92% of instances that compute nothing under explicitly licensed theorems ([02](02-licensed-deletions.md)), recover the register correspondence by reproducing the pinned build ([03](03-register-correspondence.md)), and prove per-register-boundary equivalence by certificate, with exploratory SAT confined to where no certificate exists ([04](04-equivalence-certificates.md), [05](05-hard-cones.md)).
+
 ## Statement
 
 There is a register correspondence `ρ` — a bijection between RTL state elements and netlist flops, up to `opt_dff`-eliminated constants and resizer cloning (its existence is exactly **F5**) — such that, after the three licensed deletions,
@@ -11,7 +15,7 @@ Mealy(N) / (delete PHYSICAL · collapse clock to the global tick · collapse buf
     is bisimilar under ρ to   ⟦RTL⟧,   from matched reset states.
 ```
 
-Established by **certificates**, with exploratory SAT confined to where no certificate exists. The `N` here is the shared object of [MAIN's tower](../MAIN.md#the-spec-tower): one parse of `gl_caravel_core.v` serves L1's LVS target, L2's STA subject, and this theorem's left-hand side.
+Established by **certificates**, with exploratory SAT confined to where no certificate exists. The `N` here is the shared object of [the overview's tower](../overview.md#the-spec-tower): one parse of `gl_caravel_core.v` serves L1's LVS target, L2's STA subject, and this theorem's left-hand side.
 
 ## Subcomponents
 
@@ -30,7 +34,7 @@ Established by **certificates**, with exploratory SAT confined to where no certi
 
 ## Axioms introduced
 
-**None surviving.** S1 (netlist semantics) is *derived* — per-cell Boolean shadows (L0/05) + the bridge theorem (M5) + LVS (L1) yield it as a conclusion ([00](00-netlist-object.md)) — and X1 (parser fidelity) is an ordinary verified-parser obligation; both are in [AXIOMS' Discharged table](../AXIOMS.md#discharged-and-retired). **F5** (does ρ exist?) is the layer's load-bearing unknown, decidable by [03](03-register-correspondence.md)'s experiment.
+**None surviving.** S1 (netlist semantics) is *derived* — per-cell Boolean shadows (L0/05) + the bridge theorem (M5) + LVS (L1) yield it as a conclusion ([00](00-netlist-object.md)) — and X1 (parser fidelity) is an ordinary verified-parser obligation; both are in [Axioms' Discharged table](../axioms.md#discharged-and-retired). **F5** (does ρ exist?) is the layer's load-bearing unknown, decidable by [03](03-register-correspondence.md)'s experiment.
 
 ## The layer's shape
 
@@ -52,4 +56,4 @@ Everything reduces to the register boundary. Only ports and state elements need 
 
 ## Reading
 
-[Kuehlmann](../BIBLIOGRAPHY.md#kuehlmann-2002)/[Brand](../BIBLIOGRAPHY.md#brand-1993) lineage on SAT sweeping; ABC's `rewrite`/`refactor`/`resub`. [Kaufmann & Biere](../BIBLIOGRAPHY.md#kaufmann-biere-2019) on PAC certificates for multipliers. [CompCert](../BIBLIOGRAPHY.md#compcert-2009) for the verified-pass vs validated-pass calculus — they *validated* register allocation for exactly the reasons [04](04-equivalence-certificates.md) validates the rewrite trail.
+[Kuehlmann](../bibliography.md#kuehlmann-2002)/[Brand](../bibliography.md#brand-1993) lineage on SAT sweeping; ABC's `rewrite`/`refactor`/`resub`. [Kaufmann & Biere](../bibliography.md#kaufmann-biere-2019) on PAC certificates for multipliers. [CompCert](../bibliography.md#compcert-2009) for the verified-pass vs validated-pass calculus — they *validated* register allocation for exactly the reasons [04](04-equivalence-certificates.md) validates the rewrite trail.

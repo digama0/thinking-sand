@@ -1,6 +1,6 @@
 # Reading list — getting up to speed
 
-Introductory and canonical textbooks for the fields this project spans. The [BIBLIOGRAPHY](BIBLIOGRAPHY.md) cites *specific results* with verified identifiers; this list is pedagogy. Entries link to a registered DOI, the publisher's page, or the book's own site where one could be *verified*; the unlinked remainder are equally canonical and easily found. Where a work is also cited as a reference, it links to its BIBLIOGRAPHY entry. Each entry says what it is *for* here, tagged by layer.
+Introductory and canonical textbooks for the fields this project spans. The [Bibliography](bibliography.md) cites *specific results* with verified identifiers; this list is pedagogy. Entries link to a registered DOI, the publisher's page, or the book's own site where one could be *verified*; the unlinked remainder are equally canonical and easily found. Where a work is also cited as a reference, it links to its Bibliography entry. Each entry says what it is *for* here, tagged by layer.
 
 The project's centre of gravity for a reader arriving from formal methods is the hardware and the physics; for a reader arriving from hardware, it is the opposite. The first four sections are the important ones.
 
@@ -21,7 +21,7 @@ The project's centre of gravity for a reader arriving from formal methods is the
 - **Griffiths, [*Introduction to Electrodynamics*](https://doi.org/10.1017/9781108333511)** — the undergraduate canon; everything L1's electrostatics needs, readably.
 - **Purcell & Morin, [*Electricity and Magnetism*](https://doi.org/10.1017/CBO9781139012973)** — the relativity-first treatment; the best answer to *why* magnetism is inevitable, and the right intuition for L0/01's EQS/MQS split.
 - **Jackson, [*Classical Electrodynamics*](https://www.wiley.com/en-us/Classical+Electrodynamics%2C+3rd+Edition-p-9780471309321)** — the graduate reference; boundary-value problems at the strength L1/03's enclosures actually require.
-- **[Haus & Melcher](BIBLIOGRAPHY.md#haus-melcher-1989), *Electromagnetic Fields and Energy*** — the careful quasistatics treatment L0/01 leans on directly.
+- **[Haus & Melcher](bibliography.md#haus-melcher-1989), *Electromagnetic Fields and Energy*** — the careful quasistatics treatment L0/01 leans on directly.
 
 ## Quantum theory and solid state (L0/02, L0/08)
 
@@ -38,7 +38,7 @@ For this project the solid-state route is the load-bearing one — the QFT that 
 
 - **Pierret, *Semiconductor Device Fundamentals*** — the introductory device course.
 - **Taur & Ning, [*Fundamentals of Modern VLSI Devices*](https://doi.org/10.1017/CBO9781139195065)** — the modern MOSFET in depth; what BSIM is a fit *of*.
-- **[Sze & Ng](BIBLIOGRAPHY.md#sze-ng-2007), *Physics of Semiconductor Devices*** — the reference; avalanche and breakdown for L0/07.
+- **[Sze & Ng](bibliography.md#sze-ng-2007), *Physics of Semiconductor Devices*** — the reference; avalanche and breakdown for L0/07.
 
 ## VLSI and the physical flow (L1–L3)
 
@@ -60,6 +60,6 @@ For this project the solid-state route is the load-bearing one — the QFT that 
 - **Kroening & Strichman, [*Decision Procedures*](https://doi.org/10.1007/978-3-662-50497-0)** — SAT, SMT, bitvectors; L3's engine room.
 - **Biere, Heule, van Maaren & Walsh (eds.), [*Handbook of Satisfiability*](https://doi.org/10.3233/FAIA336)** — the SAT canon in depth; the CDCL and proof-logging (DRAT/LRAT) chapters are the trust story behind every certificate in L2–L3.
 - **Avigad, de Moura, Kong & Ullrich, [*Theorem Proving in Lean 4*](https://leanprover.github.io/theorem_proving_in_lean4/)** — an interactive-theorem-prover on-ramp, free online; the working style that every "formalise X" in this book assumes, whatever system the project ultimately inhabits.
-- **Pierce et al., [*Software Foundations*](https://softwarefoundations.cis.upenn.edu/)** — machine-checked program verification from zero (Coq, free online); volumes 1–2 are the discipline's boot camp, and [CompCert](BIBLIOGRAPHY.md#compcert-2009) is the flagship artifact showing where it leads — the verified-vs-validated-pass calculus L3/04 borrows comes from there.
+- **Pierce et al., [*Software Foundations*](https://softwarefoundations.cis.upenn.edu/)** — machine-checked program verification from zero (Coq, free online); volumes 1–2 are the discipline's boot camp, and [CompCert](bibliography.md#compcert-2009) is the flagship artifact showing where it leads — the verified-vs-validated-pass calculus L3/04 borrows comes from there.
 - **Clarke, Grumberg, Kroening, Peled & Veith, *Model Checking*** — the standard text for the technique this project explicitly *cannot* use at scale (2^5774 states — L3/02) but borrows ideas from everywhere (IC3, invariants as certificates).
-- **[Melham](BIBLIOGRAPHY.md#melham-1993), *Higher Order Logic and Hardware Verification*** — the historical centre of transistor-level formal verification; L0/09's ancestor.
+- **[Melham](bibliography.md#melham-1993), *Higher Order Logic and Hardware Verification*** — the historical centre of transistor-level formal verification; L0/09's ancestor.

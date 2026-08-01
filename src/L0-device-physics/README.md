@@ -1,6 +1,10 @@
 # L0 — Device physics and the digital abstraction
 
-> **Spec below:** `Field(A)` — trajectories of the transient field problem ([00](00-field-problem.md)). **Spec above:** `Contracts(N)` — the timed contract network ([MAIN](../MAIN.md#the-spec-tower)). **Kind: theorem** — within the envelope, every field trajectory refines the contract network, modulo E1.
+> **Spec below:** `Field(A)` — trajectories of the transient field problem ([00](00-field-problem.md)). **Spec above:** `Contracts(N)` — the timed contract network ([the overview](../overview.md#the-spec-tower)). **Kind: theorem** — within the envelope, every field trajectory refines the contract network, modulo E1.
+
+## Background
+
+The bottom. Below the netlist there are no bits — only charge, fields, and dopant atoms — and this layer manufactures the digital abstraction out of that material: per-cell contracts certifying that each standard cell computes its Boolean function, within noise margins and delay intervals, under stated operating conditions. The route runs through the governing PDE's well-posedness ([00](00-field-problem.md)), the reduction from Maxwell's equations to circuit theory ([01](01-quasistatic-reduction.md), [04](04-lumping-composition.md)), the fitted device models carrying the project's deepest empirical axiom ([02](02-device-models.md)), validated per-cell numerics ([03](03-cell-enclosures.md)), the regime decomposition that *is* the digital abstraction stated as a theorem ([05](05-digital-abstraction.md)), the error model deciding what survives as probability ([06](06-error-model.md)), the envelope outside which none of it holds ([07](07-operating-envelope.md)), what the whole tower bottoms out on ([08](08-quantum-floor.md)), and the transistor-level cut discipline ([09](09-cut-discipline.md)). This is the crunchiest material in the book; the per-chapter Backgrounds assume no physics beyond curiosity.
 
 ## Statement
 
@@ -32,7 +36,7 @@ There is **one** physical problem: Maxwell plus carrier transport over the whole
 
 The proof plan, in order of logical dependence (which is not document order — notably it puts the envelope *before* the per-component work, as a precondition):
 
-1. **Existence, circuit-independent.** The transient system has global-in-time solutions for any geometry, within the model's validity — established ([Gajewski–Gröger](../BIBLIOGRAPHY.md#gajewski-groger-1986)). Uniqueness is *not required*: every downstream claim is an enclosure **quantified over all solutions**, which converts stationary non-uniqueness (M1) from a blocking assumption into a reachability obligation — see [00](00-field-problem.md). "Within reasonable physical bounds" means *model validity*, not solution bounds: the theorem is unconditional for the model; the envelope justifies the model. [00, 01]
+1. **Existence, circuit-independent.** The transient system has global-in-time solutions for any geometry, within the model's validity — established ([Gajewski–Gröger](../bibliography.md#gajewski-groger-1986)). Uniqueness is *not required*: every downstream claim is an enclosure **quantified over all solutions**, which converts stationary non-uniqueness (M1) from a blocking assumption into a reachability obligation — see [00](00-field-problem.md). "Within reasonable physical bounds" means *model validity*, not solution bounds: the theorem is unconditional for the model; the envelope justifies the model. [00, 01]
 2. **Coarse invariance, near-circuit-independent.** Every solution stays in a broad safe set: bounded potentials (maximum principle) and carrier densities, no runaway — a theorem *within* the model, since the omitted terms (impact ionisation, electrothermal coupling) are exactly where the feedback dangers live. Excluding those is [07](07-operating-envelope.md)'s envelope, whose side conditions are computable but not all structural (thermal is workload-conditional). The safe set is honest-broad: it contains U, 0, 1, transitioning, metastable, **and the latched states** — which step 3 must show unreachable, not assume absent. [07, 00, 02]
 3. **Fine regime decomposition, per component.** Pin regions "0" / "1" / "transitioning", with "transitioning" a family parameterised by slew — the component's behaviour is an **assume-guarantee contract on trajectory classes** (an interval Liberty arc with an explicit domain): guaranteed output class given input classes, load, and a bounded local disturbance budget. Established numerically with rigorous enclosures, once per library cell. The disturbance budget's discharge is nonlocal (L1's screening) and must cover Miller feedthrough *through* the component. [02, 03, 05]
 4. **Composition = combinatorics + side conditions.** Components plug together by finite checking: each edge's load / slew / coupling within the contracts' domains (not vacuous — the shipped design fails these, F2). Cuts are licensed only at restoring, near-unidirectional boundaries (channel-connected components), so every bistable loop is internal to a component. Three globals do not factor through pins — supply, clock, temperature — and need their own aggregate arguments. Conclusion: the network emulates a state machine, **except** at Poisson fault events and unresolved synchroniser reads, which are carried as P1/P2, never proved away. [04, 06]
@@ -62,7 +66,7 @@ The overall deliverable, restated: **every solution of the field problem lies wi
 
 ## Axioms introduced
 
-**E1** (the tower's one physical axiom) and **P2** (SEU). Formerly also E2, P3 and X2 — all discharged or rerouted in the reassessment ([AXIOMS](../AXIOMS.md#discharged-and-retired)): [03](03-cell-enclosures.md) is E2's discharge route, [06](06-error-model.md) P3's, and X2's check moved to L1's G2 with its empirical residue (the upset radius) into P2.
+**E1** (the tower's one physical axiom) and **P2** (SEU). Formerly also E2, P3 and X2 — all discharged or rerouted in the reassessment ([Axioms](../axioms.md#discharged-and-retired)): [03](03-cell-enclosures.md) is E2's discharge route, [06](06-error-model.md) P3's, and X2's check moved to L1's G2 with its empirical residue (the upset radius) into P2.
 
 ## Effort
 
@@ -70,4 +74,4 @@ The overall deliverable, restated: **every solution of the field problem lies wi
 
 ## Reading
 
-[von Neumann](../BIBLIOGRAPHY.md#von-neumann-1956), *Probabilistic Logics and the Synthesis of Reliable Organisms from Unreliable Components* (1956). [Bryant](../BIBLIOGRAPHY.md#bryant-1984) on switch-level (MOSSIM). [Melham](../BIBLIOGRAPHY.md#melham-1993), *Higher Order Logic and Hardware Verification*. [Markowich](../BIBLIOGRAPHY.md#markowich-1986), *The Stationary Semiconductor Device Equations*.
+[von Neumann](../bibliography.md#von-neumann-1956), *Probabilistic Logics and the Synthesis of Reliable Organisms from Unreliable Components* (1956). [Bryant](../bibliography.md#bryant-1984) on switch-level (MOSSIM). [Melham](../bibliography.md#melham-1993), *Higher Order Logic and Hardware Verification*. [Markowich](../bibliography.md#markowich-1986), *The Stationary Semiconductor Device Equations*.

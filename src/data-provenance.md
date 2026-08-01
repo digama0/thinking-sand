@@ -10,7 +10,7 @@
 | `efabless/caravel_mgmt_soc_litex` | `503eda0790085712ffef7f4ad8934c7daed3237f` | 2024-01-03 |
 | `google/skywater-pdk-libs-sky130_fd_sc_hd` | `ac7fb61f06e6470b94e8afdf7c25268f62fbd7b1` | 2020-11-10 |
 
-Refs are commit SHAs, not branches. `FINDINGS.md` quotes exact byte counts, instance counts, and Liberty table values from these files, and `L0/09` quotes structural-check results. A floating ref would silently invalidate all of it. **If you move to newer upstream: bump the SHA in `tools/fetch-data.sh`, re-run, and re-derive FINDINGS — never one without the other.**
+Refs are commit SHAs, not branches. `findings.md` quotes exact byte counts, instance counts, and Liberty table values from these files, and `L0/09` quotes structural-check results. A floating ref would silently invalidate all of it. **If you move to newer upstream: bump the SHA in `tools/fetch-data.sh`, re-run, and re-derive Findings — never one without the other.**
 
 The design's own toolchain pins are recorded separately, inside the fetched artifacts: `data/caravel/OPENLANE_VERSION` and `data/caravel/PDK_SOURCES`.
 

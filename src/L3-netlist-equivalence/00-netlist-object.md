@@ -10,7 +10,7 @@ That semantics is a **Mealy machine**: the classical mathematical form of a cloc
 
 ## Statement
 
-Define `N` and `Mealy(N)` — the shared object of [MAIN's spec tower](../MAIN.md#the-spec-tower) and the left-hand side of this layer's theorem.
+Define `N` and `Mealy(N)` — the shared object of [the overview's spec tower](../overview.md#the-spec-tower) and the left-hand side of this layer's theorem.
 
 ## One parse, three consumers
 

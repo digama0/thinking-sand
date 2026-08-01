@@ -16,7 +16,7 @@ The two analog phenomena that could force their way into the discrete interface 
 
 Coupling capacitance `C_x` between a victim and an aggressor (L1's coupling graph) acts twice:
 
-**Delay shift (victim switching).** The classical model: effective coupling ranges over `{0, 1, 2}×C_x` by relative transition direction — the coupling *Miller factor*, named for the feedback-capacitance multiplication of [Miller](../BIBLIOGRAPHY.md#miller-1919) (1919). Absorb it by widening the victim's load interval — `C_eff ∈ [C_g, C_g + 2C_x]` for setup, `[C_g, ...]` floor for hold — and the coupling graph *disappears into the per-net RC interval*. Honesty note: the 2× ceiling is a fact about equal-slew ramp models, not a theorem — [Chen, Kirkpatrick & Keutzer](../BIBLIOGRAPHY.md#chen-kirkpatrick-keutzer-2000) showed the factor needed for worst-case *delay* exceeds the naive range with mismatched slews. The rigorous version derives the factor from the contract network (slew-dependent), which is exactly the kind of lemma L0/04's machinery exists for — assume the classical bound only until then, and say so.
+**Delay shift (victim switching).** The classical model: effective coupling ranges over `{0, 1, 2}×C_x` by relative transition direction — the coupling *Miller factor*, named for the feedback-capacitance multiplication of [Miller](../bibliography.md#miller-1919) (1919). Absorb it by widening the victim's load interval — `C_eff ∈ [C_g, C_g + 2C_x]` for setup, `[C_g, ...]` floor for hold — and the coupling graph *disappears into the per-net RC interval*. Honesty note: the 2× ceiling is a fact about equal-slew ramp models, not a theorem — [Chen, Kirkpatrick & Keutzer](../bibliography.md#chen-kirkpatrick-keutzer-2000) showed the factor needed for worst-case *delay* exceeds the naive range with mismatched slews. The rigorous version derives the factor from the contract network (slew-dependent), which is exactly the kind of lemma L0/04's machinery exists for — assume the classical bound only until then, and say so.
 
 **Glitch (victim quiet).** An aggressor transition injects charge; the victim's driver fights it. The check: worst-case over all aggressors switching together,
 
@@ -36,7 +36,7 @@ The grid could contaminate everything — every delay depends on V. It is kept t
 
 > **The equipotential bound.** The grid's impedance to the rails, over the frequency band set by the design's edge rates, is below the threshold making supply excursions at any cell ≤ ΔV_grid. Established by the ~225k decaps (the impedance bound is *why they exist*); discharged once as a frequency-domain claim.
 
-Downstream of this single bound: (i) the voltage tier of [03](03-corners.md)'s corners covers V ± ΔV_grid — supply variation becomes *corner content*, not a new mechanism; (ii) L1/04's screening theorem gets its Dirichlet hypothesis — the grid is a shield only if it is an equipotential, so **the decaps are doing double duty** (delay stability *and* shield quality); (iii) the residual — droop beyond the bound under worst-case simultaneous switching — is `P_droop` in MAIN's ε, a P6-class environment/design bound.
+Downstream of this single bound: (i) the voltage tier of [03](03-corners.md)'s corners covers V ± ΔV_grid — supply variation becomes *corner content*, not a new mechanism; (ii) L1/04's screening theorem gets its Dirichlet hypothesis — the grid is a shield only if it is an equipotential, so **the decaps are doing double duty** (delay stability *and* shield quality); (iii) the residual — droop beyond the bound under worst-case simultaneous switching — is `P_droop` in the overview's ε, a P6-class environment/design bound.
 
 Slower edges relax the band over which the impedance bound must hold *and* shrink both crosstalk effects — one more independent way a conservatively-clocked design is cheaper to verify, and by now the third such coincidence (cf. F2's slew limits, the SPI round-trip hypothesis).
 
@@ -45,7 +45,7 @@ Slower edges relax the band over which the impedance bound must hold *and* shrin
 1. The Miller-factor lemma from the contract network (or the explicit assumption, flagged, until then).
 2. The glitch check as a per-net computation over L1's coupling graph + L0's NM — plus the routing-rule predicate that makes it pass by construction (L1/G5-adjacent).
 3. The grid impedance bound: state it, and identify what discharges it (decap census + package model — partially X4/P6 territory).
-4. The `P_droop` term's definition, so MAIN's ε has three defined summands rather than two and a gesture.
+4. The `P_droop` term's definition, so the overview's ε has three defined summands rather than two and a gesture.
 
 ## First experiments
 

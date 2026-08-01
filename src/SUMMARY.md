@@ -1,6 +1,6 @@
 # Summary
 
-[MAIN — the mathematical content](MAIN.md)
+[Overview — the mathematical content](overview.md)
 
 ---
 
@@ -67,8 +67,8 @@
 ---
 
 [Appendix: Glossary](glossary.md)
-[Appendix: AXIOMS — the register](AXIOMS.md)
-[Appendix: FINDINGS — measured data](FINDINGS.md)
+[Appendix: Axioms — the register](axioms.md)
+[Appendix: Findings — measured data](findings.md)
 [Appendix: Reading list](reading-list.md)
-[Appendix: BIBLIOGRAPHY](BIBLIOGRAPHY.md)
+[Appendix: Bibliography](bibliography.md)
 [Appendix: Data provenance](data-provenance.md)

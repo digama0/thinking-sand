@@ -42,4 +42,4 @@ Spec and implementation share an author here; the evidence must not. The anchors
 
 ## Effort
 
-Months, thinking-dominated — the counterweight to [03](03-coverage.md)'s typing-dominated bulk. The fidelity risk is priced in AXIOMS as S3 and cannot be engineered away, only anchored.
+Months, thinking-dominated — the counterweight to [03](03-coverage.md)'s typing-dominated bulk. The fidelity risk is priced in Axioms as S3 and cannot be engineered away, only anchored.

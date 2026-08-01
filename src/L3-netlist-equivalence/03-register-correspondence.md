@@ -30,7 +30,7 @@ Yosys's `opt_dff`/`opt_merge` can remove constant-driven flops and merge duplica
 
 ## The decision procedure: reproduce the synthesis
 
-**Do this before anything else in the project.** Versions are pinned exactly (FINDINGS: OpenLane `05fac72e…`, docker tag, PDK commit). Yosys is single-threaded and essentially deterministic; ABC's seeds are fixed by default. Reproducing the shipped netlist converts archaeology into experiment: instrument the flow to **dump ρ directly** — log every `opt_dff`/`opt_merge` action, emit the name mapping before mangling — and the witness falls out of the run instead of being reverse-engineered from the artifact.
+**Do this before anything else in the project.** Versions are pinned exactly (Findings: OpenLane `05fac72e…`, docker tag, PDK commit). Yosys is single-threaded and essentially deterministic; ABC's seeds are fixed by default. Reproducing the shipped netlist converts archaeology into experiment: instrument the flow to **dump ρ directly** — log every `opt_dff`/`opt_merge` action, emit the name mapping before mangling — and the witness falls out of the run instead of being reverse-engineered from the artifact.
 
 The nondeterminism concentrates in P&R (multithreaded routing, placement seeds, hash order, floating point), which is **function-preserving** — a different DEF is harmless, and one verifies the shipped DEF rather than reproducing it. Synthesis, the stage that would actually hurt, is the deterministic one. Fortunate, and worth stating as the reason this experiment is expected to succeed.
 

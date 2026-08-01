@@ -59,7 +59,7 @@ An IRQ redirects the commit transition: instead of `α(s) →_isa α(s')` by the
 
 ## What is deliberately not in the statement
 
-No timing (L2 discharged it), no probabilistic terms (conditioning happened at MAIN's †-lines), no bus implementation (contract-abstracted), no netlist (L3 licensed the RTL view). The statement is purely a relation between two transition systems — which is the payoff of the entire tower below it.
+No timing (L2 discharged it), no probabilistic terms (conditioning happened at the overview's †-lines), no bus implementation (contract-abstracted), no netlist (L3 licensed the RTL view). The statement is purely a relation between two transition systems — which is the payoff of the entire tower below it.
 
 ## Obligations
 

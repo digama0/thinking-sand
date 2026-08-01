@@ -4,10 +4,10 @@
 # Everything lands in data/, which is gitignored: these files total ~350 MB and are
 # reproducible from upstream, so they are deliberately not committed.
 #
-# Refs are PINNED to commit SHAs, not branches. FINDINGS.md quotes exact byte counts,
+# Refs are PINNED to commit SHAs, not branches. findings.md quotes exact byte counts,
 # instance counts and table values from these files; a floating ref would silently
 # invalidate those numbers. If you deliberately move to a newer upstream, bump the SHA
-# here, re-run, and re-derive FINDINGS.md — do not do one without the other.
+# here, re-run, and re-derive findings.md — do not do one without the other.
 #
 # Usage:  tools/fetch-data.sh [all|caravel|mgmt|pdk|small]
 #         small  = everything except the two large binaries (~1 MB total)

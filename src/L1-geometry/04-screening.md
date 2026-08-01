@@ -101,4 +101,4 @@ Unknown, and the widest error bars in the project — obligation 1 could be six 
 
 ## Reading
 
-[Pólya & Szegő](../BIBLIOGRAPHY.md#polya-szego-1951) for capacity comparison methods. Standard potential-theory texts for harmonic measure and the maximum principle; Garnett & Marshall, *Harmonic Measure*, for the estimates Step 2 needs.
+[Pólya & Szegő](../bibliography.md#polya-szego-1951) for capacity comparison methods. Standard potential-theory texts for harmonic measure and the maximum principle; Garnett & Marshall, *Harmonic Measure*, for the estimates Step 2 needs.

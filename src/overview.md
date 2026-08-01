@@ -1,9 +1,15 @@
-# MAIN — the mathematical content
+# Overview — the mathematical content
 
 > *"If you wish to make an apple pie from scratch, you must first invent the universe."*
 > — Carl Sagan, *Cosmos*
 
-The statement the project is trying to establish, and how it dispatches into layers. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md). This file covers what is actually being proved.
+## Background
+
+Between "my program ran correctly" and "electrons obey Maxwell's equations" stands a tower of trust: the instruction set means what its manual says; the processor implements the instruction set; the netlist computes what the RTL describes; the digital story the netlist tells is what the analog circuit actually settles to; the circuit is what the geometry realises; the geometry is what the fab printed; and the transistors do what the device models claim. Industrial practice verifies one or two storeys of this tower and takes the rest on faith — reasonably, but the faith is unaudited. This book is a scoping study for auditing *all of it*: what it would take to produce a machine-checked proof that one specific, physical, purchasable chip runs its programs correctly, starting from field equations over the silicon and ending at the instruction set.
+
+It is not the proof. Carrying the proof out is a decade-scale project; the deliverable here is the map — for each of eight layers, what the theorem is, how it would be proved, what it rests on, and what is genuinely unknown. The organising principle is that with unbounded proof capacity, everything merely hard collapses to time, and what remains — the assumptions no proof can reach — *is* the result; that ledger is the [axiom register](axioms.md). The study is grounded throughout in the shipped artifacts of a chip that has actually been fabricated — the [Caravel](https://github.com/efabless/caravel) harness on SkyWater's open 130 nm process, carrying the [picorv32](https://github.com/YosysHQ/picorv32) RISC-V core — and the numbers measured off those artifacts, including a few genuine gaps found in the shipped design, are in [Findings](findings.md).
+
+The rest of this page is the mathematical front door: the statement the project is trying to establish, and how it dispatches into layers. Project structure, the target-selection rationale, and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md).
 
 ## The top-level statement
 
@@ -11,7 +17,7 @@ Let `d` be a fabricated die, `F` a flash image, `E` an environment (supply, cloc
 
 ```
      Envelope(d, E)                                     ← L0/07, V1–V7
-  ∧  Axioms                                             ← AXIOMS.md
+  ∧  Axioms                                             ← axioms.md
   ⟹  P[ obs(d,F,E) ⊑ Sys(F) ]  ≥  1 − ε(T)
 
       ε(T)  =  λ·A·T·AVF          particle strikes         (P2)
@@ -23,7 +29,7 @@ Let `d` be a fabricated die, `F` a flash image, `E` an environment (supply, cloc
 
 Three features of this statement are deliberate and worth defending.
 
-**It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](BIBLIOGRAPHY.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
+**It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](bibliography.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
 
 **Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's, and part of *that* does not exist yet — [picorv32](https://github.com/YosysHQ/picorv32)'s interrupt mechanism is custom, so S3 must be authored rather than imported ([L6](L6-isa/README.md)).
 
@@ -48,11 +54,11 @@ One identification is used silently everywhere and stated only here: **`N` is a 
 
 > With unbounded proof capacity, the deliverable is the **axiom list**.
 
-Everything merely hard collapses to time. What survives is what is *not* a theorem: specification fidelity, empirical models, physical facts, and genuinely probabilistic phenomena. So each layer is organised around what it **discharges** and what it **introduces**, and the running register is [AXIOMS.md](AXIOMS.md) — with the open *mathematical* questions (M1–M8) kept separate from the axioms, because effort could in principle remove them.
+Everything merely hard collapses to time. What survives is what is *not* a theorem: specification fidelity, empirical models, physical facts, and genuinely probabilistic phenomena. So each layer is organised around what it **discharges** and what it **introduces**, and the running register is [axioms.md](axioms.md) — with the open *mathematical* questions (M1–M8) kept separate from the axioms, because effort could in principle remove them.
 
-**Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [AXIOMS](AXIOMS.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
+**Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [Axioms](axioms.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
 
-**Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every numbered sub-chapter opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch. Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
+**Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every chapter — this overview, each layer chapter, and every numbered sub-chapter — opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch (the layer chapters' are brief orientations; the sub-chapters' do the real teaching). Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
 
 ## The dispatch
 
@@ -139,7 +145,7 @@ Instances so far: min-width and min-spacing are the hypotheses of L1's topology-
 
 ## Status
 
-**Open mathematics** (M1–M8 in [AXIOMS.md](AXIOMS.md)): M2 (the screening exponent) and M5 (the bridge theorem) are the two the project's structure most depends on; M1 (uniqueness for stationary drift–diffusion) is the only one that is open *mathematics* rather than open *formalisation*.
+**Open mathematics** (M1–M8 in [axioms.md](axioms.md)): M2 (the screening exponent) and M5 (the bridge theorem) are the two the project's structure most depends on; M1 (uniqueness for stationary drift–diffusion) is the only one that is open *mathematics* rather than open *formalisation*.
 
 **Established for the shipped design** — the parts that are not speculative:
 
@@ -148,6 +154,6 @@ Instances so far: min-width and min-spacing are the hypotheses of L1's topology-
 
 **Unestablished for the shipped design** (F1–F5): three of nine corners fail `in2reg` hold; one passes only modulo `max_tran`/`max_cap`, meaning parts of the design sit outside the Liberty characterisation range where STA is *vacuous* rather than merely inaccurate; 159 SDC exceptions are unverified; register correspondence through synthesis is unknown. **The hypotheses of the bridge theorem are not currently established for this design as shipped.**
 
-See [FINDINGS.md](FINDINGS.md) for the measured data behind all of it.
+See [findings.md](findings.md) for the measured data behind all of it.
 
 The chapters descend the tower from here: [L7](L7-system/README.md) first — the claim — down to [L0](L0-device-physics/README.md), where it runs out of turtles.

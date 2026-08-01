@@ -53,11 +53,11 @@ Each of these violates a hypothesis structurally, not numerically:
 
 ## The conditioning is the theorem's honest edge
 
-Hypothesis (4) is not a technicality: it is **where ε enters the whole project** (MAIN's † marks). The theorem is deterministic *on the event* "no strike, no unresolved read"; [06](06-boundaries.md) and L0/06 bound the event's complement. Stating M5 unconditionally would be false; smearing the probability through the induction would be unworkable. The conditional form is the correct interface.
+Hypothesis (4) is not a technicality: it is **where ε enters the whole project** (the overview's † marks). The theorem is deterministic *on the event* "no strike, no unresolved read"; [06](06-boundaries.md) and L0/06 bound the event's complement. Stating M5 unconditionally would be false; smearing the probability through the induction would be unworkable. The conditional form is the correct interface.
 
 ## Open problems
 
-1. **Write it.** Bounded-delay model, window rule, per-cycle induction — a solid paper, not a decade. Its absence is a fact about nobody working at the boundary, not about difficulty. [Lööw](../BIBLIOGRAPHY.md#loow-2021)'s stack is the closest prior art and stops short of this statement.
+1. **Write it.** Bounded-delay model, window rule, per-cycle induction — a solid paper, not a decade. Its absence is a fact about nobody working at the boundary, not about difficulty. [Lööw](../bibliography.md#loow-2021)'s stack is the closest prior art and stops short of this statement.
 2. The multi-domain version: the theorem above is per-domain; the composition across declared boundaries is [06](06-boundaries.md)'s.
 3. Whether hypothesis (1) can be weakened from "in domain" to "in domain or provably unobservable this cycle" — the F2 violations may be on nets whose values are dead; that would repair the shipped design's status without touching silicon.
 

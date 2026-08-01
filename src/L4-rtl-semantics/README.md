@@ -1,6 +1,10 @@
 # L4 — RTL semantics
 
-> **Supplies:** `⟦RTL⟧` — the word-level transition system used on *both* sides of the tower: L3's right-hand side and L5's left-hand side ([MAIN](../MAIN.md#the-spec-tower)). **Kind: definition.** Its obligations are well-definedness and adequacy — there is no refinement theorem here, and the risk profile is inverted accordingly: a wrong definition yields a true theorem about the wrong object.
+> **Supplies:** `⟦RTL⟧` — the word-level transition system used on *both* sides of the tower: L3's right-hand side and L5's left-hand side ([the overview](../overview.md#the-spec-tower)). **Kind: definition.** Its obligations are well-definedness and adequacy — there is no refinement theorem here, and the risk profile is inverted accordingly: a wrong definition yields a true theorem about the wrong object.
+
+## Background
+
+Before anything can be proved about the RTL, the RTL must *mean* something. Verilog's official semantics is an event-driven simulator with deliberately loose scheduling — unusable as a proof object — so this layer defines the design's meaning directly, as a clean synchronous transition system, for exactly the subset of the language this design occupies, with membership mechanically checked rather than assumed ([00](00-elaborated-object.md), [01](01-subset.md)). The two conditions that make combinational logic actually combinational are checked in [02](02-comb-blocks.md); the treatment of unknown values and reset in [03](03-x-and-reset.md); and the question no proof can answer — whether the definition captures what the artifact really means — is made *detectable*, since it cannot be made provable, in [04](04-adequacy.md).
 
 ## Statement
 
@@ -46,4 +50,4 @@ Everything here is the admissible-subset move plus its receipts. [01](01-subset.
 
 ## Reading
 
-[Lööw](../BIBLIOGRAPHY.md#loow-2021)'s HOL4 Verilog semantics — the existing deep embedding, and the reference point for how much of the language one actually needs. The FIRRTL spec, for what the alternative architecture would have looked like ([04](04-adequacy.md)).
+[Lööw](../bibliography.md#loow-2021)'s HOL4 Verilog semantics — the existing deep embedding, and the reference point for how much of the language one actually needs. The FIRRTL spec, for what the alternative architecture would have looked like ([04](04-adequacy.md)).

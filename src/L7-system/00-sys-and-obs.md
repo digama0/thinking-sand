@@ -12,7 +12,7 @@ One more translation. The pad voltage is an analog quantity; calling it "0" or "
 
 ## Statement
 
-Define the two objects MAIN's top-level statement quantifies over. The ISA is not the top: an ISA transition system does not produce pad traces, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. Before L7 existed, that map was used by MAIN while being defined by nobody.
+Define the two objects the overview's top-level statement quantifies over. The ISA is not the top: an ISA transition system does not produce pad traces, and the map from architecture to observable behaviour goes through everything the SoC wraps around the core. Before L7 existed, that map was used by the overview while being defined by nobody.
 
 ```
 Sys(F)  =  traces at the pads of:
@@ -40,7 +40,7 @@ Consequences worth pinning:
 
 ## Refinement shape
 
-`obs(d,F,E) ⊑ Sys(F)` is trace refinement up to stuttering at the physical alphabet, prefix-closed, with liveness expressed as bounded progress (every claim carries its `T`). The ε-conditioning lives at MAIN's †-lines, not here — `Sys` itself is a deterministic-spec-with-nondeterminism object, never probabilistic.
+`obs(d,F,E) ⊑ Sys(F)` is trace refinement up to stuttering at the physical alphabet, prefix-closed, with liveness expressed as bounded progress (every claim carries its `T`). The ε-conditioning lives at the overview's †-lines, not here — `Sys` itself is a deterministic-spec-with-nondeterminism object, never probabilistic.
 
 ## Obligations
 

@@ -2,6 +2,10 @@
 
 > **Spec below:** `⟦RTL⟧` (L4). **Spec above:** `ISA` (L6). **Kind: theorem** — the irreducible one.
 
+## Background
+
+This is the layer a computer-architecture course would recognise: prove that the processor implements its instruction set. It is also the tower's irreducible theorem — the one piece no tool produces and no measurement substitutes for. The proof technique is the **simulation**: an abstraction function reads architectural state out of the hardware at commit points, an invariant describes the machine's in-flight state well enough to survive induction, and a measure bounds how long any instruction can take — all introduced from scratch in [01](01-refinement.md)'s Background, with the machine's anatomy toured in [00](00-microarchitecture.md). The invariant ([02](02-invariant.md)) is where the thinking concentrates; the rest is wide, shallow, and largely mechanisable ([03](03-instruction-obligations.md)–[05](05-interrupts.md)).
+
 ## Statement
 
 `⟦RTL⟧ ⊑ ISA`: a stuttering simulation `(I, α, m)` — invariant, abstraction at commit points, measure — conditional on the bus contract (L7) and stated over the shipped configuration (L4). Displayed in full in [01](01-refinement.md); inventing `I` is the one thing in the entire project no tool produces ([02](02-invariant.md)).
@@ -43,8 +47,8 @@ None of its own; this is where the others are cashed in. The conditionality is e
 
 ## Effort
 
-1–2 years — yet the irreducible content is plausibly a few hundred lines of clauses plus a glue lemma; the residual is the invariant's genuine unknown plus this layer's share of the project-wide infrastructure item (MAIN's accounting: symbolic simulation, bitvector automation, the stuttering framework). picorv32 sits at the baseline of every effort multiplier: store buffer ×1.5, non-blocking cache ×3, precise exceptions on a deep pipe ×3, VM ×5, FP ×10, multicore/RVWMO ×20 — all absent.
+1–2 years — yet the irreducible content is plausibly a few hundred lines of clauses plus a glue lemma; the residual is the invariant's genuine unknown plus this layer's share of the project-wide infrastructure item (the overview's accounting: symbolic simulation, bitvector automation, the stuttering framework). picorv32 sits at the baseline of every effort multiplier: store buffer ×1.5, non-blocking cache ×3, precise exceptions on a deep pipe ×3, VM ×5, FP ×10, multicore/RVWMO ×20 — all absent.
 
 ## Reading
 
-[Burch & Dill](../BIBLIOGRAPHY.md#burch-dill-1994) on flushing — the technique this core makes unnecessary, and the baseline for everything that isn't a multicycle FSM. Manolios on WEB refinement (where flushing fails). Sawada & Hunt on intermediate abstractions. [Fox](../BIBLIOGRAPHY.md#fox-2003)'s ARM6 verification — the closest existing analogue to this layer's deliverable. riscv-formal's picorv32 checks — the RVFI-based prior art α should stay comparable with.
+[Burch & Dill](../bibliography.md#burch-dill-1994) on flushing — the technique this core makes unnecessary, and the baseline for everything that isn't a multicycle FSM. Manolios on WEB refinement (where flushing fails). Sawada & Hunt on intermediate abstractions. [Fox](../bibliography.md#fox-2003)'s ARM6 verification — the closest existing analogue to this layer's deliverable. riscv-formal's picorv32 checks — the RVFI-based prior art α should stay comparable with.
