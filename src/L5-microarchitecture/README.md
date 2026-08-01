@@ -43,7 +43,7 @@ None of its own; this is where the others are cashed in. The conditionality is e
 
 ## Effort
 
-3–5 years, least compressible in the project — yet the irreducible content is plausibly a few hundred lines of clauses plus a glue lemma; the years are the surrounding machinery (symbolic simulation, bitvector automation, the stuttering framework). picorv32 sits at the baseline of every effort multiplier: store buffer ×1.5, non-blocking cache ×3, precise exceptions on a deep pipe ×3, VM ×5, FP ×10, multicore/RVWMO ×20 — all absent.
+1–2 years — yet the irreducible content is plausibly a few hundred lines of clauses plus a glue lemma; the residual is the invariant's genuine unknown plus this layer's share of the project-wide infrastructure item (MAIN's accounting: symbolic simulation, bitvector automation, the stuttering framework). picorv32 sits at the baseline of every effort multiplier: store buffer ×1.5, non-blocking cache ×3, precise exceptions on a deep pipe ×3, VM ×5, FP ×10, multicore/RVWMO ×20 — all absent.
 
 ## Reading
 
