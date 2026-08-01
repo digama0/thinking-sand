@@ -36,4 +36,4 @@ Both outcomes are results: reproduction yields ρ as a logged witness; failure m
 
 ## Effort
 
-The experiment: days to weeks of flow wrangling. It is the highest information-per-effort action available in the entire project, which is why the top README lists it first.
+The experiment: days to weeks of flow wrangling. It is the highest information-per-effort action available in the entire project, which is why the repository README's "where to start" lists it first.

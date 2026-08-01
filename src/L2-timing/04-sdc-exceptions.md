@@ -45,4 +45,4 @@ SDC is Tcl — conditionals, variables (`$clk_period`), mode branches. The same 
 
 ## Effort
 
-**Weeks to months, needing only artifacts already in `data/`.** This is the recommended first real work of the entire project — see the top README's "where to start".
+**Weeks to months, needing only artifacts already in `data/`.** This is the recommended first real work of the entire project — it is first on the repository README's "where to start" list.

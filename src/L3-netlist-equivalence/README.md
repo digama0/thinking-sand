@@ -1,6 +1,6 @@
 # L3 — Netlist ↔ RTL equivalence
 
-> **Spec below:** `Mealy(N)` — the shipped netlist's discrete machine. **Spec above:** `⟦RTL⟧` — L4's transition system. **Kind: theorem.** Note the proof-order inversion: this theorem *consumes* L4's object, so it is proved after L4 despite sitting below it in the tower — numbering is artifact altitude, not logical dependency.
+> **Spec below:** `Mealy(N)` — the shipped netlist's discrete machine. **Spec above:** `⟦RTL⟧` — L4's transition system. **Kind: theorem.** Note the proof-order inversion: this theorem *consumes* L4's object, so it is proved after L4 despite sitting below it in the tower — numbering is artifact altitude, not logical dependency. (The book's top-down reading order happens to agree: L4's chapters precede these.)
 
 ## Statement
 

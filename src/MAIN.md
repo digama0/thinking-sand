@@ -48,6 +48,8 @@ One identification is used silently everywhere and stated only here: **`N` is a 
 
 Everything merely hard collapses to time. What survives is what is *not* a theorem: specification fidelity, empirical models, physical facts, and genuinely probabilistic phenomena. So each layer is organised around what it **discharges** and what it **introduces**, and the running register is [AXIOMS.md](AXIOMS.md) — with the open *mathematical* questions (M1–M8) kept separate from the axioms, because effort could in principle remove them.
 
+**Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [AXIOMS](AXIOMS.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
+
 ## The dispatch
 
 Each layer's named obligations. This is the proof skeleton; the layer documents are the expansions.
@@ -141,3 +143,5 @@ Instances so far: min-width and min-spacing are the hypotheses of L1's topology-
 **Unestablished for the shipped design** (F1–F5): three of nine corners fail `in2reg` hold; one passes only modulo `max_tran`/`max_cap`, meaning parts of the design sit outside the Liberty characterisation range where STA is *vacuous* rather than merely inaccurate; 159 SDC exceptions are unverified; register correspondence through synthesis is unknown. **The hypotheses of the bridge theorem are not currently established for this design as shipped.**
 
 See [FINDINGS.md](FINDINGS.md) for the measured data behind all of it.
+
+The chapters descend the tower from here: [L7](L7-system/README.md) first — the claim — down to [L0](L0-device-physics/README.md), where it runs out of turtles.
