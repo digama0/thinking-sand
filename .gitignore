@@ -1,0 +1,14 @@
+# Fetched design artifacts — ~400 MB, reproducible from upstream at pinned SHAs.
+# Regenerate with tools/fetch-data.sh; provenance recorded in data/README.md.
+# NB: `data/*` not `data/` — git cannot re-include a file whose parent dir is excluded,
+# so excluding the directory itself would swallow the README too.
+data/*
+!data/README.md
+
+# Analysis scratch
+*.pyc
+__pycache__/
+out/
+
+# Editor workspace state
+.obsidian/

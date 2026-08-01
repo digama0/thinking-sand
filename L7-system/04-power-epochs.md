@@ -1,0 +1,47 @@
+# L7/04 — Power epochs
+
+## Statement
+
+The top-level statement covers one powered epoch: POR-released reset through `T` in-envelope cycles. The lifetime claim is a **concatenation** — `obs = boot·trace₁ · gap · boot·trace₂ · …` — and this file owns its composition: the per-boundary requirements, how power meets the ISA, and the brown-out resolution.
+
+## Per epoch boundary
+
+- **V8** (L0/07): supply ramps follow the sequencing/rate constraints — the transitions between U and powered are *trajectory* conditions the steady-state envelope does not cover (multi-rail bring-up can forward-bias junctions and reach latch-up's branch while the wells are not yet protected).
+- **The POR contract** (`simple_por`, X4-class): reset asserted from power-good to supply-stable, released synchronously with a running clock, once.
+- **Per-epoch X-elimination**, refined by the spec: reset drives definite only what `Sys(F)` claims definite (pc, FSM, reset-defined state); elsewhere implementation-X is *matched* by the ISA's reset nondeterminism (L4/03's three-way split). The proof quantifies from all-X ⊇ arbitrary garbage, so brown-out recovery and SEU-recovery reset share this one obligation.
+- **The boot-window promise**: `gpio_defaults_block` ×38 gives pads defined behaviour before any software runs — `obs` during boot is spec'd by hardware defaults, not demonic.
+- **F-immutability or F-evolution**: epochs are independent iff software cannot reach flash write commands (checkable against the XIP controller); otherwise `Sys` becomes a transition system over flash states *and* torn writes need a persistency model — a problem class that vanishes if the immutability check passes. Flash **retention** across the gap is a new X4 item.
+- ε sums over *powered* time; aging (electromigration, NBTI, thermal cycling) scopes P4/P5 to the die's rated lifetime — the honest horizon of the whole theorem.
+
+**Partial cycling is live on this chip**: the user-domain rails switch mid-epoch, which is why `mgmt_protect` exists — X containment at the power-domain boundary. A B2 theorem survives user-domain cycling iff that containment is proved. (Third census macro family to receive its formal job here, after the defaults blocks and the POR.)
+
+## How this meets the ISA — which is rightly silent
+
+The ISA's two hooks suffice: its **reset section** is the power-on hook, and **prefix-closed small-step refinement** is the power-off hook — a machine that stops violates nothing. Three consequences with teeth:
+
+1. The epoch's end is `prefix · demonic-ramp-down-tail · U` (a dying UART TX can glitch a start bit), so prefix closure must hold at the **physical alphabet** with byte views derived — the constraint that forced [00](00-sys-and-obs.md)'s alphabet choice.
+2. All liveness is **bounded progress** ("if powered through cycle N, O by N") — power persistence becomes a per-claim P6 assumption, delivered free by the explicit `T` every statement already carries.
+3. Crash consistency exists **iff** flash is writable — beyond any ISA, gated by the immutability check above.
+
+## The brown-out gray band, and its resolution
+
+Sudden full loss is the easy case. The epoch model is *unsound* against a slow sag below operating minimum but above state retention, recovering without reset — corrupted state, continued execution, neither epoch end nor valid continuation. `simple_por` is an RC ramp detector and almost certainly does not cover the band. The discharge is a **supervisor** (on-board, X4-class, jellybean part): **(A)** reset-clamp BOR — assert throughout the excursion, release on hysteresis + timeout — or **(B)** forced full discharge — load switch + bleed drains the die below retention on any sag, *deleting* the gray band from the reachable states rather than guarding it.
+
+**Rail faults do not go into ε — by category.** ε's terms share one shape: *continuation despite corruption* (SEU, unresolved reads, evading droop) — the machine keeps running with traces that look valid but aren't. A rail fault is **terminal**, and termination is already free: prefix closure + the specified backstop tail make a fault death ⊑ `Sys(F)` with probability 1; adding a λ_fault·T term would pay probability for behaviour the spec can admit. (The claim is conditional correctness — *while it runs, and however it stops, the trace is in-spec* — not availability; component MTBF is a different document.) Three corner checks: the fast-collapse **garbage burst** (a short crossing the gray band faster than `t_detect`) is *energy-bounded, hence deterministic* — the tail admits "≤ t_burst of sub-symbol activity," filtered by the byte-view derivation, rate-independent; **recovering transients** that evade the BOR are exactly `P_droop`, which the supervisor *shrinks* rather than adds to; and the one real gap is the **partial-rail fault** (core dead, IO alive — level shifters float, output stages still driving): neither terminal nor bounded, engineered away by the fail-safe-IO property *in its literal datasheet sense* (pads hold safe state with the core unpowered) — already on X4's books for the tail — else it alone would genuinely need a component-FIT ε term.
+
+The apparent regress (the detector is powered by the failing supply) terminates by **range stacking + fail-safe polarity**: the analog detector's validity range strictly contains the logic's gray band, and below the detector's own floor, deasserting reset requires drive headroom that no longer exists — a passive pull holds reset asserted. The requirement is "**output monotone-safe in Vdd**," one-sided, an easier computer-assisted-proof target than the oscillator (DC maps + latency bound; M8's interval machinery). Two checkable inequalities close it: *traversal* — `t_detect + t_reset_prop < C·(V_thresh − V_fail)/I_max` with `C` the decap total (**the decaps' third formal job**) — and *hold* — reset held past state-death or POR stabilisation. Residue: async-reset assertion effective at degraded voltage (one-sided DC-drive argument, not a timing race).
+
+**Hold-up energy makes the common death graceful.** One rung above the tamed tail: a bulk capacitor plus an *upstream* power-fail warning (watching the input, before the storage — the BOR stays on the die rail as backstop) buys a bounded epilogue on stored energy: finish the symbol in flight, refuse new work, park at a quiescent state, then decay. The governing inequality `t_holdup(C, I, ΔV) ≥ t_epilogue^max` has its right-hand side **derived from L5's measure** — the refinement's own progress bound prices the capacitor (µF-scale at this design's draw; a UART byte at 9600 baud ≈ 1 ms ≈ tens of µF). Epilogue routes: warn→IRQ→firmware (drags firmware into the claim) or a **hardware quiesce** — gate issue at the next commit and drain — bounded by construction; a minor design modification of the kind the project's framing permits. The epoch end then refines once more, `warn · epilogue · quiescent-end · decay`: a *spec event*, not a truncation — B3 strengthens to "the last accepted byte is always fully emitted." Structurally this is the boundary ladder's move in the power domain: **stored energy converts an asynchronous environmental event into a bounded-latency protocol event**, price paid in board space instead of ε. Honest limit: gracefulness is conditional on the *failure mode* — upstream loss (the common case) goes graceful; a rail fault discharges the hold-up instantly, so the spec keeps a two-tier ending with the truncate-idle-decay tail as the rail-fault backstop.
+
+**Good BOR also tames the demonic ramp-down tail.** The tail's demonic-ness came from one scenario — the core executing garbage in the gray band while driving pads — and the BOR threshold sitting *above* that band deletes it: normal operation ends at BOR assertion (in the valid band, pads driven to reset defaults correctly), and below the valid band the chip is already in reset with fail-safe polarity holding. The tail refines to `(≤1 truncated symbol) · idle^k · monotone decay` — **specified, not demonic** — under two pad-side conditions: (i) reset defaults are non-hazardous (UART TX high or high-Z + board pull-up ⟹ a framing error on one byte, never a spurious start bit; check `OENB_INIT`'s actual meaning — "user bidirectional on power-up" may mean *driving*); (ii) the IO cells are **fail-safe under collapse** — a constant-input driver must not glitch as rails die, with the vccd-before-vddio level-shifter float as the known hazard — an X4-class per-cell property, plus V8 extended to the *down*-ramp rail ordering. Under architecture (B) even the decay profile is board-controlled (the bleed sets `dV/dt`). Irreducible residue: truncation timing (environmental), the analog decay (specifiable, not digital), and the fail-safe-IO property itself. The B3 payoff: *"under power loss at any point, at most one framing error and never a spurious character"* becomes provable rather than caveated.
+
+## Obligations
+
+1. The epoch-composition theorem over [00](00-sys-and-obs.md)'s alphabet: per-epoch refinement + the boundary requirements ⟹ the lifetime claim.
+2. The F-immutability check against the XIP controller (gates a whole problem class).
+3. The supervisor's two inequalities, computed from datasheet + decap numbers; the monotone-safe property as a CAP target.
+4. The `mgmt_protect` containment lemma for partial cycling (B2).
+
+## Effort
+
+The composition theorem: weeks once 00 exists. The checks: days each. The supervisor CAP proof: optional depth, L0-machinery.
