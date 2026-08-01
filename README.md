@@ -4,7 +4,7 @@
 
 A scoping study. **Not** an attempt to carry out the proof — an attempt to determine how each phase *would* be done, what it would rest on, and what is genuinely unknown. The intended output is a roadmap: paper-length per layer, book-length overall.
 
-**→ [MAIN.md](MAIN.md) is the mathematical content**: the top-level statement, the dispatch into layers, and how they compose. This file covers structure and tooling. Unfamiliar terms are in the [glossary](#glossary).
+**→ [MAIN.md](src/MAIN.md) is the mathematical content**: the top-level statement, the dispatch into layers, and how they compose. This file covers structure and tooling. Unfamiliar terms are in the [glossary](src/glossary.md).
 
 The framing throughout is **validation of an existing design**, not design of a new one. We assume the designers applied best practices that produce the error bounds needed to push the argument through; the job is to check that assumption, not to re-engineer the artifact. In practice, we may find that the original designers cut corners and so we may need to make minor modifications to get the theorem to hold. But we would like to lean on the wisdom of the elders whenever possible.
 
@@ -16,7 +16,7 @@ Caravel is an open-source SoC *harness* — fixed pad frame, management core, RA
 
 [picorv32](https://github.com/YosysHQ/picorv32) — a small hand-written RV32IMC [RISC-V](https://riscv.org) core — over the alternatives ([VexRiscv](https://github.com/SpinalHDL/VexRiscv), [Ibex](https://github.com/lowRISC/ibex)) because it is 3,044 lines and semantically tame: 19 enumerated Verilog sites needing care, and none of the categories that make Verilog semantics awful. The others are ~550 KB of machine-emitted Verilog with mangled names — tamer in some respects, hostile to authoring an invariant. All three ship in [caravel_mgmt_soc_litex](https://github.com/efabless/caravel_mgmt_soc_litex) as configuration options.
 
-The flow that produced the shipped artifacts is [OpenLane](https://github.com/The-OpenROAD-Project/OpenLane) ([Yosys](https://github.com/YosysHQ/yosys) for synthesis, [OpenROAD](https://github.com/The-OpenROAD-Project/OpenROAD) for place-and-route, [Magic](http://opencircuitdesign.com/magic/) and [netgen](http://opencircuitdesign.com/netgen/) for DRC/LVS), pinned to exact commits — see [FINDINGS](FINDINGS.md#toolchain-provenance).
+The flow that produced the shipped artifacts is [OpenLane](https://github.com/The-OpenROAD-Project/OpenLane) ([Yosys](https://github.com/YosysHQ/yosys) for synthesis, [OpenROAD](https://github.com/The-OpenROAD-Project/OpenROAD) for place-and-route, [Magic](http://opencircuitdesign.com/magic/) and [netgen](http://opencircuitdesign.com/netgen/) for DRC/LVS), pinned to exact commits — see [FINDINGS](src/FINDINGS.md#toolchain-provenance).
 
 **Alternative worth keeping live: [iCE40](https://github.com/YosysHQ/icestorm) FPGA ([iCEBreaker](https://github.com/icebreaker-fpga/icebreaker)) running [picosoc](https://github.com/YosysHQ/picorv32/tree/main/picosoc)** — the reference SoC bundled with picorv32: the same core plus an SPI-flash execute-in-place controller, a UART and block RAM, and small enough to fit the fabric. Deletes L1 entirely — no extraction, DRC, OPC or litho model, because the vendor ran the geometric stack once and the result is a finite, *empirically testable* arc table. Weaker claim (someone else's silicon, plus an opaque configuration engine), much shorter axiom list, and a complete chain that could actually be finished.
 
@@ -24,26 +24,26 @@ The flow that produced the shipped artifacts is [OpenLane](https://github.com/Th
 
 | | |
 |---|---|
-| **[MAIN.md](MAIN.md)** | the statement, the dispatch, how the layers compose |
-| [AXIOMS.md](AXIOMS.md) | what the result would rest on — plus M1–M8, the open mathematics, kept separate |
-| [FINDINGS.md](FINDINGS.md) | every number measured off the real artifacts, with provenance |
-| [BIBLIOGRAPHY.md](BIBLIOGRAPHY.md) | one reference list; author mentions in the text link to per-entry anchors |
-| [data/README.md](data/README.md) | what gets fetched, from which pinned commits |
+| **[MAIN.md](src/MAIN.md)** | the statement, the dispatch, how the layers compose |
+| [AXIOMS.md](src/AXIOMS.md) | what the result would rest on — plus M1–M8, the open mathematics, kept separate |
+| [FINDINGS.md](src/FINDINGS.md) | every number measured off the real artifacts, with provenance |
+| [BIBLIOGRAPHY.md](src/BIBLIOGRAPHY.md) | one reference list; author mentions in the text link to per-entry anchors |
+| [src/data-provenance.md](src/data-provenance.md) | what gets fetched, from which pinned commits |
 
 Layers, bottom-up:
 
 | | | effort |
 |---|---|---|
-| **L0** [device physics](L0-device-physics/) | transistor network ⟹ Boolean function; the error model | 2–4 yr |
-| **L1** [geometry](L1-geometry/) | GDS ⟹ netlist + RC enclosures; DRC as theorem hypotheses | 4–6 yr |
-| **L2** [timing](L2-timing/) | timing closure ⟹ the synchronous abstraction is sound | 2–3 yr |
-| **L3** [netlist equivalence](L3-netlist-equivalence/) | shipped netlist ≡ RTL, by certificate not search | 1–2 yr |
-| **L4** [RTL semantics](L4-rtl-semantics/) | the synthesisable subset this design actually uses | 1 yr |
-| **L5** [microarchitecture](L5-microarchitecture/) | RTL refines the ISA — the irreducible content | 3–5 yr |
-| **L6** [ISA](L6-isa/) | what the specification *is*, including the parts that don't exist | 1–2 yr |
-| **L7** [system](L7-system/) | `Sys(F)` and `obs` — the pad-trace spec the top statement quantifies over | 1 yr |
+| **L0** [device physics](src/L0-device-physics/README.md) | transistor network ⟹ Boolean function; the error model | 2–4 yr |
+| **L1** [geometry](src/L1-geometry/README.md) | GDS ⟹ netlist + RC enclosures; DRC as theorem hypotheses | 4–6 yr |
+| **L2** [timing](src/L2-timing/README.md) | timing closure ⟹ the synchronous abstraction is sound | 2–3 yr |
+| **L3** [netlist equivalence](src/L3-netlist-equivalence/README.md) | shipped netlist ≡ RTL, by certificate not search | 1–2 yr |
+| **L4** [RTL semantics](src/L4-rtl-semantics/README.md) | the synthesisable subset this design actually uses | 1 yr |
+| **L5** [microarchitecture](src/L5-microarchitecture/README.md) | RTL refines the ISA — the irreducible content | 3–5 yr |
+| **L6** [ISA](src/L6-isa/README.md) | what the specification *is*, including the parts that don't exist | 1–2 yr |
+| **L7** [system](src/L7-system/README.md) | `Sys(F)` and `obs` — the pad-trace spec the top statement quantifies over | 1 yr |
 
-Effort figures are for one competent person and are guesses. All eight layers are decomposed into numbered subcomponent files, one per major proof obligation. Each layer README opens with a **spec block** — spec below, spec above, theorem or definition — keyed to [MAIN's spec tower](MAIN.md#the-spec-tower).
+Effort figures are for one competent person and are guesses. All eight layers are decomposed into numbered subcomponent files, one per major proof obligation. Each layer README opens with a **spec block** — spec below, spec above, theorem or definition — keyed to [MAIN's spec tower](src/MAIN.md#the-spec-tower).
 
 ## Tooling
 
@@ -84,7 +84,7 @@ Pure-Python GDSII record parsers — the format is simple enough that a dependen
 tools/build-book.sh          # needs mdbook; renders to book/index.html
 ```
 
-The repository renders as an [mdBook](https://rust-lang.github.io/mdBook/), with [SUMMARY.md](SUMMARY.md) as the table of contents. The script stages the git-tracked markdown into `book-src/` first — pointing mdBook at the repo root would copy the ~490 MB `data/` tree into the output — and checks that every staged chapter appears in SUMMARY (mdBook rewrites `.md` links to `.html` unconditionally, so an unlisted file would 404). [A GitHub Actions workflow](.github/workflows/book.yml) builds and deploys to GitHub Pages on every push to `master`; enable Pages with source "GitHub Actions" in the repository settings once a remote exists.
+The book's sources live in [`src/`](src/MAIN.md) (the conventional mdBook layout), with [SUMMARY.md](src/SUMMARY.md) as the table of contents and **MAIN as the front page** — this README stays at the root as the GitHub landing page and is not a chapter. The script checks SUMMARY and the chapter set agree in both directions (mdBook rewrites `.md` links to `.html` unconditionally, so a present-but-unlisted file would 404), builds, and copies `tools/` into the output so the raw-file links above resolve on Pages; `data/` stays outside `src/` because mdBook copies everything under its source directory into the output. [A GitHub Actions workflow](.github/workflows/book.yml) builds and deploys to GitHub Pages on every push to `master`; enable Pages with source "GitHub Actions" in the repository settings once a remote exists.
 
 ## Where to start work
 
@@ -96,67 +96,8 @@ Three cheap, high-information experiments. Each is weeks rather than years, and 
 
 3. **Confront the signoff report** (L2). Three of nine corners fail `in2reg` hold; one passes only modulo `max_tran`/`max_cap`. The bridge theorem's hypotheses are *not currently established* for this design as shipped, and determining whether the failures are all covered by justified exceptions is concrete and bounded.
 
-Within L0 and L1 specifically, the cheapest substantial entries are [L1/01](L1-geometry/01-topology-preservation.md) (the sandwich theorem — self-contained computational geometry, no analysis) and [L1/05](L1-geometry/05-geometric-checks.md) (G1–G6, near-linear checks gated only on extraction).
+Within L0 and L1 specifically, the cheapest substantial entries are [L1/01](src/L1-geometry/01-topology-preservation.md) (the sandwich theorem — self-contained computational geometry, no analysis) and [L1/05](src/L1-geometry/05-geometric-checks.md) (G1–G6, near-linear checks gated only on extraction).
 
-## Glossary
-
-The flow's jargon, in the order a design passes through it. Terms are used throughout the layer documents without re-explanation.
-
-**Design description**
-
-| | |
-|---|---|
-| **RTL** | Register Transfer Level — the behavioural Verilog a human writes (`always` blocks, buses, arithmetic) |
-| **netlist** | the same design as a flat graph of library cells and wires, after synthesis. Also "gate-level" |
-| **ISA** | Instruction Set Architecture — the programmer-visible contract the whole project is proving the chip meets |
-| **SoC** | System on Chip — core plus memory and peripherals on one die |
-
-**The cell library and process**
-
-| | |
-|---|---|
-| **PDK** | Process Design Kit — everything the foundry supplies about a process: cell layouts, timing, DRC rules, device models |
-| **standard cell** | a pre-drawn logic gate (inverter, NAND, flip-flop) of fixed height, ~400 of them; designs are assembled from these |
-| **Liberty** (`.lib`) | per-cell timing/power tables — delay as a 2-D function of input slew and output load, one file per PVT corner |
-| **BSIM** | the fitted compact model giving a transistor's current from its terminal voltages. The project's one physical axiom (E1) |
-| **PVT corner** | a (process, voltage, temperature) extreme the design must work at; SKY130 HD ships 17 |
-
-**Physical implementation**
-
-| | |
-|---|---|
-| **pad / IO cell** | the chip's physical interface: the *bond pad* is a bare metal square (~60 µm) on the die perimeter that a bond wire attaches to; the *IO cell* behind it is a large circuit doing level shifting (1.8 V core ↔ 3.3 V world), ESD protection, drive-strength output staging, input buffering, and direction control. In Caravel these are `sky130_fd_io` macros — at 60–77k polygons each, individually bigger than most logic blocks. `obs` is defined at the pad metal: the last point that is still "the chip" |
-| **P&R** | Place and Route — choosing where each cell sits and how wires connect them |
-| **LEF / DEF** | the abstract views P&R works in: cell outlines and pin locations (LEF), placements and routes (DEF) |
-| **GDS / GDSII** | the layout interchange format — layer-tagged polygons; what goes to the mask shop |
-| **CTS** | Clock Tree Synthesis — building the buffer tree that distributes the clock |
-| **OPC** | Optical Proximity Correction — deliberately distorting the mask so the *printed* shape matches intent |
-| **fill / decap / tap / antenna diode** | non-logic cells inserted for density, supply stability, well biasing and process protection. **~85% of instances** |
-
-**Checks**
-
-| | |
-|---|---|
-| **DRC** | Design Rule Check — geometric rules (min width, min spacing, enclosure) the layout must satisfy |
-| **LVS** | Layout Versus Schematic — extract a netlist from the geometry and check it matches the intended one |
-| **STA** | Static Timing Analysis — exhaustive longest/shortest-path delay analysis; no simulation |
-| **setup / hold** | the two timing constraints. Setup is a *performance* limit (fixable by slowing the clock); **hold is a correctness limit, unfixable at any frequency** |
-| **SDC** | the timing-constraint file. Also carries *exceptions* — human claims that a path need not be checked, which no tool verifies |
-| **CEC** | Combinational Equivalence Check — proving two netlists compute the same function |
-
-**Physics and reliability**
-
-| | |
-|---|---|
-| **SEU** | Single Event Upset — a particle strike flipping a stored bit. Poisson, does not shrink with margin |
-| **metastability** | a flip-flop sampled mid-transition settles after an unbounded time; the one failure that breaks the digital abstraction rather than giving a wrong value |
-| **X** | the third logical value: *untracked* — the wire is somewhere in the electrically safe region but the abstraction has lost its value (settled-but-unpredicted, mid-swing, saddle, unpowered). Drive-recoverable, which is what distinguishes untracked from broken; reset is an X-elimination procedure |
-| **ECC** | Error Correcting Code — redundancy that repairs upsets, at the cost of a layout-level independence assumption |
-| **latch-up** | a parasitic thyristor turning on — a *second solution branch* of the device equations, which tap cells exist to destroy |
-| **electromigration** | current gradually voiding a wire; a wearout criterion over a trajectory, not a state |
-| **POR** | Power-On Reset — the circuit that holds the chip in reset from power-good until the supply is stable, supplying each power epoch's initial state. Caravel's (`simple_por`) is an RC ramp detector: it catches rise-from-zero, not sags |
-| **BOR** | Brown-Out Reset — a supervisor that asserts reset whenever the supply *sags* below operating minimum, closing the gray band between "logic misbehaves" and "state is lost" that a ramp-only POR leaves open. Fail-safe by construction: below its own validity range, reset is the passive default |
-| **MCU** | microcontroller — a commodity single-chip computer (STM32, AVR). Cited here as precedent: every MCU ships a BOR, so the gray-band fix is a solved industrial problem, not a research item |
 
 ## Conventions
 

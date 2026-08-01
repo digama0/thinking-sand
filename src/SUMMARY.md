@@ -1,8 +1,6 @@
 # Summary
 
-[hwverif — structure and tooling](README.md)
-
-- [MAIN — the mathematical content](MAIN.md)
+[MAIN — the mathematical content](MAIN.md)
 
 ---
 
@@ -68,7 +66,8 @@
 
 ---
 
+[Appendix: Glossary](glossary.md)
 [Appendix: AXIOMS — the register](AXIOMS.md)
 [Appendix: FINDINGS — measured data](FINDINGS.md)
 [Appendix: BIBLIOGRAPHY](BIBLIOGRAPHY.md)
-[Appendix: Data provenance](data/README.md)
+[Appendix: Data provenance](data-provenance.md)

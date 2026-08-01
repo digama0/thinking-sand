@@ -87,4 +87,4 @@ case "${1:-all}" in
 esac
 
 echo
-echo "data/ is $(du -sh data 2>/dev/null | cut -f1); see data/README.md"
+echo "data/ is $(du -sh data 2>/dev/null | cut -f1); see src/data-provenance.md"

@@ -2,9 +2,7 @@
 title = "hwverif — How to verify a computer down to physics"
 authors = ["Mario Carneiro"]
 language = "en"
-# Sources are STAGED into book-src/ by tools/build-book.sh (git-tracked *.md + tools/),
-# because src = "." would make mdBook copy the ~490 MB data/ tree into the output.
-src = "book-src"
+src = "src"
 
 [build]
 build-dir = "book"

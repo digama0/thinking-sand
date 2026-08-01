@@ -1,6 +1,6 @@
 # MAIN — the mathematical content
 
-The statement the project is trying to establish, and how it dispatches into layers. [README](README.md) covers project structure and tooling, and carries a [glossary](README.md#glossary) of the flow's jargon; this file covers what is actually being proved.
+The statement the project is trying to establish, and how it dispatches into layers. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md). This file covers what is actually being proved.
 
 ## The top-level statement
 
