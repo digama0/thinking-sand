@@ -56,16 +56,18 @@ Each layer's named obligations. This is the proof skeleton; the layer documents 
 
 Five layers are **theorems**, three are **definitions** — marked, because a definition line in the chain below is an object being supplied, not a claim being proved. (The tables here run bottom-up, L0→L7, following the composition; the book's chapters run top-down, L7→L0, because the material gets progressively crunchier as you descend — start wherever suits.)
 
-| layer | kind | establishes / supplies | named obligations |
-|---|---|---|---|
-| **[L0](L0-device-physics/)** | theorem | `Field(d) ⊑ Contracts(N)`; the error model is Poisson | **M3** lumping/composition · **M7** regime decomposition (I)(P)(A) · **M1** device uniqueness · CCC cut discipline · **M8** metastable eigenvalue |
-| **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 |
-| **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification |
-| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) |
-| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | 19 enumerated Verilog sites |
-| **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point |
-| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices |
-| **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) |
+| layer | kind | establishes / supplies | named obligations | effort |
+|---|---|---|---|---|
+| **[L0](L0-device-physics/)** | theorem | `Field(d) ⊑ Contracts(N)`; the error model is Poisson | **M3** lumping/composition · **M7** regime decomposition (I)(P)(A) · **M1** device uniqueness · CCC cut discipline · **M8** metastable eigenvalue | 2–5 yr |
+| **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 | 4–6 yr |
+| **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification | 2–3 yr |
+| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 1–2 yr |
+| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | 19 enumerated Verilog sites | ~1 yr |
+| **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 3–5 yr |
+| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices | 1–2 yr |
+| **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~1 yr |
+
+**The effort accounting.** Figures are for one competent person; the naive sequential sum is **15–25 person-years**, before sharing and before the FPGA alternative (which deletes L1). Layer totals exceed the sum of their subcomponents' figures by roughly 2× throughout: the subcomponent estimates are *marginal* costs assuming the layer's shared machinery exists — harnesses, automation, formal libraries — and the totals include building it. L5 states this split explicitly; it holds everywhere.
 
 Note one deliberate inversion: L3's theorem *consumes* L4's object, so proof order is not layer order. The numbering is by artifact altitude — netlist below RTL — not by logical dependency.
 

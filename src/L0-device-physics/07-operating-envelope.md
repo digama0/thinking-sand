@@ -128,6 +128,10 @@ Without it, [05](05-digital-abstraction.md)'s claims are false as stated, becaus
 - Confirm the design's operating voltage sits comfortably below the process's avalanche rating, and record the margin.
 - Check whether any net violating `max_transition` (F2) is in a high-activity region, where the crowbar-current consequence would actually matter.
 
+## Effort
+
+The structural checks: days each (V1 shared with L3). The mollified-constraint formalisation: weeks.
+
 ## Reading
 
 [Sze & Ng](../BIBLIOGRAPHY.md#sze-ng-2007), *Physics of Semiconductor Devices* — avalanche breakdown, the ionisation-integral criterion, and [Chynoweth](../BIBLIOGRAPHY.md#chynoweth-1958)'s `α(E) = A·exp(−B/E)`; also second breakdown. [Troutman](../BIBLIOGRAPHY.md#troutman-1986), *Latchup in CMOS Technology: The Problem and Its Cure* (1986) — the standard monograph on the thyristor structure and the role of taps and guard rings. [Black](../BIBLIOGRAPHY.md#black-1969) (1969) for the electromigration law behind V6. Note that these are normally presented as reliability engineering, and the reframing as side conditions of well-posedness is this project's angle rather than the field's.

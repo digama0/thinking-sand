@@ -55,6 +55,10 @@ This is worth stating as a general pattern: **several DRC rules are secretly the
 - Take `inv_1`: extract its transistor netlist (`magic`/`netgen`), attach an interval-valued device model, and derive the terminal enclosure. This is the unit that gets multiplied by 400 — measuring it decides whether L0 is two years or five.
 - Check how coarse the device enclosure can be while still yielding positive noise margin. If the margin is large (it should be, at 1.8 V), E1's precision requirement is weak, which materially reduces what must be assumed.
 
+## Effort
+
+The `inv_1` experiment: days — and it prices the whole layer (see [03](03-cell-enclosures.md)). The switch-level formalisation (route C): months.
+
 ## Reading
 
 [Markowich](../BIBLIOGRAPHY.md#markowich-1986), *The Stationary Semiconductor Device Equations*. [Bryant](../BIBLIOGRAPHY.md#bryant-1984), "A switch-level model and simulator for MOS digital systems" (IEEE Trans. Computers 1984) — the MOSSIM II model: strengths, charge sharing, and the ternary algebra. [Melham](../BIBLIOGRAPHY.md#melham-1993), *Higher Order Logic and Hardware Verification* (1993) — transistor-level CMOS in HOL, the closest existing formalisation of Route C. The [BSIM4 technical manual](../BIBLIOGRAPHY.md#bsim4-manual) (Berkeley) for what E1 actually asserts — the SKY130 PDK models are BSIM4, evaluated under ngspice; [Gildenblat et al.](../BIBLIOGRAPHY.md#gildenblat-2006) for PSP, the surface-potential alternative. [de Figueiredo & Stolfi](../BIBLIOGRAPHY.md#de-figueiredo-stolfi-2004) on affine arithmetic; [Makino & Berz](../BIBLIOGRAPHY.md#makino-berz-2003) on Taylor models.

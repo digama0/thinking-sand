@@ -105,6 +105,10 @@ Note this needs only a *coarse* device model: you need the regimes to be separat
 - Attempt a barrier certificate for that inverter (SOS programming is the standard route).
 - Check whether the Lyapunov time bound and the Liberty delay agree in order of magnitude.
 
+## Effort
+
+The single-inverter (I)/(P)/(A) instance: weeks. The driven-steady-state Lyapunov adaptation (M7) is the open-ended piece.
+
 ## Reading
 
 [Gajewski & Gröger](../BIBLIOGRAPHY.md#gajewski-groger-1986) on existence and asymptotics for van Roosbroeck, and the free-energy functional. [Prajna & Jadbabaie](../BIBLIOGRAPHY.md#prajna-jadbabaie-2004) on barrier certificates; [Parrilo](../BIBLIOGRAPHY.md#parrilo-2003) on SOS relaxations; [Harrison](../BIBLIOGRAPHY.md#harrison-2007) and [Martin-Dorel & Roux](../BIBLIOGRAPHY.md#martin-dorel-roux-2017) (ValidSDP) for prover-checked certificates. [Blanchini](../BIBLIOGRAPHY.md#blanchini-1999) on set invariance in control; [Lohmiller & Slotine](../BIBLIOGRAPHY.md#lohmiller-slotine-1998) for contraction. [Marino](../BIBLIOGRAPHY.md#marino-1981), "General theory of metastable operation" (IEEE Trans. Computers 1981) — the unavoidability theorem; [Kinniment](../BIBLIOGRAPHY.md#kinniment-2007), *Synchronization and Arbitration in Digital Systems*, for the engineering side. Standard hybrid-systems abstraction literature for the (I)/(P)/(A) pattern — this is a well-worn shape, just not usually applied this far down.

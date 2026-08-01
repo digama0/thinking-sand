@@ -40,7 +40,7 @@ Layers, bottom-up:
 
 | | | effort |
 |---|---|---|
-| **L0** [device physics](src/L0-device-physics/README.md) | transistor network ⟹ Boolean function; the error model | 2–4 yr |
+| **L0** [device physics](src/L0-device-physics/README.md) | transistor network ⟹ Boolean function; the error model | 2–5 yr |
 | **L1** [geometry](src/L1-geometry/README.md) | GDS ⟹ netlist + RC enclosures; DRC as theorem hypotheses | 4–6 yr |
 | **L2** [timing](src/L2-timing/README.md) | timing closure ⟹ the synchronous abstraction is sound | 2–3 yr |
 | **L3** [netlist equivalence](src/L3-netlist-equivalence/README.md) | shipped netlist ≡ RTL, by certificate not search | 1–2 yr |

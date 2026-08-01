@@ -44,6 +44,10 @@ Settled physics, standard asymptotic analysis, entirely unformalised in this con
 - Compute `L/λ` for the actual design: die size, longest net, clock frequency, `ε_r`. Confirm the separation is as comfortable as it appears, and record it as a checked side condition rather than folklore.
 - Estimate the inductive contribution on the longest global net and the clock spine, to justify dropping MQS.
 
+## Effort
+
+Weeks for the statement; M6's explicit constant is the open-ended part.
+
 ## Reading
 
 [Haus & Melcher](../BIBLIOGRAPHY.md#haus-melcher-1989), *Electromagnetic Fields and Energy* — the standard careful treatment of the EQS/MQS split. [Ammari, Buffa & Nédélec](../BIBLIOGRAPHY.md#ammari-buffa-nedelec-2000), "A justification of eddy currents model for the Maxwell equations" (SIAM J. Appl. Math. 2000). [Raviart & Sonnendrücker](../BIBLIOGRAPHY.md#raviart-sonnendrucker-1996) on the Darwin model. [Alonso Rodríguez & Valli](../BIBLIOGRAPHY.md#alonso-rodriguez-valli-2010), *Eddy Current Approximation of Maxwell Equations* — book-length treatment of the MQS side. [Ruehli](../BIBLIOGRAPHY.md#ruehli-1974) on PEEC / partial inductance; [Kamon–Tsuk–White](../BIBLIOGRAPHY.md#kamon-tsuk-white-1994) ([FastHenry](../BIBLIOGRAPHY.md#kamon-tsuk-white-1994)) for what inductance extraction actually computes. Any asymptotic-analysis text for the regular perturbation structure.

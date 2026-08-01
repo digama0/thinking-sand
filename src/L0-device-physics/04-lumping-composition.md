@@ -71,6 +71,10 @@ And three quantities thread through every component without factoring through pi
 - Test monotonicity empirically across the shipped Liberty library: for all cells, all arcs, all corners, check monotonicity in each argument. We found violations in `inv_1`; a survey would show whether they are rare pathologies or systematic. **Cheap, mechanical, and directly informs how much of corner methodology is sound.**
 - Build a small end-to-end instance: two inverters and a wire, field solve vs lumped model, and check the lumped enclosure actually contains the field solution.
 
+## Effort
+
+Months for the statement and the monotonicity survey; as the other dominant item (with [03](03-cell-enclosures.md)), its depth sets the layer total.
+
 ## Reading
 
 [Haus & Melcher](../BIBLIOGRAPHY.md#haus-melcher-1989) for the field-to-circuit derivation of Kirchhoff. [Bossavit](../BIBLIOGRAPHY.md#bossavit-1998), *Computational Electromagnetism* — Whitney forms and network models as discrete Maxwell; [Tonti](../BIBLIOGRAPHY.md#tonti-2013) on the classification diagrams behind it. [Bryant](../BIBLIOGRAPHY.md#bryant-1984) (1984) for channel-connected components. [Benveniste et al.](../BIBLIOGRAPHY.md#benveniste-2018), *Contracts for System Design* (Foundations and Trends in EDA, 2018) — the assume-guarantee formalism the per-component contracts instantiate. [Jiang–Teel–Praly](../BIBLIOGRAPHY.md#jiang-teel-praly-1994) and [Dashkovskiy–Rüffer–Wirth](../BIBLIOGRAPHY.md#dashkovskiy-ruffer-wirth-2007) on ISS small-gain; [Lohmiller & Slotine](../BIBLIOGRAPHY.md#lohmiller-slotine-1998), "On contraction analysis for non-linear systems" (Automatica 1998). [de Figueiredo & Stolfi](../BIBLIOGRAPHY.md#de-figueiredo-stolfi-2004) (affine arithmetic), [Makino & Berz](../BIBLIOGRAPHY.md#makino-berz-2003) (Taylor models), [Girard](../BIBLIOGRAPHY.md#girard-2005) and [Althoff](../BIBLIOGRAPHY.md#althoff-cora-2015) (zonotopes, [CORA](../BIBLIOGRAPHY.md#althoff-cora-2015)) for the dependency problem. Note that circuit-theory texts almost universally *start* from Kirchhoff, so the derivation direction needed here is unusual.

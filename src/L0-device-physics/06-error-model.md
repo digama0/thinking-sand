@@ -98,6 +98,10 @@ The netlist cannot see geometry. The code's algebra cannot see particles. **The 
 - Check whether the shipped design has ECC at all (`RAM128`), and if not, what the raw FIT budget is and whether it matters for the claim being made.
 - Enumerate every asynchronous input and CDC in the design — this list *is* P1's scope, and L2 needs it anyway.
 
+## Effort
+
+Weeks for the formal model; the probabilistic reasoning layer it needs is machinery no other layer requires.
+
 ## Reading
 
 [von Neumann](../BIBLIOGRAPHY.md#von-neumann-1956) (1956). [Hamming (1950)](../BIBLIOGRAPHY.md#hamming-1950) for the code. [Mukherjee et al.](../BIBLIOGRAPHY.md#mukherjee-2003) (MICRO 2003) on architectural vulnerability factor. [JEDEC JESD89A](../BIBLIOGRAPHY.md#jesd89a) for the standard terrestrial flux reference. [Ibe et al.](../BIBLIOGRAPHY.md#ibe-2010) on multi-cell upset scaling — the empirical content behind X2. [PRISM](../BIBLIOGRAPHY.md#prism-2011) / [Storm](../BIBLIOGRAPHY.md#storm-2017) for the renewal-model computation; [Hölzl](../BIBLIOGRAPHY.md#holzl-2017)'s Isabelle Markov chains for the in-prover version. [Demir, Mehrotra & Roychowdhury](../BIBLIOGRAPHY.md#demir-mehrotra-roychowdhury-2000), "Phase noise in oscillators: a unifying theory" (IEEE TCAS-I 2000) — the phase-diffusion structure behind the jitter exception.

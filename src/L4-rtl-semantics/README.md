@@ -42,7 +42,7 @@ Everything here is the admissible-subset move plus its receipts. [01](01-subset.
 
 ## Effort
 
-~1 year. The smallest layer, and unusually well-bounded because the scope was measured rather than assumed.
+~1 year. The smallest layer, and unusually well-bounded because the scope was measured rather than assumed. The gap between this figure and the subcomponents' sum (~2–3 months) is the shared machinery: the elaborator front end, the mechanised semantics itself, and the differential harness — built once, consumed by every file.
 
 ## Reading
 

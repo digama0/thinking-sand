@@ -60,6 +60,10 @@ The difference is that inside a cell the problem is coupled to nonlinear boundar
 - Measure the cost. This is the unit multiplied by 400 × 17 corners, and it decides whether L0 is two years or five.
 - Check whether the enclosure width is dominated by the device model, the parasitics, or the integration — that tells you where to spend effort.
 
+## Effort
+
+The dominant item of L0: the per-cell unit × ~400 cells × 17 corners. Its first experiment prices it, and the answer is the layer's two-to-five-year swing.
+
 ## Reading
 
 [Rump](../BIBLIOGRAPHY.md#rump-1999)'s INTLAB and the validated-numerics literature. [CAPD](../BIBLIOGRAPHY.md#capd-2021) / [VNODE-LP](../BIBLIOGRAPHY.md#nedialkov-2006) ([Nedialkov](../BIBLIOGRAPHY.md#nedialkov-2006)) for validated ODE integration; [Nedialkov & Pryce](../BIBLIOGRAPHY.md#nedialkov-pryce-2005) ([DAETS](../BIBLIOGRAPHY.md#nedialkov-pryce-2005)) and [Pryce](../BIBLIOGRAPHY.md#pryce-2001)'s Σ-method for the DAE structural side; [Estévez Schwarz & Tischendorf](../BIBLIOGRAPHY.md#estevez-schwarz-tischendorf-2000) for the MNA index results. [Greenstreet & Mitchell](../BIBLIOGRAPHY.md#greenstreet-mitchell-1999), [Dang–Donzé–Maler](../BIBLIOGRAPHY.md#dang-donze-maler-2004), [Althoff & Krogh](../BIBLIOGRAPHY.md#althoff-krogh-2014), and the [Zaki et al.](../BIBLIOGRAPHY.md#zaki-tahar-bois-2008) survey for formal analog verification; [CORA](../BIBLIOGRAPHY.md#althoff-cora-2015) / [Flow*](../BIBLIOGRAPHY.md#flowstar-2013) / [JuliaReach](../BIBLIOGRAPHY.md#juliareach-2019) for current reachability tooling. [Liberty format documentation](../BIBLIOGRAPHY.md#liberty-format) for exactly what the shipped tables assert.
