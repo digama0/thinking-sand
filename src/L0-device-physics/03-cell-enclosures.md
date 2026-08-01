@@ -1,5 +1,15 @@
 # L0/03 — Per-cell field bounds and terminal behaviour
 
+## Background
+
+This chapter is where the physics gets *computed*, so it needs two pieces of context: what the computation is, and what discipline makes a computation trustworthy inside a proof.
+
+The computation. A standard cell — an inverter, a NAND gate — is a handful of transistors plus a little internal wiring, and simulating its behaviour means solving a small system of **differential equations**: each node's voltage changes at a rate set by the currents flowing onto it, currents given by the device model. (Strictly a **DAE** — differential-*algebraic* equations, the flavour where some equations are instantaneous constraints rather than rates; circuit equations always come out this way, and it changes which solvers apply.) Industry does this with **SPICE**, the venerable analog simulator: give it the transistor netlist, it integrates the equations numerically and reports waveforms. The foundry has already done exactly this, thousands of times, to produce the **Liberty file** that L2 consumes — each cell's delay and output slew simulated across a grid of (input slew, output load) pairs and tabulated. So the object this chapter must produce is not novel in *shape* at all: it is the Liberty table again. What changes is the epistemic status of the numbers.
+
+The discipline is **validated numerics** (interval computation). An ordinary numerical solver returns a number that is *close to* the answer, with error estimated by heuristics; a validated solver returns an *interval* together with a proof that the true solution lies inside it, by doing all arithmetic on intervals with outward rounding and bounding every truncation term. This costs looseness — the intervals are wider than the likely error — but yields statements a proof assistant can consume. Validated integration of small ODE/DAE systems is a mature specialty (the chapter's reading list names the standard tools), and a logic gate's equation system is small; the genuinely new thing here is only scale and interface — running the machinery over a whole cell library, against an *interval-valued* device model, with a Liberty-shaped table of certified bounds as output.
+
+What makes this chapter the layer's centre of gravity is **amortisation**. Everything on the die is one of ~400 library cells; a cell verified once is verified for every one of its hundred thousand instances, and for every other design ever fabricated on this process. The unit of work — one cell, one corner, end to end — is measurable in days, and the first experiment below is precisely to measure it, because unit × 400 cells × 17 corners is the number that decides where in its estimated range the whole layer lands.
+
 ## Statement
 
 For each of the ~400 standard cells, bound the terminal behaviour over the operating range:

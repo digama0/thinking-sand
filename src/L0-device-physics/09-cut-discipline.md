@@ -1,5 +1,13 @@
 # L0/09 — The cut discipline
 
+## Background
+
+Lumping ([04](04-lumping-composition.md)) cuts the die into components and composes their contracts — but *where* may one legally cut? The answer lives in the transistor-level structure of a CMOS cell, and turns on the MOSFET's fundamental asymmetry: the **gate** terminal is (almost) purely an input — it controls the channel through a capacitor, drawing no steady current and pushing (almost) nothing back — while the **source and drain** are the channel's two ends, through which current flows *bidirectionally*, with no inherent notion of which side drives which. A signal path through gates is one-way; a path through source/drain terminals is a two-way electrical continuum.
+
+This asymmetry induces a canonical decomposition of any transistor network, due to Bryant: partition the circuit's nodes by connectivity through source/drain terminals only, and call each part a **channel-connected component** (CCC). Within a CCC, everything is bidirectionally coupled — charge can slosh both ways, nodes can fight, and analysis must treat the component as one analog lump (this is where **charge sharing** lives: a driven node connected through a pass transistor to an undriven one redistributes its charge, possibly corrupting both). *Between* CCCs, all influence flows through gate terminals — unidirectional and restoring. So CCC boundaries are exactly the places where cutting is sound: a contract stated at a gate input composes forward without any fixed-point argument about mutual feedback, because there is none.
+
+The chapter's other two obligations are also best previewed in circuit terms. **PUN/PDN duality**: a static CMOS gate is built as two complementary switch networks — a pull-up network of PMOS transistors to the high rail and a pull-down network of NMOS to ground — designed as logical duals (series in one ↔ parallel in the other), so that for every input exactly one network conducts: output always driven, rails never shorted. That "exactly one" is a checkable graph property of the cell's transistor network, and it is the within-cell half of the no-contention condition V1. And the **bistable containment** condition: a storage element is electrically a feedback loop (two inverters tail-to-head), and the discipline requires every such loop to live *inside* one declared sequential cell — a feedback loop straddling a cut boundary would be a latch the composition never modelled, exactly the kind of surprise the cut discipline exists to exclude.
+
 ## Statement
 
 The per-cell transistor-level combinatorics that license [04](04-lumping-composition.md)'s composition: **where may the network be cut, and why is every bistable inside a component rather than spanning components?**
