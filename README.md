@@ -109,6 +109,7 @@ Within L0 and L1 specifically, the cheapest substantial entries are [L1/01](src/
 
 - Each layer directory has a `README.md` with the same sections: statement, interfaces, axioms introduced, established, open problems, first experiments, effort, reading.
 - Layers decompose into numbered subcomponents (`00-…md`, `01-…md`), one per major proof obligation, indexed from the layer README.
+- Every subcomponent opens with a **Background** section explaining, for a reader from outside the chapter's field, the concepts and techniques it uses. The book's required expertise intersection is empty; the Backgrounds are what make it readable anyway.
 - Prose is **unwrapped** — one source line per paragraph. (The reflow tool that enforced this was retired; keep the convention by hand.)
 - Numbers taken from real artifacts are marked as such in FINDINGS and should be re-derived rather than trusted when they matter.
 - Author citations link into BIBLIOGRAPHY by anchor.

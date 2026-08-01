@@ -52,6 +52,8 @@ Everything merely hard collapses to time. What survives is what is *not* a theor
 
 **Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [AXIOMS](AXIOMS.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
 
+**Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every numbered sub-chapter opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch. Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
+
 ## The dispatch
 
 Each layer's named obligations. This is the proof skeleton; the layer documents are the expansions.
