@@ -19,6 +19,8 @@ Let `d` be a fabricated die, `F` a flash image, `E` an environment (supply, cloc
             +  P_droop            supply excursions        (P6)
 ```
 
+(Symbols: `λ` is the particle flux and `A` the die area; **AVF**, the architectural vulnerability factor, is the fraction of raw bit-flips that matter architecturally; `N_sync` counts the synchroniser boundaries where the design meets unclocked inputs. All three ε-terms are derived, not decorative — each has its own chapter.)
+
 Three features of this statement are deliberate and worth defending.
 
 **It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](BIBLIOGRAPHY.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
@@ -35,7 +37,7 @@ The named objects at the seams. Every layer README opens with which of these it 
 |---|---|---|
 | `Field(A)` | trajectory space of the transient field problem on fabricated geometry `A` | [L0/00](L0-device-physics/00-field-problem.md) (definition) |
 | `Contracts(N)` | netlist `N` with each cell carrying its timed assume-guarantee contract (interval Liberty arc + regime classes + noise margin) and each net its RC enclosure | [L0/03–05](L0-device-physics/03-cell-enclosures.md) + [L1/03](L1-geometry/03-capacitance-enclosures.md) |
-| `Mealy(N)` | the discrete Mealy machine over BitVec induced by the cells' Boolean functions | *derived* — formerly axiom S1; falls out of L0/05's (A) + M5 |
+| `Mealy(N)` | the discrete machine induced by the cells' Boolean functions — a *Mealy machine* is a clocked finite-state machine over bitvectors, outputs computed from state and current input | *derived* — formerly axiom S1; falls out of L0/05's (A) + M5 |
 | `⟦RTL⟧` | word-level transition system of the source text | [L4](L4-rtl-semantics/README.md) (definition) |
 | `ISA` | `Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices` | [L6](L6-isa/README.md) (definition) |
 | `Sys(F)`, `obs` | pad-trace semantics of the system spec; the physical observation map | [L7](L7-system/README.md) (definition) |

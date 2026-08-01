@@ -20,7 +20,7 @@ Both are definitions; the theorem connecting them is the whole rest of the repos
 
 ## The trace alphabet — the load-bearing choice
 
-`obs` is defined at the **physical alphabet**: timed, regime-classified pad samples. This is forced, not stylistic, by the epoch analysis ([04](04-power-epochs.md)): an epoch ends in `valid-prefix · ramp-down-tail`, and prefix closure — the property that lets a machine *stop* without violating anything — holds at the physical level only. A truncated byte is a prefix of a timed trace but not of any byte sequence, so **abstract views (bytes, transactions) are derived, never primitive**, or epoch composition is unstatable. (The tail is demonic only without supervisor + fail-safe-pad discipline; with them it refines to a *specified* truncate-idle-decay shape — [04](04-power-epochs.md).)
+`obs` is defined at the **physical alphabet**: timed, regime-classified pad samples. This is forced, not stylistic, by the epoch analysis ([04](04-power-epochs.md)): an epoch ends in `valid-prefix · ramp-down-tail`, and prefix closure — the property that lets a machine *stop* without violating anything — holds at the physical level only. A truncated byte is a prefix of a timed trace but not of any byte sequence, so **abstract views (bytes, transactions) are derived, never primitive**, or epoch composition is unstatable. (The tail is demonic — adversarially unconstrained, the spec holding under *every* resolution — only without supervisor + fail-safe-pad discipline; with them it refines to a *specified* truncate-idle-decay shape — [04](04-power-epochs.md).)
 
 Consequences worth pinning:
 

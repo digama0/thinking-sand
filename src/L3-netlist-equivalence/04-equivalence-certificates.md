@@ -23,7 +23,7 @@ The plan, enabled by [03](03-register-correspondence.md)'s reproduction of the f
 
 1. **Verify the NPN library once, exhaustively** — 222 lemmas over 4-input functions, trivially checkable.
 2. **Log the trail**: `(cut, before, after, library-entry)` per rewrite — a modest patch to an open-source tool.
-3. **Check the trail**: each step is congruence (substitution at a cut, pointer-level if the representation is a hash-consed AIG) plus one library lemma. No search at check time.
+3. **Check the trail**: each step is congruence (substitution at a cut, pointer-level if the representation is a hash-consed AIG (And-Inverter Graph — the two-input-AND-plus-inverter normal form equivalence tools operate on)) plus one library lemma. No search at check time.
 4. **Residual cones** — anything the trail doesn't cover (`proc`/`techmap` structural expansion, don't-care-free `resub`) — fall back to per-cone SAT **with LRAT proofs**, checked not trusted.
 
 This is the `K(G₁) = K(G₂)` congruence architecture the project sketched from the start, landing at its cheapest available site: local rewrites, precomputed justifications, open tool. It is the best available answer to *avoid poorly-specified exploratory obligations*.

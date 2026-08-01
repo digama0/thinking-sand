@@ -34,9 +34,9 @@ Two honest caveats. Every "theorem" above is an asymptotic scaling limit over id
 
 ## The ideal theorem could not say "negligible" anyway
 
-Suppose every link were proved. The statement still could not be "the physical behaviour diverges negligibly from the DD solution," pointwise, for a physical reason: **the statistical approximation's fluctuations are observable at this node.**
+Suppose every link were proved. The statement still could not be "the physical behaviour diverges negligibly from the drift–diffusion (DD) solution," pointwise, for a physical reason: **the statistical approximation's fluctuations are observable at this node.**
 
-A logic `1` at 1.8 V on ~1 fF is ~10⁴ electrons. CLT-scale fluctuations around the mean field are therefore ~1%, and they have names: **shot noise** (carrier granularity), **random telegraph noise** (single trapped charges modulating a transistor's current — individually visible; [Kirton & Uren](../BIBLIOGRAPHY.md#kirton-uren-1989)), **discrete dopant fluctuation** (a channel holds thousands, not 10²³, dopant atoms; [Asenov](../BIBLIOGRAPHY.md#asenov-1998)'s atomistic simulations quantify the resulting threshold scatter). None of these is negligible pointwise; all are bounded by margins and corners (E4) — the correct theorem has the **P3 shape**: `P(deviation > margin)` bounded by something astronomically small, then discharged. Fluctuations are bounded against margins, never proved absent.
+A logic `1` at 1.8 V on ~1 fF is ~10⁴ electrons. Central-limit-theorem-scale fluctuations around the mean field are therefore ~1%, and they have names: **shot noise** (carrier granularity), **random telegraph noise** (single trapped charges modulating a transistor's current — individually visible; [Kirton & Uren](../BIBLIOGRAPHY.md#kirton-uren-1989)), **discrete dopant fluctuation** (a channel holds thousands, not 10²³, dopant atoms; [Asenov](../BIBLIOGRAPHY.md#asenov-1998)'s atomistic simulations quantify the resulting threshold scatter). None of these is negligible pointwise; all are bounded by margins and corners (E4) — the correct theorem has the **P3 shape**: `P(deviation > margin)` bounded by something astronomically small, then discharged. Fluctuations are bounded against margins, never proved absent.
 
 ## Quantum effects already inside E1
 
