@@ -2,6 +2,8 @@
 
 ### How to verify a computer down to physics
 
+**📖 Read the book: [digama0.github.io/thinking-sand](https://digama0.github.io/thinking-sand/)**
+
 > *We tricked sand into thinking. This repository is the audit of the trick.*
 
 **What this is.** Between "my program ran correctly" and "electrons obey Maxwell's equations" stands a tower of trust: the instruction set means what its manual says; the processor implements the instruction set; the netlist computes what the RTL describes; the digital story the netlist tells is what the analog circuit actually settles to; the circuit is what the geometry realises; the geometry is what the fab printed; and the transistors do what the device models claim. Industrial practice verifies one or two storeys of this tower and takes the rest on faith — reasonably, but the faith is unaudited. This repository is a scoping study for auditing *all of it*: what it would take to produce a machine-checked proof that one specific, physical, purchasable chip runs its programs correctly, starting from field equations over the silicon and ending at the instruction set, with every claim that cannot be a theorem recorded, classified, and priced in an explicit ledger.
