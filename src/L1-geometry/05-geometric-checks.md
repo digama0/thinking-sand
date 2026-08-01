@@ -1,5 +1,15 @@
 # L1/05 — The geometric checks
 
+## Background
+
+This chapter collects the layer's finite, mechanical checks, and three of them guard against physical phenomena that have not yet been introduced. Each is a classic chip-killer with a geometric cure.
+
+**Latch-up** is CMOS's oldest self-destruct mode. The wells and diffusions that form a chip's transistor pairs *also*, unavoidably, form a parasitic four-layer PNPN structure — a **thyristor**, a device whose defining property is that once triggered it conducts hugely and latches on, held by its own feedback until power is removed. Triggered (by a voltage transient or a particle strike), the parasitic thyristor shorts the supply rails through the silicon, and the chip either browns out or cooks. The cure is **well taps**: frequent, low-resistance connections tying each well solidly to its supply rail, which starve the parasitic structure of the voltage drop it needs to trigger. "A tap within distance d of every device" is the design rule; the deeper reading — developed in L0 — is that tap coverage removes a *second solution branch* of the device equations, making the transistor's nominal behaviour the only one available.
+
+**Multi-cell upsets** concern memory protected by **ECC** (error-correcting codes — extra check bits stored alongside each data word, enough to correct any single flipped bit). The code's mathematics assumes at most one bit of a word fails at a time; but a single particle strike ionises a *region*, and can flip several physically adjacent cells at once. The cure is **interleaving**: place the bits of one logical word physically far apart, so one strike's radius covers at most one bit per word. Note what kind of fact this is — a coding-theory assumption discharged by *placement geometry*, checkable in neither the netlist (which has no positions) nor the code's algebra (which has no particles), only in the layout.
+
+The **antenna effect** is the strangest of the three: a defect mechanism of the *unfinished* chip. During fabrication, plasma etching deposits electric charge on whatever metal is exposed; a long wire connected, at that mid-fabrication moment, only to a transistor gate funnels all its collected charge into the gate's few nanometres of oxide and punctures it — destroying the transistor before the chip is even complete. Whether this happens depends on the *order* layers are built: the wire's eventual connection to a protective diode may not exist yet when the charge arrives. Hence the oddity flagged below: the antenna check quantifies over prefixes of the build sequence — it is a property of the fabrication history, not of the finished geometry, and the finished layout alone cannot express it.
+
 ## Statement
 
 The finite, decidable obligations L1 owns. These are the *discharge points* for conditions other layers only **state** — see [L0/09](../L0-device-physics/09-cut-discipline.md)'s dispatch table. All are near-linear; none needs a PDE. They are gated on extraction and on having placement data, not on difficulty.

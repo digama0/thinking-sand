@@ -1,5 +1,13 @@
 # L1/00 — The layout as a formal object
 
+## Background
+
+A chip is built, not carved: it starts as a blank silicon wafer and grows upward through a few dozen processing steps, each one adding, doping, or removing material across the whole wafer at once. The repeating move is **photolithography**: coat the wafer with a light-sensitive resist, project a pattern onto it through a **mask** (a stencil, one per patterned step), develop away the exposed resist, and then let the step's real action — etching material away, implanting dopant atoms, depositing metal — act only where the resist is gone. Repeat per layer: first the transistor-forming layers (doped wells in the silicon, the **active**/diffusion regions, the **polysilicon** gate material), then, above them, an alternating stack of insulating oxide and patterned metal wiring — `met1` through `met5` on this process — with **vias** (small holes filled with metal) connecting one metal level to the next.
+
+The consequence for formalisation is happy: since every step is controlled by a 2D stencil, *the entire design content of a chip is a finite stack of 2D polygon sets* — one set per layer. That is literally what the design file contains: **GDS**, the format handed to the mask shop, is a list of polygons with integer coordinates (in database units of 1 nm here), tagged by layer number, organised in a hierarchy of reusable cells. The third dimension is *not* in the file, because it is not the designer's to choose — the vertical structure (layer thicknesses, what material ends up where when layers overlap) is fixed by the fabrication recipe, identical for every design on the process.
+
+The formal picture this chapter builds is therefore: a *drawn layout* is a map from layers to polygon sets; a point of the plane has a "colour" — the set of layers covering it; and the process turns colours into materials via a fixed vertical profile, yielding the 3D **material distribution** that the physics layers below actually analyse. Two further wrinkles the definitions must carry. Some process layers are not drawn directly but *derived* from drawn ones by boolean combinations and small resizings (the **rule deck** — a program, supplied by the foundry, that this chapter must treat as part of the spec). And connectivity — which metal shapes form one electrical **net** — is genuinely three-dimensional, established through vias, so it can only be computed on the assembled stack, never per layer.
+
 ## Statement
 
 Fix the objects every other L1 theorem quantifies over: what a layout *is*, what the process turns it into, and which GDS files are admissible.

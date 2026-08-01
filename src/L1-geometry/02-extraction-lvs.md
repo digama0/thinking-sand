@@ -1,5 +1,13 @@
 # L1/02 — Extraction and LVS
 
+## Background
+
+A layout is polygons; a netlist is transistors and wires. **Extraction** is the map between them — the recognition procedure that reads a circuit back out of geometry — and its key fact is a beautiful economy of the CMOS process: *a transistor is not drawn; it happens.* Wherever a polysilicon shape crosses an active (diffusion) region, the crossing **is** a MOSFET: the poly strip over the crossing is the gate, insulated from the silicon by the thin oxide grown between them; the two pieces of active region on either side are the source and drain; and the surrounding well determines whether it is the N-type or P-type flavour. Even the transistor's electrical parameters are geometric readings — channel length L is the width of the poly strip, channel width W the extent of the active region it crosses. Wires, likewise, are just the connected clumps of metal-and-via material. So extraction is: intersect two layers to find the devices, compute 3D connected components to find the nets, record which touches which.
+
+**LVS** — "layout versus schematic" — is the industrial check built on extraction: extract the circuit from the drawn polygons and compare it, as a graph, against the intended netlist. The comparison is graph isomorphism, which is notoriously hard in general and easy here for a concrete reason the chapter explains: the graph's nodes are richly labelled (device types, W/L values, port names), and the labels shatter the graph into tiny equivalence classes before any search begins. A clean LVS run is the flow's certificate that *what was drawn is the circuit that was meant* — which, chained with [01](01-topology-preservation.md)'s sandwich theorem ("what is printed is topologically what was drawn"), yields the layer's full conclusion: what is printed is the circuit that was meant.
+
+This chapter also owns a piece of honesty about [01](01-topology-preservation.md): writing the composition revealed that the sandwich theorem as stated covers *nets* but not *devices* — a printed distortion could in principle sever a transistor or detach a terminal without violating any net-level hypothesis — so the device-level analogues (D1)–(D3) are added here, and the enclosure/extension design rules find their formal role as exactly those hypotheses.
+
 ## Statement
 
 The layout implements the intended netlist: `Ext(M(A)) ≅ N_intended`, an isomorphism of labelled graphs.
