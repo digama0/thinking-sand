@@ -11,7 +11,7 @@
 | | | status |
 |---|---|---|
 | [00](00-microarchitecture.md) | **What the machine actually is** — the arch-class tour of picorv32, measured from source; the absence table with each absence priced | descriptive; days |
-| [01](01-refinement.md) | The statement: `(I, α, m)`, commit points = FSM structure, **RVFI as the designer's own α**, IRQ preemption in the diagram, the conditional measure | weeks; do first |
+| [01](01-refinement.md) | The statement: `(I, α, m)`, commit points = FSM structure, **RVFI as the designer's own α**, IRQ preemption in the diagram; the measure read quantitatively = **the WCET table**, hard real time for free | weeks; do first |
 | [02](02-invariant.md) | The invariant: entropy argument, the six-clause sketch, IC3 calibration plan | **the heart of the estimate** |
 | [03](03-instruction-obligations.md) | Wide-shallow per-instruction lemmas: decode bijection + unimplemented sweep, ALU, iterative shifts, load/store, counters | months; harness-dominated |
 | [04](04-memory-pcpi.md) | The bus as assume-guarantee (G1–G3 + the look-ahead consistency lemma `LA`); PCPI loop invariants; the memory-hierarchy counterfactual priced | weeks |
@@ -19,7 +19,7 @@
 
 ## Interfaces
 
-**Consumes:** `⟦RTL⟧` + configuration record (L4), the licence to reason discretely (L2), the bus contract and its latency bound `B` (L7), the Sail import + authored S3 (L6). **Exports:** the refinement theorem — the tower's ← THE WORK arrow.
+**Consumes:** `⟦RTL⟧` + configuration record (L4), the licence to reason discretely (L2), the bus contract and its latency bound `B` (L7), the Sail import + authored S3 (L6). **Exports:** the refinement theorem — the tower's ← THE WORK arrow — plus the per-instruction WCET table (the measure read quantitatively, [01](01-refinement.md)), consumed by L7/04's epilogue sizing.
 
 ## Axioms introduced
 
