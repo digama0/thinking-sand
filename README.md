@@ -1,4 +1,4 @@
-# thinking-sand
+# Thinking Sand
 
 ### How to verify a computer down to physics
 
