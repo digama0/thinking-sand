@@ -77,6 +77,15 @@ tools/bbox.py    data/pdk/inv_1.gds     # per-layer bounding boxes in µm
 ```
 
 Pure-Python GDSII record parsers — the format is simple enough that a dependency isn't worth it, and reading the bytes directly is how several FINDINGS entries were established.
+
+### Build the book — [`tools/build-book.sh`](tools/build-book.sh)
+
+```sh
+tools/build-book.sh          # needs mdbook; renders to book/index.html
+```
+
+The repository renders as an [mdBook](https://rust-lang.github.io/mdBook/), with [SUMMARY.md](SUMMARY.md) as the table of contents. The script stages the git-tracked markdown into `book-src/` first — pointing mdBook at the repo root would copy the ~490 MB `data/` tree into the output — and checks that every staged chapter appears in SUMMARY (mdBook rewrites `.md` links to `.html` unconditionally, so an unlisted file would 404). [A GitHub Actions workflow](.github/workflows/book.yml) builds and deploys to GitHub Pages on every push to `master`; enable Pages with source "GitHub Actions" in the repository settings once a remote exists.
+
 ## Where to start work
 
 Three cheap, high-information experiments. Each is weeks rather than years, and each tells you whether the layer above is tractable before you invest in it.

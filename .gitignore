@@ -12,3 +12,7 @@ out/
 
 # Editor workspace state
 .obsidian/
+
+# mdBook staging and output (tools/build-book.sh)
+book-src/
+book/
