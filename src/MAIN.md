@@ -52,7 +52,7 @@ Everything merely hard collapses to time. What survives is what is *not* a theor
 
 Each layer's named obligations. This is the proof skeleton; the layer documents are the expansions.
 
-Five layers are **theorems**, three are **definitions** — marked, because a definition line in the chain below is an object being supplied, not a claim being proved.
+Five layers are **theorems**, three are **definitions** — marked, because a definition line in the chain below is an object being supplied, not a claim being proved. (The tables here run bottom-up, L0→L7, following the composition; the book's chapters run top-down, L7→L0, because the material gets progressively crunchier as you descend — start wherever suits.)
 
 | layer | kind | establishes / supplies | named obligations |
 |---|---|---|---|
