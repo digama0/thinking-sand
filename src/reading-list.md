@@ -58,5 +58,8 @@ For this project the solid-state route is the load-bearing one — the QFT that 
 
 - **Nipkow & Klein, *Concrete Semantics*** — operational semantics and machine-checked proof, hands-on; the mindset of L4–L5.
 - **Kroening & Strichman, *Decision Procedures*** — SAT, SMT, bitvectors; L3's engine room.
+- **Biere, Heule, van Maaren & Walsh (eds.), *Handbook of Satisfiability*** — the SAT canon in depth; the CDCL and proof-logging (DRAT/LRAT) chapters are the trust story behind every certificate in L2–L3.
+- **Avigad, de Moura, Kong & Ullrich, *Theorem Proving in Lean 4*** — an interactive-theorem-prover on-ramp, free online; the working style that every "formalise X" in this book assumes, whatever system the project ultimately inhabits.
+- **Pierce et al., *Software Foundations*** — machine-checked program verification from zero (Coq, free online); volumes 1–2 are the discipline's boot camp, and [CompCert](BIBLIOGRAPHY.md#compcert-2009) is the flagship artifact showing where it leads — the verified-vs-validated-pass calculus L3/04 borrows comes from there.
 - **Clarke, Grumberg, Kroening, Peled & Veith, *Model Checking*** — the standard text for the technique this project explicitly *cannot* use at scale (2^5774 states — L3/02) but borrows ideas from everywhere (IC3, invariants as certificates).
 - **[Melham](BIBLIOGRAPHY.md#melham-1993), *Higher Order Logic and Hardware Verification*** — the historical centre of transistor-level formal verification; L0/09's ancestor.
