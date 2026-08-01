@@ -1,5 +1,13 @@
 # L3/00 — The netlist object and its Mealy semantics
 
+## Background
+
+Between the RTL a human wrote and the geometry the fab printed sits the **netlist**: the design expressed as a list of *gates* and the *wires* connecting them. It is produced from the RTL by **synthesis** — a compiler, in every meaningful sense: it parses the Verilog, maps the described logic onto a fixed vocabulary of available gates, and optimises hard along the way, restructuring the logic beyond recognition while (one hopes) preserving its function. The gate vocabulary is the **standard cell library**: a catalog of a few hundred pre-designed, pre-characterised primitive circuits — NAND gates, inverters, flip-flops, multiplexers, each in several drive strengths — provided with the fabrication process. Everything computational on the die is an instance of one of these cells; this design has 275,608 of them.
+
+The netlist's file format is **structural Verilog** — the same language as the RTL, but stripped of everything programmatic: no `always` blocks, no assignments, no control flow, just instance declarations ("here is a NAND2 named `_04531_`, its pin A connects to net `_1234_`...") repeated a few hundred thousand times. Where the RTL is a program, the netlist is a parts list with a wiring diagram, and its semantics is correspondingly simpler to define — which is why this chapter is the cleanest formal artifact in the book.
+
+That semantics is a **Mealy machine**: the classical mathematical form of a clocked circuit, consisting of a state (here, one bit per **flop** — flip-flop, the library's storage cell), a next-state function, and an output function. Reading a Mealy machine off a netlist works because the netlist separates cleanly into its sequential cells (the flops — which cells those are is declared in the library, a lookup rather than an inference) and everything else, the combinational cells, which form a **DAG** — a directed graph with no cycles — from flop outputs and input ports to flop inputs and output ports. One clock cycle means: evaluate the DAG in dependency order, each cell applying its little Boolean function; then update every flop simultaneously with the value at its data pin. The preconditions that make this well-defined (no cycles, exactly one driver per wire, nothing floating) are precisely the well-formedness checks of [01](01-well-formedness.md).
+
 ## Statement
 
 Define `N` and `Mealy(N)` — the shared object of [MAIN's spec tower](../MAIN.md#the-spec-tower) and the left-hand side of this layer's theorem.
