@@ -1,5 +1,13 @@
 # L2/01 — The bridge theorem (M5)
 
+## Background
+
+Every layer above this point reasons about the chip as a clocked state machine: state now, one step, state next. That picture is not physics — it is a *theorem-shaped claim* that industrial practice believes, acts on, and has never stated. Designers say the design "meets timing" or "closes timing" (**timing closure**), meaning the checking tools report that every flop's setup and hold requirements are satisfied at the intended clock period; and everyone proceeds as if closure implies the discrete abstraction is sound. The implication is almost surely true. It is also nowhere written down as mathematics — with its hypotheses enumerated, its conclusion stated over a defined model, and its edge cases forced into the open. Writing it down is this chapter, and the exercise is the book's central specimen of the pattern *"a design rule is secretly a hypothesis of a theorem nobody wrote."*
+
+The proof shape is worth previewing in words because it explains *why* the synchronous discipline works, not just that it does. It is an induction over clock cycles, and the invariant is simply "at the start of each cycle, every flop stably holds the state the Mealy machine says it should." Given that, the settled combinational values are the right ones by the time the setup margin requires (the *fast enough* half); the newly-launched values of the next cycle cannot corrupt the capture (the *not too fast* half, hold); so the edge captures exactly the Mealy machine's next state, and the invariant is re-established — *fully*, every cycle. That last point is the profound one: the clock edge is a **restoration point in time**. Nothing carries over; timing error does not accumulate across a trillion cycles any more than voltage noise accumulates across a chain of restoring gates. The tower's recurring motif — every layer has a mechanism that resets its own error to zero — appears here in its temporal form.
+
+The asymmetry between the two halves also deserves plain statement, because it drives real engineering behaviour. The clock period appears in the setup inequality only: a setup-slow chip can always be rescued by clocking it slower, which is why vendors can sell slower parts from an imperfect batch ("binning"). Hold contains no period at all — it is a race between two paths launched by the *same* edge — so a hold-violating chip is broken at every frequency, forever, in silicon. Hold bugs are the ones that kill tapeouts, and the reader will see hold appear as the sharp edge in several findings below.
+
 ## Statement
 
 Over the timed model of [00](00-timed-model.md):

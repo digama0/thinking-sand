@@ -1,5 +1,13 @@
 # L2/02 — Verified STA
 
+## Background
+
+How does anyone check setup and hold across a design with hundreds of thousands of paths? Not by simulation — no test could exercise every path at its worst — but by **static timing analysis (STA)**: a tool that never runs the design at all. It treats the netlist as a graph whose edges are annotated with delay ranges, and computes, for every node, the earliest and latest possible moment a signal transition can arrive there — a longest-path/shortest-path computation over a DAG, polynomial and fast. Comparing each flop's latest arrival against its setup deadline and earliest arrival against its hold requirement yields a per-flop **slack** (margin: how much room is left, negative meaning violated), and a design "meets timing" when no slack is negative. Because it covers *all* paths by construction rather than the exercised ones, STA is the industry's **sign-off** instrument — the analysis whose verdict is the go/no-go for fabrication.
+
+Where do the edge delays come from? From the **Liberty file**, the cell library's timing characterisation: for each cell, each arc (this input to this output), the library vendor ran analog circuit simulations across a grid of operating points and tabulated the results. A delay is *looked up*, in a table indexed by the two context quantities that L2/00's background introduced — the input's slew and the output's load — and since the arguments rarely land exactly on grid points, the tool *interpolates* between samples. That one word carries this chapter's hardest problem: interpolation is an estimate, not a bound, and the measured tables are not even monotone (a slower input edge occasionally yields a *smaller* tabulated delay — an artifact of how "delay" is anchored to waveform midpoints; the physics behind it is [03](03-corners.md)'s subject). A verified STA must replace every such convenience with something that is actually sound, and the three deviations catalogued below are where standard practice and soundness part ways.
+
+"Verified" here means the strong sense established elsewhere in the book: not a carefully-written reimplementation, but an engine accompanied by a machine-checked theorem that *if the pass reports no violation, then hypothesis (2) of the bridge theorem holds in the timed model*. The algorithm is textbook; the content is the soundness statement — and, as so often in this project, the places where proving soundness forces the discovery that the standard practice being formalised quietly isn't.
+
 ## Statement
 
 > If the STA algorithm, run over the contract arcs and the clock arrival function, reports no violation on any non-excepted path at any corner, then hypothesis (2) of the [bridge theorem](01-bridge-theorem.md) holds.
