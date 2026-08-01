@@ -1,5 +1,11 @@
 # L4/01 — The subset: 19 sites, measured
 
+## Background
+
+Verilog is really two languages sharing a syntax. One is for *describing hardware*; the other is for *writing testbenches* — simulation-only code that pokes the design with stimuli, and may freely use constructs with no physical counterpart: `#10` ("wait ten simulated nanoseconds"), `force` (reach in and override a wire), `fork` (spawn parallel processes). Synthesis tools accept only the first language — the **synthesisable subset** — and even that subset has dark corners the standard leaves loose: `casex`'s treatment of unknown values is a famous source of simulation/synthesis mismatch, and an explicit `'bx` literal drags the simulator's "unknown" value into design semantics. A formal semantics for *all* of Verilog would be enormous, contested, and mostly spent on constructs that describe no hardware.
+
+The move this chapter makes — the same one the book makes at every layer where a messy industrial format appears — is to refuse the general problem. Instead: choose a well-behaved subset, give the semantics for exactly that subset, and *mechanically check* that the design lies inside it, so that every dark corner becomes a parse error rather than a semantic question. Nobody has to formalise what `force` means if a checker proves `force` never occurs. The empirical discovery that makes this cheap here is in the table below: measured over its 3,044 lines, picorv32 uses essentially none of the dangerous constructs, and the residue needing individual care is 19 specific places in the file — few enough to inspect by hand, which is precisely the "semantically tame" property for which this core was selected.
+
 ## Statement
 
 A semantics for **the synthesisable subset this design actually uses** — not for Verilog. The general artifact is large and contested; the specific one is 19 individually inspectable sites, and the categories that make Verilog semantics genuinely awful are *absent*, measured rather than hoped:
