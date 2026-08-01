@@ -45,7 +45,7 @@ The tower is cut into eight layers, numbered by artifact altitude from physics u
 - **[L3 — netlist ↔ RTL](L3-netlist-equivalence/README.md).** The synthesis compiler preserved meaning: shipped netlist and source RTL are equivalent, by certificates rather than trust.
 - **[L4 — RTL semantics](L4-rtl-semantics/README.md).** What the Verilog *means*: a formal semantics for the subset the design occupies.
 - **[L5 — microarchitecture](L5-microarchitecture/README.md).** The theorem a computer architect would recognise: the hardware refines the instruction set. The tower's irreducible proof.
-- **[L6 — the ISA](L6-isa/README.md).** The specification itself: the imported Sail standard, plus the parts that exist nowhere and must be authored.
+- **[L6 — the ISA](L6-isa/README.md).** The specification itself: the imported Sail standard, plus the parts that exist only as informal prose and must be formalised.
 - **[L7 — the system](L7-system/README.md).** What the end-to-end claim is even about: the chip's observable behaviour at its pads, with the memory map, peripherals, and power in the specification where they belong.
 
 Each layer exports a thin, named object to its neighbours, and the layers compose along those seams into the top-level statement — the next chapter displays the whole chain. Two storeys are conditional on probabilistic events (a particle strike, an unresolved synchroniser), and those two conditions are exactly where the theorem's ε lives; everything else is deterministic. The book's chapters run top-down, L7 to L0, because the material gets progressively crunchier as you descend — and because reading the claim before its foundations mirrors how the trust is actually spent.

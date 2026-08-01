@@ -24,7 +24,7 @@ Three features of this statement are deliberate and worth defending.
 
 **It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](bibliography.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
 
-**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's, and part of *that* does not exist yet — [picorv32](https://github.com/YosysHQ/picorv32)'s interrupt mechanism is custom, so S3 must be authored rather than imported ([L6](L6-isa/README.md)).
+**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's, and part of *that* exists only as informal documentation — [picorv32](https://github.com/YosysHQ/picorv32)'s interrupt mechanism is custom, described in its README but formalised nowhere, so S3 must be authored rather than imported ([L6](L6-isa/README.md)).
 
 **`⊑` is trace refinement up to stuttering, not equality.** The implementation takes many cycles per architectural step; L5's obligation is a stuttering simulation with a measure function, not a cycle-accurate correspondence.
 
