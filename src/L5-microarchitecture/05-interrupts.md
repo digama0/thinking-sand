@@ -1,5 +1,13 @@
 # L5/05 — Interrupts: the implementation side of S3
 
+## Background
+
+[L6/01](../L6-isa/01-irq-spec.md)'s background introduced the two halves of this story: what interrupts are and how picorv32's custom scheme replaces the standard RISC-V machinery, and why a spec authored from the same RTL it will be checked against risks certifying bugs rather than catching them. That chapter authored the spec; this one proves the hardware meets it, and the proof side has its own vocabulary worth a moment.
+
+The central concept is **non-interference** — a theorem shape borrowed from security verification, where it means "secret inputs don't affect public outputs." Here it does modularity work instead: *with interrupts masked and no interrupt instructions executed, the machine behaves exactly as if the interrupt unit did not exist.* This is what licenses every other L5 chapter to ignore interrupts entirely — their proofs are about the interrupt-free machine, and non-interference says that machine is faithfully embedded in the real one. Without it, every per-instruction lemma would need an "...and the IRQ unit doesn't intervene" side condition, and a bug in the interrupt hardware could silently invalidate the base refinement. Proving it first *quarantines* the layer's riskiest component.
+
+The other recurring word is **atomicity**. Interrupt entry does several things — saves the return address, updates the mask, redirects the program counter — and the spec describes them as one indivisible step. The hardware necessarily spreads the work over wires and cycles; the obligation is that no *observable* intermediate exists: no cycle at which a commit-point readout would catch the machine half-entered, return address saved but mask not yet updated. Atomicity failures are classic interrupt bugs (they manifest as corruption when an interrupt arrives in exactly the wrong cycle — rare, unreproducible, and exactly what proofs exist to exclude), which is why the entry sequence gets its own obligation rather than being folded into the general invariant.
+
 ## Statement
 
 Prove the custom IRQ machinery refines the authored IRQ specification (L6/S3). The layer's risk concentrates here, for a structural reason: everywhere else the spec is imported and battle-tested (Sail) while the implementation is simple; here **both sides are bespoke** — the spec must be written from the same RTL it will then be checked against, and circularity is the failure mode to engineer away.

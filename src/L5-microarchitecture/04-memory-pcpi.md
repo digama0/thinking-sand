@@ -1,5 +1,13 @@
 # L5/04 — The memory interface and PCPI
 
+## Background
+
+This chapter proves the core's half of the bargains struck at its two external ports. The bus side of the story — what a valid/ready handshake is, why memory latency varies, and how assume-guarantee reasoning splits an interface proof into promises proved by each side separately — is introduced in [L7/02](../L7-system/02-bus-contract.md)'s background, which is worth reading first; L7 authored the fabric's promises to the core, and here the core proves its own request discipline in return.
+
+The port that has not appeared before is **PCPI**, the "pico co-processor interface." A co-processor is an auxiliary execution unit outside the core proper: picorv32 does not contain a multiplier or divider — the RISC-V `M` extension's instructions, when enabled, are handled by separate units hanging off this port. The protocol is another handshake: the core presents an instruction it has decoded but cannot execute, along with its operand values; a unit that recognises the instruction takes it, works — possibly for many cycles, signalled by a wait line — and hands back the result. The units themselves are **iterative** in the grade-school sense: the multiplier accumulates shifted addends over 32 cycles rather than computing the product in one; the divider runs shift-and-subtract long division. Verifying such a unit is a loop-invariant proof of exactly the kind [03](03-instruction-obligations.md) introduced for the shifter, with one new feature — the divider's iteration count depends on the data, which is why the refinement's progress measure has a slot for it.
+
+One design curiosity needs naming because a whole obligation hangs on it: picorv32 exposes each memory transaction *twice*. Alongside the ordinary registered bus, a "look-ahead" interface announces the upcoming request's address one cycle early, combinationally, so that a tightly-coupled memory can prepare and skip a wait state. Two interfaces describing one transaction must never disagree — the `LA` lemma below — and which of the two the surrounding SoC actually wires up is a fact to extract from the RTL, not assume.
+
 ## Statement
 
 The core's two ports into the outside world — the bus and the coprocessor interface — as assume-guarantee pairs: what the core *guarantees* about its requests (proved here), what it *assumes* about responses (L7's contract), and the internal consistency obligation between picorv32's two views of one transaction.
