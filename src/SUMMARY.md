@@ -69,5 +69,6 @@
 [Appendix: Glossary](glossary.md)
 [Appendix: AXIOMS — the register](AXIOMS.md)
 [Appendix: FINDINGS — measured data](FINDINGS.md)
+[Appendix: Reading list](reading-list.md)
 [Appendix: BIBLIOGRAPHY](BIBLIOGRAPHY.md)
 [Appendix: Data provenance](data-provenance.md)

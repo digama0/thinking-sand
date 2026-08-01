@@ -3,7 +3,7 @@
 > *"If you wish to make an apple pie from scratch, you must first invent the universe."*
 > — Carl Sagan, *Cosmos*
 
-The statement the project is trying to establish, and how it dispatches into layers. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md). This file covers what is actually being proved.
+The statement the project is trying to establish, and how it dispatches into layers. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md). This file covers what is actually being proved.
 
 ## The top-level statement
 
