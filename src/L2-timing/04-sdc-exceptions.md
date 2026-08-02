@@ -18,14 +18,18 @@ The shipped inventory (`signoff/caravel/caravel.sdc`, 406 lines): **112** `set_f
 
 SDC is Tcl — conditionals, variables (`$clk_period`), mode branches. The same flop output (`housekeeping/_6817_/Q`) is pinned to **both 0 and 1** in different branches. Nothing can be classified until the Tcl is *elaborated* into flat per-mode constraint sets; the flat sets, not the script, are the objects the claims below attach to.
 
+**Done** — `tools/sdc-audit.py` (a tclsh harness stubbing every SDC command) elaborates the full mode space: **8 modes** (`io_4_mode` × `ios_mode` × `IO_SYNC`), shipped setting SCK/OUT/0, 87–139 flat constraints each; results in [Findings](../findings.md#sdc-exceptions). The `_6817_` double-pin resolved as **modes, not a bug**: 0 in all SCK modes, 1 in all GPIO modes — it is the pad-4 function select, and the other cross-mode conflicts are exactly the `DM[2:0]` pad drive-mode bus.
+
 ## The four classes, with their discharge statements
 
-| class | count here | claim | discharge |
+| class | count (measured, per mode) | claim | discharge |
 |---|---|---|---|
-| **logically false** | few | no transition can propagate along the path | 2-vector SAT on the netlist |
-| **asynchronous** | dominant (`mprj_io[*]`) | the endpoint tolerates unconstrained data | structural synchroniser check + P1 |
-| **static** | config signals | the source cannot change during operation | sequential reachability |
-| **mode** (`set_case_analysis`) | 45 | the pin is constant *in this mode* | mode-coverage over reachable configurations |
+| **logically false** | **0** | no transition can propagate along the path | 2-vector SAT on the netlist |
+| **asynchronous** | **all of them** (36–39; `mprj_io[*]`, `gpio`, `resetb`) | the endpoint tolerates unconstrained data | structural synchroniser check + P1 (input-side); exported interface guarantees (output-side) |
+| **static** | **0** | the source cannot change during operation | sequential reachability |
+| **mode** (`set_case_analysis`) | 41 distinct pins; 4 mode-selects | the pin is constant *in this mode* | mode-coverage over reachable configurations |
+
+The classification came back cleaner than the plan anticipated: **every false path in every mode is asynchronous-external** — no logically-false claims, no static claims, nothing unclassified. Two consequences. The SAT and reachability machinery rows 1 and 3 budgeted for are *not needed for this design's false paths at all*; and the asynchronous class splits by direction — the shipped OUT mode's 34 exceptions are `-to` the pads, where the claim is about the **external consumer's** timing (L2/06's exported-guarantee side), not about any synchroniser in this netlist.
 
 **Logically false** is the clean case, with one classical trap: the correct criterion is about *transitions*, not values. Static (one-vector) sensitisation is both unsound and incomplete for delay — the honest query is "no input/state *pair* propagates a transition along the path" (the false-path/viability literature, McGeer–Brayton). The safe direction for justifying an exclusion is the two-vector unsatisfiability, which is a well-defined SAT obligation on the netlist plus a reachability assumption on the state.
 
@@ -39,10 +43,11 @@ SDC is Tcl — conditionals, variables (`$clk_period`), mode branches. The same 
 
 ## The work plan
 
-1. Elaborate the Tcl into flat per-mode constraint sets; diff the modes against each other (the `_6817_` double-pin falls out here as two modes, or as a bug).
-2. Classify all 159 into the four classes — mostly mechanical from the pin names and netlist context.
-3. Discharge per class: SAT for the logical ones, the synchroniser predicate for the asynchronous ones, reachability sketches for static/mode.
-4. **Close F1**: map every failing `in2reg` hold path to its covering exception and check the exception is justified. Either outcome is a result — a clean pass proves what everyone assumes about a fabricated chip; a gap is a real finding in shipped silicon.
+1. ~~Elaborate the Tcl into flat per-mode constraint sets~~ — **done** (`tools/sdc-audit.py`; the `_6817_` double-pin fell out as two modes).
+2. ~~Classify into the four classes~~ — **done**: all asynchronous; see the table.
+3. Discharge: the synchroniser predicate for the input-side entries, the exported-interface argument for the output-side ones. (The SAT and reachability routes are unneeded here — no entries in their classes.)
+4. **Close F1**: map every failing `in2reg` hold path to its covering exception and check the exception is justified — now concretely: check each `-from` pin's fanout lands on a two-flop synchroniser. Either outcome is a result.
+5. **F4, sharpened**: the shipped file pins one mode of eight, and the modes' constraint sets genuinely differ — determine from the OpenLane logs whether the other seven were ever timed, and whether `-logically_exclusive` (an unverified claim, SCK modes only) is justified.
 
 ## Obligations
 

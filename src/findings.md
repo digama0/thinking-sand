@@ -175,6 +175,17 @@ Dominant false-path shapes: 40× `-from mprj_io[*] -through .../mgmt_gpio_out[*]
 
 Practical note: **SDC is a Tcl script**, not declarative data — conditionals, variables (`$clk_period`), mode branches. Step zero of any validation is elaborating it to a flat constraint list.
 
+### Elaborated (L2/04 steps 1–2 executed)
+
+`tools/sdc-audit.py` (driving `tools/sdc-elaborate.tcl`, a tclsh harness that stubs every SDC command and logs resolved arguments) elaborates the file over its full mode space. The counts above describe the *text*; these describe the *constraint sets*:
+
+- **The mode space is 8** = `io_4_mode` (SCK|GPIO) × `ios_mode` (IN|OUT) × `IO_SYNC` (0|1), with the shipped file pinning **SCK/OUT/0** (138 flat constraints). No mode sees more than 39 false paths; the 112 in the text are spread across mutually exclusive branches.
+- **Every false path in every mode classifies as asynchronous-external** — `mprj_io[*]`, `gpio`, `resetb`, or (`IO_SYNC=1` variants) `-through` the housekeeping GPIO pins. **Zero logically-false, zero static-class entries; zero unclassified.** L2/04's four-class discharge problem collapses to one class, in two flavours: input-side (`-from` — the endpoint needs a synchroniser: F1/F3's check) and output-side (`-to`, dominant in the shipped OUT mode — the claim is about the *external consumer's* timing, discharged by L2/06's exported-interface guarantees, not by anything inside this netlist).
+- **The `_6817_` "double pin" resolves as modes, not a bug**: 0 in all four SCK modes, 1 in all four GPIO modes — it is the pad-4 function select. The other cross-mode conflicts are exactly the `*mprj*/DM[2:0]` drive-mode bus (`110` in OUT modes, `001` in IN — matching `DM_INIT 3'b110`). 41 distinct case-analysis pins total: 37 mode-invariant where set, 4 mode-selects, 19 set in only some modes.
+- **Clock structure is mode-dependent**: SCK modes create a fourth clock `hkspi_clk` on `mprj_io[4]` and declare all four clocks `-logically_exclusive`; GPIO modes have three. The exclusivity declaration is itself an unverified claim of the F4 family.
+- **F4 sharpened**: the shipped file pins one mode, so unless separate signoff runs elaborated the others, **7 of the 8 modes were never timed** — and the conflict table shows their constraint sets genuinely differ. Whether other runs exist is checkable against the OpenLane run logs (`cmds.log`).
+- Lint curiosity: the file's `puts "IO[4] …"` contains an unescaped command substitution — evidence the script only ever ran under shells with a forgiving `unknown` handler.
+
 ## picorv32 Verilog tameness
 
 3,044 lines. The semantics obligation is **finite and enumerable**:
