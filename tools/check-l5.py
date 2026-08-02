@@ -44,18 +44,22 @@ def _(ctx):
     if m := need(vex):
         return FAIL, f"missing {m}"
     txt = vex.read_text(errors="replace")
-    # count DECLARED registers per bank (usage-site identifiers include derived
-    # wires with the same prefix; the bank is the declarations)
-    banks = {p: len(set(re.findall(r"reg\s*(?:\[[^\]]*\]\s*)?(" + p + r"[A-Za-z_0-9]+)", txt)))
+    # count DECLARED, SYNTHESIZABLE registers per bank: declaration-anchored
+    # (usage sites and derived wires share the prefix) and excluding the
+    # simulation-only *_string waveform-debug regs (absent from the GL netlist).
+    # This measurement corrected the chapter's first published numbers twice -
+    # a sloppy grep gave 38/16/12, declarations-with-strings 24/13/10.
+    decls = set(re.findall(r"^\s*reg\s*(?:\[[^\]]*\]\s*)?([A-Za-z_0-9]+)\s*(?:;|=)", txt, re.M))
+    banks = {p: len([n for n in decls if n.startswith(p) and not n.endswith("_string")])
              for p in ("decode_to_execute_", "execute_to_memory_", "memory_to_writeBack_")}
     ways2 = len(re.findall(r"ways_1|banks_1", txt))
     pred = len(re.findall(r"BranchPredictor|BTB|branch.*predict", txt))
-    expect = {"decode_to_execute_": 38, "execute_to_memory_": 16, "memory_to_writeBack_": 12}
+    expect = {"decode_to_execute_": 17, "execute_to_memory_": 12, "memory_to_writeBack_": 9}
     if banks != expect or ways2 != 0 or pred != 0:
         return FAIL, f"pipeline census changed: banks={banks}, multiway={ways2}, predictor={pred}"
-    return PASS, ("4 main stages behind the cached fetch: 38/16/12 distinct inter-stage "
-                  "registers; I-cache single-way single-bank (direct-mapped); zero "
-                  "branch-prediction structures — the shape L5/00's tour describes")
+    return PASS, ("4 main stages behind the cached fetch: 17/12/9 synthesizable "
+                  "inter-stage registers; I-cache single-way single-bank (direct-mapped); "
+                  "zero branch-prediction structures — the shape L5/00's tour describes")
 
 
 L.todo("stage-graph", "extract the pipeline stall/flush/arbitration structure and per-instruction occupancy bounds",

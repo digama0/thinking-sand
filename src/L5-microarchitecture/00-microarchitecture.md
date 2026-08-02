@@ -18,8 +18,10 @@ Four main stages behind a two-stage cached fetch front end; the inter-stage regi
 
 ```
 Fetch (2 stages, inside IBusCachedPlugin: PC / cache-read | hit-check, injector)
-  → Decode ──[38 distinct regs]──▶ Execute ──[16]──▶ Memory ──[12]──▶ WriteBack
+  → Decode ──[17 regs]──▶ Execute ──[12]──▶ Memory ──[9]──▶ WriteBack
 ```
+
+(Register counts are declared synthesizable registers per inter-stage bank; the source also carries simulation-only `*_string` waveform-debug registers, absent from the netlist. The first published version of these numbers was a sloppy grep's 38/16/12 — `check-l5.py`'s declaration-anchored count is the authority.)
 
 Five-ish instructions in flight. The stage registers (`decode_to_execute_*`, `execute_to_memory_*`, `memory_to_writeBack_*`) carry the decoded control signals *with* the instruction down the pipe — contrast picorv32's decode-once-and-latch — so the invariant's "decode coherence" clause becomes a per-stage family: what each stage's control bits must say about the instruction they travel with.
 
