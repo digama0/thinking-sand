@@ -31,6 +31,8 @@ caravel/
   cmds.log                 33 KB    170 literal timestamped commands — the flow "spec"
   config.tcl               14 KB    synthesis configuration
   memory_map.rst           11 KB    the housekeeping memory-map documentation (memmap.py)
+  user_defines.v, gpio_control_block.v, defines.v
+                                    the pad power-up defaults + their loader (pads.py)
   metrics.csv, warnings.log, OPENLANE_VERSION, PDK_SOURCES
 mgmt/
   mgmt_core.v             275 KB    the SHIPPED SoC fabric: LiteX/Migen output — bus decode,
@@ -67,6 +69,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/partition.py` | `VexRiscv_MinDebugCache.v`, `opcodes/*` | the encoding partition + UB set, spec side validated (L6/03) |
 | `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `memory_map.rst` | the four-way memory-map diff (L7/03) |
 | `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
+| `tools/pads.py` | `rtl_caravel_core.v`, `user_defines.v`, `gpio_control_block.v` | the 38 pad power-up defaults, decoded (L7/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.

@@ -57,6 +57,10 @@ fetch_small_caravel() {
   get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.wns.rpt data/caravel/sta.wns.rpt
   # the human-written memory-map documentation (the docs side of memmap.py)
   get $CARAVEL docs/rst/memory_map.rst           data/caravel/memory_map.rst
+  # the pad power-up defaults: per-pad values + the control block that loads them (pads.py)
+  get $CARAVEL verilog/rtl/user_defines.v        data/caravel/user_defines.v
+  get $CARAVEL verilog/rtl/gpio_control_block.v  data/caravel/gpio_control_block.v
+  get $CARAVEL verilog/rtl/defines.v             data/caravel/defines.v
 }
 
 fetch_big_caravel() {

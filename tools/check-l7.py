@@ -104,9 +104,46 @@ def _(ctx):
                   "not a latch; a write to 0xFC0 traps. This settles L6/01's deferred "
                   "level-vs-latched question: persistence lives in the SoC event blocks, "
                   "not the core")
-L.todo("pad-defaults", "diff gpio_defaults_block values and DM_INIT/OENB_INIT against pinout docs",
-       doc="src/L7-system/04-power-epochs.md",
-       blocked_on="the defaults-block per-instance values (defines.v is fetched; per-pad overrides live in the config)")
+@L.check("pad-defaults", "the 38 per-pad power-up defaults, extracted and decoded",
+         doc="src/L7-system/04-power-epochs.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    for f in ("caravel/rtl_caravel_core.v", "caravel/user_defines.v",
+              "caravel/gpio_control_block.v", "caravel/defines.v", "mgmt/defines.v"):
+        if m := need(DATA / f):
+            return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    pd = load("pads")
+    pads = pd.pad_defaults()
+    pos, reset_ok = pd.ctrl_block_positions()
+    if sorted(pads) != list(range(38)) or not reset_ok:
+        return FAIL, f"pad set changed: {len(pads)} pads, reset-from-defaults {reset_ok}"
+    if any((hi, lo) != (13 * i + 12, 13 * i) for i, (_, (hi, lo)) in pads.items()):
+        return FAIL, "a defaults-block slice is miswired"
+    vals = {i: v for i, (v, _) in pads.items()}
+    expect = {0: 0x1803, 1: 0x1803, 2: 0x0403, 3: 0x0801, 4: 0x0403,
+              **{i: 0x0403 for i in range(5, 38)}}
+    if vals != expect:
+        diff = {i: (hex(vals[i]), hex(expect[i])) for i in vals if vals[i] != expect[i]}
+        return FAIL, f"pad defaults changed: {diff}"
+    exp_pos = {"MGMT_EN": 0, "OEB": 1, "HLDH": 2, "INP_DIS": 3, "MOD_SEL": 4,
+               "AN_EN": 5, "AN_SEL": 6, "AN_POL": 7, "SLOW": 8, "TRIP": 9, "DM": 10}
+    if {k: pos.get(k) for k in exp_pos} != exp_pos:
+        return FAIL, f"control-block field positions changed: {pos}"
+    legacy = pd.legacy_defines()
+    if legacy["referenced_by_pad_rtl"] or \
+       (legacy["caravel"]["DM_INIT"], legacy["mgmt_soc"]["DM_INIT"]) != ("001", "110"):
+        return FAIL, f"legacy-defines situation changed: {legacy}"
+    return FINDING, ("all 38 defaults blocks extracted, slices verified, and the control "
+                     "block's reset state provably loads from them. Power-up state: pads "
+                     "0/1 (JTAG, SDO) management-bidirectional with output DISABLED and "
+                     "strong drive mode; pad 3 (CSB) weak pull-up; the other 35 pads "
+                     "management standard input, no pull. So at power-up NO pad actively "
+                     "drives - answering L7/04's non-hazardous-defaults question. Two "
+                     "stale artifacts pinned: DM_INIT/OENB_INIT exist in BOTH repos' "
+                     "defines.v with DIFFERENT DM values (caravel 001, mgmt_soc 110) and "
+                     "are referenced by no pad RTL - the defaults blocks are the whole "
+                     "story; and caravel defines.v's comment says pads default to USER "
+                     "input when they are in fact MANAGEMENT input")
 L.todo("b-config", "tabulate B(config): worst-case bus latency per XIP mode-bit setting",
        doc="src/L7-system/02-bus-contract.md",
        blocked_on="the housekeeping/spimemio RTL for the wait-state generator (fetch decision)")
