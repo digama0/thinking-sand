@@ -26,7 +26,17 @@ unimplemented  everything else — ALL of C ([1:0] ≠ 11, three quadrants of th
 
 Each implemented encoding gets the decode-equivalence + execute lemma pair (L5/03, templated by [00](00-sail-base.md)'s `addi`/`beq` example). Each unimplemented encoding gets **traps-correctly**: the decoder raises the illegal-instruction exception and the machine takes the imported spec's trap step — `mcause`/`mtval` included, per the S4 rows. Note the CSR subtlety: a `csrrw` to an *absent* CSR is a legal instruction *encoding* whose execution traps — the sweep partitions CSR address space as well as opcode space.
 
-**Generated and checked** ([`tools/partition.py`](../tools/partition.py); [Findings](../findings.md#the-management-core-in-the-pinned-netlist-is-vexriscv), F8): the spec patterns against the shipped decoder's own legality cubes, compared exactly. Every spec-legal word is accepted — and the decoder **over-accepts 4,292,609 reserved words** (all of LOAD funct3=110, the reserved shift-immediate variants, and `sret`), which execute instead of trapping. So the traps-correctly sweep is stated over the *complement of the measured alias set*, and the alias set's actual execution semantics — what those words do — becomes rows of the authored residue ([01](01-irq-spec.md)), extractable from the decode control signals.
+**Generated and checked** ([`tools/partition.py`](../tools/partition.py); [Findings](../findings.md#the-management-core-in-the-pinned-netlist-is-vexriscv)): the spec patterns against the shipped decoder's own legality cubes, compared exactly. Every spec-legal word is accepted, and the decoder additionally accepts **4,292,609 reserved words** (all of LOAD funct3=110, the reserved shift-immediate variants, and `sret` — decoder-minimisation don't-cares). The partition is therefore **three-way**, and the third class is a deliberate piece of spec design:
+
+```
+implemented   the 49 patterns — matched to their Sail clauses
+trapping      words the decoder REJECTS — proven to take the illegal-instruction
+              trap step (a sweep against the measured rejected set)
+spec-UB       the 4,292,609 reserved words the decoder ACCEPTS — the spec assigns
+              them UNSPECIFIED architectural behaviour
+```
+
+**Spec UB, and why it is safe to say.** For the UB class the ISA transition relation simply permits *any* successor architectural state (a demonic havoc step); refinement on those words is then trivial — which is exactly the point: the theorem deliberately claims nothing about them, instead of claiming something false. What makes this honest rather than a cop-out is the **layering**: UB at the ISA layer is still bounded by every layer below it. The invariant `I` still holds (the machine stays a coherent pipeline), the bus guarantees still hold (no malformed transaction), retirement still happens within the measure's bound, the electrical envelope is untouched — *no instruction is a halt-and-catch-fire*. This is the same move as L7/05's operating-conditions clause one level down: out-of-spec behaviour is not "anything may happen" but "anything may happen *to the architectural state*, within a machine that keeps functioning and can be re-anchored by trap or reset." The practical corollary: an execution that never fetches a UB word gets the full correspondence theorem — and for a fixed flash image, "contains no UB word" is a *checkable* property of `F`.
 
 ## Why this is the model case of cheap entropy
 

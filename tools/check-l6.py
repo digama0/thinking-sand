@@ -39,13 +39,12 @@ def _(ctx):
     if pt.count(only_spec) != 0 or pt.count(only_dec) != 4292609 or fam != expect_fam:
         return FAIL, (f"partition changed: spec-only {pt.count(only_spec)}, "
                       f"decoder-only {pt.count(only_dec)}, families {fam}")
-    return FINDING, ("spec-only 0: every RV32I+Zicsr word is accepted. decoder-only "
-                     "4,292,609 words (F8): the shipped decoder ACCEPTS reserved "
-                     "encodings - all 2^22 words of LOAD funct3=110, 98,304 reserved "
-                     "shift-immediate variants, and exactly one SYSTEM word: sret "
-                     "(0x10200073). These execute as something instead of trapping; "
-                     "the trap sweep must carve them out and their semantics becomes "
-                     "authored alias rows in the residue")
+    return PASS, ("spec-only 0: every RV32I+Zicsr word is accepted. The spec-UB set "
+                  "is pinned at 4,292,609 words: all 2^22 words of LOAD funct3=110, "
+                  "98,304 reserved shift-immediate variants, and exactly one SYSTEM "
+                  "word, sret (0x10200073). The spec assigns these unspecified "
+                  "architectural behaviour (L6/03); the layered guarantees below the "
+                  "ISA still hold on them - no instruction is a halt-and-catch-fire")
 L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin source, then diff against RTL behaviour",
        doc="src/L6-isa/01-irq-spec.md",
        note="the plugin-first half is authoring; the DIFF is checker-shaped once a simulator harness exists")

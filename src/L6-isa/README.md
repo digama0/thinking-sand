@@ -8,7 +8,7 @@ An ISA — instruction set architecture — is the contract between hardware and
 
 ## Statement
 
-What L5's theorem is *stated against*: `Sail-RV32(config) ⊕ authored residue ⊕ S4-choices`, its three components carrying the three fidelity axioms — **S2** (the official model's small residue, now covering the machine-mode subset as well as the base), **S3** (the authored residue: the external-interrupt array and anything else outside the ratified model), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: the same core in a different SoC keeps this layer's spec while L7's is replaced wholesale.
+What L5's theorem is *stated against*: `Sail-RV32(config) ⊕ authored residue ⊕ S4-choices ⊕ spec-UB clause` — the last assigning the measured reserved-accept set unspecified behaviour ([03](03-coverage.md)) — its authored components carrying the three fidelity axioms — **S2** (the official model's small residue, now covering the machine-mode subset as well as the base), **S3** (the authored residue: the external-interrupt array and anything else outside the ratified model), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: the same core in a different SoC keeps this layer's spec while L7's is replaced wholesale.
 
 ## Subcomponents
 

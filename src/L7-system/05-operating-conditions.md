@@ -28,7 +28,7 @@ The table is expected to grow one row per discovered knob; the file exists so th
 
 Not C-style undefined behaviour. Per L2/00's value lattice: the state floods with **X** — *envelope-bounded demonic nondeterminism*. The damage tier (L0/07's V-conditions) is still excluded — an out-of-spec clock configuration computes garbage, it does not burn the die — and **recovery is provable**: restore the configuration, reset, and X-elimination re-enters the tracked fragment. So the clause's semantics is: outside recommended operating conditions, `Sys(F)` constrains `obs` only to the electrically safe trace set, until the next reset re-anchors.
 
-This weakness is a feature twice over: it is *true* of the physics (the envelope genuinely still holds), and it keeps the UB clause from ever being load-bearing for safety-critical reasoning — nothing above may assume out-of-spec behaviour is *absent*, only that it is recoverable.
+This weakness is a feature twice over: it is *true* of the physics (the envelope genuinely still holds), and it keeps the UB clause from ever being load-bearing for safety-critical reasoning — nothing above may assume out-of-spec behaviour is *absent*, only that it is recoverable. The same layered-UB pattern appears one level down in L6/03's spec-UB clause for reserved instruction encodings: at every layer, "undefined" means undefined *at this layer's alphabet*, bounded by all the layers below — no knob and no instruction is a halt-and-catch-fire.
 
 ## Obligations
 

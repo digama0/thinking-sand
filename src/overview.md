@@ -38,7 +38,7 @@ The named objects at the seams. Every layer README opens with which of these it 
 | `Contracts(N)` | netlist `N` with each cell carrying its timed assume-guarantee contract (interval Liberty arc + regime classes + noise margin) and each net its RC enclosure | [L0/03–05](L0-device-physics/03-cell-enclosures.md) + [L1/03](L1-geometry/03-capacitance-enclosures.md) |
 | `Mealy(N)` | the discrete machine induced by the cells' Boolean functions — a *Mealy machine* is a clocked finite-state machine over bitvectors, outputs computed from state and current input | *derived* — formerly axiom S1; falls out of L0/05's (A) + M5 |
 | `⟦RTL⟧` | word-level transition system of the source text | [L4](L4-rtl-semantics/README.md) (definition) |
-| `ISA` | `Sail-RV32(config, incl. machine-mode subset) ⊕ S4-choices ⊕ residual authored semantics` | [L6](L6-isa/README.md) (definition) |
+| `ISA` | `Sail-RV32(config, incl. machine-mode subset) ⊕ S4-choices ⊕ residual authored semantics ⊕ spec-UB clause` | [L6](L6-isa/README.md) (definition) |
 | `Sys(F)`, `obs` | pad-trace semantics of the system spec; the physical observation map | [L7](L7-system/README.md) (definition) |
 
 One identification is used silently everywhere and stated only here: **`N` is a single shared object.** The netlist that L1's LVS certifies the geometry against, the netlist L2's STA runs on, and the left-hand side of L3's equivalence are all `⟦gl_caravel_core.v⟧` under one parse — X1's obligation, one parser, three consumers.

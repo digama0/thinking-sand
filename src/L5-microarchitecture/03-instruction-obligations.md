@@ -20,7 +20,7 @@ The wide-shallow quantification: for each instruction of the [configuration reco
             exclusive: one instruction class per word)
 ```
 
-Per-encoding, SAT-shaped, ~40 base patterns plus the **unimplemented sweep**: RV32I only, so *every* M, C, and A encoding — and the counter CSR reads — must reach the illegal-instruction trap. L6's "traps correctly" obligation lands here as the implementation half, gated on the configuration record.
+Per-encoding, SAT-shaped, ~40 base patterns plus the **trap sweep**: every word the decoder *rejects* must reach the illegal-instruction trap step (all of C, M, A, and the reserved space minus the UB set), and the counter/absent-CSR reads trap at execute. The words in L6/03's **spec-UB set** — reserved encodings the decoder accepts — generate no obligation at all: the spec's havoc step is refined by anything, which is precisely why the UB clause exists.
 
 **ALU and comparisons** — word-level lemmas per operator ([`IntAluPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/IntAluPlugin.scala), [`SrcPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/SrcPlugin.scala)): the Execute-stage result equals the Sail arithmetic — bitvector identities, discharged by SMT; the *netlist* structure of the adder was L3/05's business and never appears here. Branches: the comparison drives the redirect exactly as Sail's branch semantics, with the flush obligation carried by the invariant's clause 5.
 

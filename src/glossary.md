@@ -67,6 +67,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **Mealy machine** | a clocked finite-state machine whose outputs depend on state and current input — what a synchronous netlist *is* |
 | **bisimulation** | two systems matching each other step-for-step in both directions; the equivalence L3 proves under the register map ρ |
 | **stuttering / measure** | the implementation takes many steps per spec step; a measure function — a counter that strictly decreases — proves the stalling terminates. Read quantitatively (this core's measure components are constants), it yields per-instruction cycle bounds — see WCET |
+| **UB, layered (spec UB)** | behaviour a spec leaves unspecified *at its own layer* while every layer below still holds: a reserved instruction (L6/03) havocs architectural state but the pipeline, bus, and envelope stay sound; an out-of-range knob (L7/05) floods X but the die stays safe. Never C-style anything-goes |
 | **WCET** | worst-case execution time — a hard upper bound on how long code takes; an entire analysis discipline on cached/pipelined cores, literal addition of per-instruction bounds on this one (L5/01), and the input to L7/04's hold-up sizing |
 | **(inductive) invariant** | a property true at reset and preserved by every step — the certificate form of "always true", and the one artifact no tool invents (L5/02) |
 | **assume-guarantee** | contract style: the component guarantees G while its environment maintains A; the bus and PCPI ports are specified this way |
