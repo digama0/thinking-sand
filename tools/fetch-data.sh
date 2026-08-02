@@ -93,6 +93,10 @@ fetch_mgmt() {
   get $MGMT verilog/dv/firmware/csr-defs.h       data/mgmt/csr-defs.h
   # the generated interrupt-assignment documentation (the docs side of irqmap.py)
   get $MGMT docs/generated/interrupts.rst        data/mgmt/interrupts.rst
+  # the interrupt-facing firmware (fwanchors.py: the L6/01 anchor corpus)
+  for f in crt0_vex.S isr.c irq_vex.h irq.h simple_system_common.c simple_system_common.h caravel.h; do
+    get $MGMT verilog/dv/firmware/$f data/mgmt/firmware/$f
+  done
 }
 
 fetch_opcodes() {

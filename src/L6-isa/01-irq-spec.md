@@ -31,7 +31,7 @@ Author the residue: the spec fragments for exactly the behaviours outside the ra
 The spec and the implementation cannot share their evidence. The anchors, in order of independence:
 
 1. **The generator source**: the [plugin](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ExternalInterruptArrayPlugin.scala) is ~60 lines of SpinalHDL and *is* the design intent — formalise it first, then diff the formalisation against the emitted Verilog's behaviour (a generator bug would surface as exactly that diff).
-2. **The [LiteX](https://github.com/enjoy-digital/litex) interrupt conventions** and the shipped BIOS/firmware: software written against the intended semantics; the spec must make observed, working interrupt handling correct.
+2. **The [LiteX](https://github.com/enjoy-digital/litex) interrupt conventions** and the shipped firmware: software written against the intended semantics; the spec must make observed, working interrupt handling correct. The corpus is extracted and pinned ([`fwanchors.py`](../tools/fwanchors.py)) and is consistent with the measured semantics — mask written, pending only read, `mtvec` initialised before anything can trap.
 3. **[riscv-formal](https://github.com/YosysHQ/riscv-formal)'s VexRiscv checks**: prior art for what "an interrupt retired correctly" observably means at the RVFI boundary.
 
 Discrepancies between anchors and RTL are *results*; choices the anchors leave open go to [02](02-underspecification.md)'s register, not improvised here.

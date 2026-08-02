@@ -98,9 +98,33 @@ L.todo("ic3-calibrate", "IC3 calibration on invariant clauses 1/2/4 (sizes the l
 L.todo("bus-guarantee", "check the Wishbone guarantee clauses (Gi/Gd) on testbench traces",
        doc="src/L5-microarchitecture/04-buses-debug.md",
        blocked_on="the simulation harness; a trace checker is checker-phase work once traces exist")
-L.todo("irq-anchors", "extract the interrupt-facing firmware paths (the residual-spec anchor corpus)",
-       doc="src/L5-microarchitecture/05-interrupts.md",
-       blocked_on="fetching the BIOS/firmware tree at a pinned commit")
+@L.check("irq-anchors", "the interrupt-facing firmware paths, extracted as spec anchors",
+         doc="src/L5-microarchitecture/05-interrupts.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    for f in ("crt0_vex.S", "isr.c", "irq_vex.h"):
+        if m := need(DATA / "mgmt/firmware" / f):
+            return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    fa = load("fwanchors")
+    c, u, i = fa.crt0(), fa.csr_usage(), fa.isr()
+    if not (c["mtvec_written"] and c["mtvec_before_mie"] and c["trap_entry_mret"]
+            and c["saves_caller_saved"] == 16):
+        return FAIL, f"crt0 discipline changed: {c}"
+    if c["mie_value"] != 0x880:
+        return FAIL, f"crt0 mie value changed: {c['mie_value']}"
+    if "CSR_IRQ_PENDING" in u["writes"] or "LITERAL_0xFC0" in u["writes"]:
+        return FAIL, f"the firmware writes the read-only pending CSR: {u}"
+    if not (i["defined"] and i["uses_setmask"]):
+        return FAIL, f"isr shape changed: {i}"
+    return PASS, ("the shipped firmware is consistent with the measured core semantics: "
+                  "crt0 writes mtvec BEFORE setting mie (the discipline forced by mtvec "
+                  "having no reset value), the trap entry saves the 16 caller-saved "
+                  "registers and returns with mret, and across the corpus the mask CSR "
+                  "(0xBC0) is read and written while the pending CSR (0xFC0) is only "
+                  "ever READ - the trapping write is never exercised. One stale "
+                  "expectation pinned: crt0 sets mie = 0x880 (MTIE|MEIE), but MTIE is "
+                  "structurally dead on this SoC - the timer wire is tied to zero and "
+                  "the LiteX timer arrives through external-array bit 0")
 
 if __name__ == "__main__":
     sys.exit(L.main())
