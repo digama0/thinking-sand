@@ -35,6 +35,7 @@ def record():
     r["compressed"] = bool(re.search(r"[Cc]ompress", vex))
     r["muldiv"] = "MulDivIterativePlugin" in vex
     r["atomics"] = bool(re.search(r"\bAMO|LRSC|lrsc", vex))
+    r["wfi"] = "32'h10500073" in vex
 
     # CSR address set, from the generated decode's 12-bit literals
     csrs = sorted({int(h, 16) for h in re.findall(r"12'h([0-9a-fA-F]+)", vex)} - {0})
@@ -71,7 +72,7 @@ def main():
     r = record()
     print("# The shipped configuration record (measured)\n")
     print(f"ISA            : RV32I — compressed={r['compressed']}, "
-          f"hardware mul/div={r['muldiv']}, atomics={r['atomics']}")
+          f"hardware mul/div={r['muldiv']}, atomics={r['atomics']}, wfi={r['wfi']}")
     print("CSRs           : " + ", ".join(
         f"0x{a:03X} ({CSR_NAMES.get(a, 'UNKNOWN')})" for a in r["csrs"]))
     absent = [f"0x{a:03X} ({n})" for a, n in CSR_NAMES.items()

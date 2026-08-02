@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklib import Layer
+from checklib import Layer, PASS, FAIL, FINDING
 
 L = Layer("L6", "the ISA specification")
 
@@ -19,9 +19,33 @@ L.todo("sail-pin", "import sail-riscv at a pinned commit; record the translation
 L.todo("compliance", "run the architectural compliance suite against the imported model",
        doc="src/L6-isa/00-sail-base.md",
        blocked_on="sail-pin plus the riscv-arch-test harness")
-L.todo("partition", "generate the encoding + CSR-address partition from the configuration record",
-       doc="src/L6-isa/03-coverage.md",
-       note="unblocked: the configuration record is measured (RV32I + Zicsr subset, no C/M/A, no counters); the partition generator is checker-shaped work")
+@L.check("partition", "the encoding partition vs the shipped decoder's legal set",
+         doc="src/L6-isa/03-coverage.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    if m := need(DATA / "mgmt/VexRiscv_MinDebugCache.v"):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh mgmt)"
+    pt = load("partition")
+    dec = pt.decoder_cubes()
+    spec_bdd = pt.union([(m_, v, ) for m_, v, _ in pt.SPEC])
+    dec_bdd = pt.union(dec)
+    only_spec = pt.bdd_andnot(spec_bdd, dec_bdd)
+    only_dec = pt.bdd_andnot(dec_bdd, spec_bdd)
+    fam = {}
+    for m_, v in pt.paths(only_dec):
+        key = (v & 0x7F, (v >> 12) & 7)
+        fam[key] = fam.get(key, 0) + (1 << (32 - bin(m_).count("1")))
+    expect_fam = {(0x03, 6): 4194304, (0x13, 5): 65536, (0x13, 1): 32768, (0x73, 0): 1}
+    if pt.count(only_spec) != 0 or pt.count(only_dec) != 4292609 or fam != expect_fam:
+        return FAIL, (f"partition changed: spec-only {pt.count(only_spec)}, "
+                      f"decoder-only {pt.count(only_dec)}, families {fam}")
+    return FINDING, ("spec-only 0: every RV32I+Zicsr word is accepted. decoder-only "
+                     "4,292,609 words (F8): the shipped decoder ACCEPTS reserved "
+                     "encodings - all 2^22 words of LOAD funct3=110, 98,304 reserved "
+                     "shift-immediate variants, and exactly one SYSTEM word: sret "
+                     "(0x10200073). These execute as something instead of trapping; "
+                     "the trap sweep must carve them out and their semantics becomes "
+                     "authored alias rows in the residue")
 L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin source, then diff against RTL behaviour",
        doc="src/L6-isa/01-irq-spec.md",
        note="the plugin-first half is authoring; the DIFF is checker-shaped once a simulator harness exists")

@@ -39,7 +39,7 @@ def _(ctx):
     from checklib import load
     cr = load("config-record")
     r = cr.record()
-    ok = (not r["compressed"] and not r["muldiv"] and not r["atomics"]
+    ok = (not r["compressed"] and not r["muldiv"] and not r["atomics"] and r["wfi"]
           and r["csrs"] == [0x300, 0x304, 0x305, 0x341, 0x342, 0x343, 0x344, 0xBC0, 0xFC0]
           and r["icache"] == {"bytes": 64, "lines": 2, "line_bytes": 32,
                               "tag_bits": 28, "ways": 1}
