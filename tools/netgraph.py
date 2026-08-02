@@ -22,8 +22,13 @@ IN = {'A', 'A0', 'A1', 'A2', 'A3', 'A4', 'A_N', 'A1_N', 'A2_N', 'B', 'B1', 'B2',
       'B_N', 'B1_N', 'B2_N', 'C', 'C1', 'C_N', 'D', 'D1', 'D_N', 'S', 'S0', 'S1',
       'CLK', 'CLK_N', 'RESET_B', 'SET_B', 'GATE', 'GATE_N', 'SLEEP', 'SLEEP_B',
       'DE', 'TE', 'TE_B', 'SCD', 'SCE', 'NOTIFIER', 'DIODE', 'CIN', 'M', 'H'}
-# cells that cut the graph (contain a bistable): flops, latches, clock gates
-SEQ = re.compile(r'__(sdf|df|edf|dl|sedf|dlrtp|dlxtp|dlclk|dlyg)')
+# cells that cut the graph (contain a bistable): flops (df*/sdf*/edf*/sedf*),
+# latches (dlx*/dlr*), clock gates (dlclk*/sdlclk*).
+# NB: the dly* delay buffers (dlybuf/dlygate/dlymetal) are COMBINATIONAL and must
+# NOT be here — an earlier over-broad 'dl' alternative matched them, silently
+# cutting the combinational graph at every hold-fix buffer (a W3 soundness hole,
+# caught when synccheck.py misfiled them as sequential).
+SEQ = re.compile(r'__(sdf|edf|sedf|df|dlx|dlr|dlclk|sdlclk)')
 # NB: conb_1 is NOT here -- it is a constant *generator* (drives HI/LO), so it is a
 # functional cell with a signal output, not an inert filler. W4 caught this
 # misclassification on its first run, which is the check working as intended.

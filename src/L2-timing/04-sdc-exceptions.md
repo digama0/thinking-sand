@@ -45,8 +45,8 @@ The classification came back cleaner than the plan anticipated: **every false pa
 
 1. ~~Elaborate the Tcl into flat per-mode constraint sets~~ — **done** (`tools/sdc-audit.py`; the `_6817_` double-pin fell out as two modes).
 2. ~~Classify into the four classes~~ — **done**: all asynchronous; see the table.
-3. Discharge: the synchroniser predicate for the input-side entries, the exported-interface argument for the output-side ones. (The SAT and reachability routes are unneeded here — no entries in their classes.)
-4. **Close F1**: map every failing `in2reg` hold path to its covering exception and check the exception is justified — now concretely: check each `-from` pin's fanout lands on a two-flop synchroniser. Either outcome is a result.
+3. ~~The synchroniser predicate for the input-side entries~~ — **run** (`tools/synccheck.py`; [Findings](../findings.md#the-synchroniser-audit-l204-step-3-l206s-predicate-f1f3)): behind the `mprj_io` exceptions there are **no two-flop synchronisers**. The input side resolves into source-synchronous SPI capture (bits 3/4 acting as clocks; 615 flops on a *muxed* shift clock), and **40 single-flop core-clock captures** whose discharge must be software pacing + single-stage settling — a weaker claim than the predicate, now to be stated and priced (P1's `N_sync`). `gpio_in_core` is the one verified two-flop synchroniser. Remaining: the exported-interface argument for the output side.
+4. **Close F1**: map every failing `in2reg` hold path to its covering exception — the endpoint census above now says what the endpoints *are*; what remains is matching the signoff report's specific failing paths against them.
 5. **F4, sharpened**: the shipped file pins one mode of eight, and the modes' constraint sets genuinely differ — determine from the OpenLane logs whether the other seven were ever timed, and whether `-logically_exclusive` (an unverified claim, SCK modes only) is justified.
 
 ## Obligations

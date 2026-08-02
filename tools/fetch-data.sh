@@ -44,6 +44,9 @@ fetch_small_caravel() {
   get $CARAVEL signoff/caravel_core/warnings.log     data/caravel/warnings.log
   get $CARAVEL openlane/caravel_core/config.tcl      data/caravel/config.tcl
   get $CARAVEL openlane/Makefile                     data/caravel/openlane-Makefile
+  # housekeeping is a macro inside caravel_core; its own gate netlist is needed to
+  # trace async inputs to their synchronisers (synccheck.py / F1, F3)
+  get $CARAVEL verilog/gl/housekeeping.v             data/caravel/gl_housekeeping.v
 }
 
 fetch_big_caravel() {

@@ -186,6 +186,20 @@ Practical note: **SDC is a Tcl script**, not declarative data — conditionals, 
 - **F4 sharpened, and checked against the run log**: the shipped file pins one mode, and `cmds.log` records exactly one signoff pass (3× `sta_multi_corner.tcl` for min/max/nom RC plus one `sta.tcl` — a single elaboration of the SDC). **The shipped run timed one of the eight modes**; the other seven, whose constraint sets genuinely differ, were not timed in this run. (Scope caveat: this is the run whose artifacts we have; other runs elsewhere could in principle have covered other modes, but nothing shipped records one.)
 - Lint curiosity: the file's `puts "IO[4] …"` contains an unescaped command substitution — evidence the script only ever ran under shells with a forgiving `unknown` handler.
 
+### The synchroniser audit (L2/04 step 3, L2/06's predicate; F1/F3)
+
+`tools/synccheck.py` traces each async input's combinational fanout to its first sequential cells and tests the structural two-flop predicate (stage-1 Q → exactly one load → stage-2 D, same clock-tree root). Run over `gl_caravel_core.v` (275,701 instances, ~3 s) and `gl_housekeeping.v` (30,569 — the macro the async inputs enter; now fetched by `fetch-data.sh`).
+
+**Core level.** `gpio_in_core` lands on a **verified two-flop synchroniser** on `caravel_clk` — the design's only one. All 38 `mprj_io_in` bits enter `user_project_wrapper.io_in` (the user area's own problem — a B-level boundary fact); 19 also enter `housekeeping.mgmt_gpio_in`. `rstb_h` enters the `xres_buf` macro (the reset path, X4-class). `flash_io*_di` pass through housekeeping to the management core unclocked.
+
+**Housekeeping level — no two-flop synchroniser exists behind any `mprj_io` false path.** The 38 bits resolve into exactly three structures:
+
+1. **Bits 3 and 4 are clocks.** Bit 4 (SPI SCK) clocks 15 shift flops directly, matching the SDC's `hkspi_clk`; bit 3 (SPI CSB) gates/clocks flops *and* async-resets 45 of them — and is **declared a clock in no SDC mode** (SCK modes pin it to a constant instead), so CSB-edge timing — the SPI transaction protocol itself — lies outside every analysed mode.
+2. **615 flops capture on `csclk` — a muxed clock** (`a22o`: the external-SCK path OR `wbbd_sck`, the wishbone bit-bang clock — housekeeping's SPI is drivable from firmware too). Pad-data capture in this domain is *source-synchronous* (data and clock travel together from the external master): sound under its own assumptions — which are input delays relative to SCK, not synchronisers — plus a clock-mux-select condition that mode coverage must own.
+3. **40 flops on the core clock (`wb_clk_i`) capture pad bits with a single flop, heavily muxed** (a typical bit reaches 4 of them). These are genuine unsynchronised asynchronous samples. Not automatically a bug — per-bit software-paced reads tolerate single-flop capture — but the discharge argument is then *software pacing plus single-stage settling*, a strictly weaker guarantee than the two-flop predicate, and P1's `N_sync` accounting must count these 40 at single-stage MTBF.
+
+**A checker checked the checker.** Building synccheck exposed a latent bug in `netgraph.py`'s sequential-cell table: an over-broad `dl` alternative classified the `dly*` *delay buffers* (combinational hold-fix cells) as sequential, silently cutting the W3 cycle-search graph at every one. Fixed; **W1–W4 re-run clean with identical published numbers** (the bug was latent for `caravel_core`, whose hold fixing uses `clkdlybuf` cells that never matched, and live only for `housekeeping`'s `dlymetal` cells, where synccheck tripped over it).
+
 ## picorv32 Verilog tameness
 
 3,044 lines. The semantics obligation is **finite and enumerable**:
