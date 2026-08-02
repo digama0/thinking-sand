@@ -82,7 +82,7 @@ units       1000/µm    (1 nm, same as GDS — no rounding at stream-out)
 
 ## Gate netlist composition (`caravel_core.v`, one hierarchy level)
 
-275,705 instances, 187 distinct cell types. Classification is heuristic on cell names.
+275,704 instances (275,608 `sky130_*` + 96 macro instances; `check-l3.py` owns the census — an earlier count said 275,705/97), 187 distinct cell types. Classification is heuristic on cell names.
 
 | class | count | share | fate |
 |---|---|---|---|
@@ -91,15 +91,15 @@ units       1000/µm    (1 nm, same as GDS — no rounding at stream-out)
 | CLOCK | 15,306 | 5.6% | delete (after L2) |
 | SEQ (flops) | **5,774** | 2.1% | **keep — the state** |
 | BUF/INV | 3,109 | 1.1% | collapse |
-| macros | 97 | — | holes |
+| macros | 96 | — | holes |
 
-Reduction 275,705 → ~21,627 (≈13×). |S| = 2^5774 at this level alone, so **model checking is not on the table** — refinement plus induction only.
+Reduction 275,704 → ~21,627 (≈13×). |S| = 2^5774 at this level alone, so **model checking is not on the table** — refinement plus induction only.
 
-Macro holes: `RAM128`×3, `housekeeping`, `gpio_control_block`×38, `spare_logic_block`×4, `digital_pll`, `simple_por`, `caravel_clocking`.
+Macro holes, measured (16 types): `gpio_logic_high`×38, `gpio_defaults_block`×38, `spare_logic_block`×4, `RAM128`×3 (two of which are the banks of a flattened `RAM256` wrapper), `empty_macro`×2, and one each of `caravel_clocking`, `mprj_io_buffer`, `housekeeping`, `manual_power_connections`, `mprj2_logic_high`, `mprj_logic_high`, `mgmt_protect_hv`, `user_project_wrapper`, `simple_por`, `xres_buf`, `user_id_programming`. (`gpio_control_block` lives one level up, in `caravel.v`; the PLL is *flattened* into this netlist as `pll.*` cells, not a macro.)
 
 ## Structural checks on the gate netlist (L3)
 
-`tools/netgraph.py data/caravel/gl_caravel_core.v` — 7.5 s. 275,608 `sky130_*` instances (+97 macro instances = 275,705, reconciling with the looser count above), 48 top-level ports, 43 distinct pin names all classified explicitly (the tool exits non-zero on an unknown pin rather than guessing a direction).
+`tools/netgraph.py data/caravel/gl_caravel_core.v` — 7.5 s. 275,608 `sky130_*` instances (+96 macro instances = 275,704), 48 top-level ports, 43 distinct pin names all classified explicitly (the tool exits non-zero on an unknown pin rather than guessing a direction).
 
 | check | result |
 |---|---|
@@ -113,7 +113,7 @@ Macro holes: `RAM128`×3, `housekeeping`, `gpio_control_block`×38, `spare_logic
 
 **W3 makes X5's excision provably minimal.** Excise `pll.ringosc` and the netlist is contention-free and acyclic. The ring oscillator is *exactly* the set of structural violations — both the only cycle and the only contention, with the same cause. The prediction that the PLL cannot live inside the synchronous abstraction was right, and nothing else violates it.
 
-**W2 is a hierarchy artifact**, localising to `mgmt_buffers` 631, `gpio_control_in_*` 462, `soc.core` 69, `RAM256` 64, `user_io_*` 76 — black-box macro outputs and hierarchical ports. Needs the macro interface list to reduce to genuine floats; expect ~0 residue.
+**W2 is a hierarchy artifact — now discharged** (`check-l3.py`): the 1,609 undriven reads = 67 input-port bus bits (netgraph's port filter is name-exact and misses bus bits) + 1,542 macro-boundary nets, **residue 0**. The `RAM256.*` cluster resolved en route: RAM256 is a flattened wrapper whose two banks are `RAM128` macro instances.
 
 **W4 caught the tool.** First run reported 118 violations, all `conb_1` — a constant *generator* wrongly filed as inert filler. Fixing the classification gave 0, and brought the physical total to exactly 235,566, matching the census above independently.
 
@@ -202,20 +202,23 @@ Practical note: **SDC is a Tcl script**, not declarative data — conditionals, 
 
 ## picorv32 Verilog tameness
 
-3,044 lines. The semantics obligation is **finite and enumerable**:
+3,044 lines. The semantics obligation is **finite and enumerable** (measured by `tools/check-l4.py`, whole file — all modules; the per-module split awaits the configuration record):
 
 | construct | count | consequence |
 |---|---|---|
 | `#` delays | **0** | no scheduling games |
-| X literals (`'bx`) | **0** | no X-optimism |
 | `casex` | **0** | — |
 | `force`/`release`/`deassign` | **0** | — |
+| UDPs, `fork`/`join`, events | **0** | — |
+| X literals (`'bx`) | **25** | deliberate don't-cares — see below |
 | `always @*` | 15 | latch-inference risk — check complete assignment |
-| posedge blocks with blocking `=` | 2 of 25 | order-dependent within block |
+| posedge blocks with blocking `=` | 5 of 24 (38 statements) | order-dependent within block; normal-form rewrite obligation |
 | `casez` | 1 | wildcard/don't-care pattern |
 | `initial` | 1 | power-up value; part of the reset story |
 
-**19 specific spots**, each individually inspectable. Not "formalise Verilog".
+**22 construct sites plus 25 don't-care literals**, each individually inspectable. Not "formalise Verilog".
+
+**Correction (2026-08-02).** The original census — recorded here before any checker existed — was wrong in three cells: it claimed **0** X literals (there are 25: `alu_out = 'bx`, `decoded_rs = 'bx`, … — the deliberate don't-care idiom, letting synthesis choose while simulation propagates X, which is precisely the simulation/synthesis divergence class the old table claimed absent; each site becomes a value-independence obligation or refines into spec nondeterminism per L4/03), **2 of 25** blocking-assignment blocks (it is 5 of 24 — decoder, state-decode, main FSM, regfile read, PCPI mux, all local-temporary style), and hence the "**19 sites**" headline. `check-l4.py` now owns these numbers; prose defers to it.
 
 ## Management-core options
 

@@ -1,4 +1,4 @@
-# L4/01 — The subset: 19 sites, measured
+# L4/01 — The subset, measured
 
 ## Background
 
@@ -8,17 +8,17 @@ The move this chapter makes — the same one the book makes at every layer where
 
 ## Statement
 
-A semantics for **the synthesisable subset this design actually uses** — not for Verilog. The general artifact is large and contested; the specific one is 19 individually inspectable sites, and the categories that make Verilog semantics genuinely awful are *absent*, measured rather than hoped:
+A semantics for **the synthesisable subset this design actually uses** — not for Verilog. The general artifact is large and contested; the specific one is a finite, individually inspectable census — 22 construct sites plus 25 don't-care literals — with the worst categories *absent*, measured rather than hoped (by `tools/check-l4.py`, which corrected this table's original numbers — see [Findings](../findings.md#picorv32-verilog-tameness)):
 
 | construct | count | consequence |
 |---|---|---|
 | `#` delays | **0** | no scheduling games |
-| X literals (`'bx`) | **0** | no X-optimism/pessimism asymmetry in the source |
 | `casex` | **0** | — |
 | `force` / `release` / `deassign` | **0** | — |
 | UDPs, `fork`/`join`, events | **0** | — |
+| X literals (`'bx`) | **25** | deliberate don't-cares: synthesis chooses freely, simulation propagates X — per-site value-independence obligations, or refinement into spec nondeterminism ([03](03-x-and-reset.md)) |
 | `always @*` | 15 | latch-inference risk → [02](02-comb-blocks.md) |
-| posedge blocks with blocking `=` | 2 of 25 | intra-block order-dependence → [00](00-elaborated-object.md) |
+| posedge blocks with blocking `=` | 5 of 24 (38 stmts) | intra-block order-dependence → [00](00-elaborated-object.md) |
 | `casez` | 1 | wildcard patterns: `?`/`z` bits in the *case item* are don't-cares — one site, one convention to fix |
 | `initial` | 1 | power-up value → [03](03-x-and-reset.md) |
 
@@ -32,11 +32,11 @@ The discipline that follows: **write the semantics for exactly what appears.** E
 
 ## Why this beats the alternatives that were considered
 
-The generated cores (VexRiscv/SpinalHDL, the LiteX wrapper) are ~550 KB of machine-emitted Verilog — *narrower* in construct usage but hostile to invariant authoring, and their generators have no written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). Hand-written picorv32 costs 19 sites of care and buys a source a human can state an invariant over. That trade was the target-selection decision, and this census is its receipt.
+The generated cores (VexRiscv/SpinalHDL, the LiteX wrapper) are ~550 KB of machine-emitted Verilog — *narrower* in construct usage but hostile to invariant authoring, and their generators have no written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). Hand-written picorv32 costs a bounded census of care and buys a source a human can state an invariant over. That trade was the target-selection decision, and this census is its receipt.
 
 ## Obligations
 
-1. Run the same census over the SoC-level RTL (`caravel_core.v` RTL, housekeeping, wrapper) — the 19-site figure is core-only.
+1. Run the same census over the SoC-level RTL (`caravel_core.v` RTL, housekeeping, wrapper) — the census covers the picorv32 file only.
 2. Freeze the subset grammar as the front end's acceptance language; wire the census into it as a regression (a construct appearing after an upstream bump must fail loudly).
 3. The `casez` convention: one site, fix the don't-care semantics explicitly.
 

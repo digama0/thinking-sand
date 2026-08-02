@@ -20,7 +20,7 @@ The framing throughout is **validation of an existing design**, not design of a 
 
 Caravel is an open-source SoC *harness* — fixed pad frame, management core, RAM, and a user area — fabricated repeatedly on SkyWater's open 130 nm process. Chosen because the full chain is open (RTL, SDC, gate netlist, DEF, GDS, timing reports, tool version pins) on an open PDK, in a chip that physically exists. That intersection is narrow: Caravel and [Tiny Tapeout](https://tinytapeout.com) are approximately all of it.
 
-[picorv32](https://github.com/YosysHQ/picorv32) — a small hand-written RV32IMC [RISC-V](https://riscv.org) core — over the alternatives ([VexRiscv](https://github.com/SpinalHDL/VexRiscv), [Ibex](https://github.com/lowRISC/ibex)) because it is 3,044 lines and semantically tame: 19 enumerated Verilog sites needing care, and none of the categories that make Verilog semantics awful. The others are ~550 KB of machine-emitted Verilog with mangled names — tamer in some respects, hostile to authoring an invariant. All three ship in [caravel_mgmt_soc_litex](https://github.com/efabless/caravel_mgmt_soc_litex) as configuration options.
+[picorv32](https://github.com/YosysHQ/picorv32) — a small hand-written RV32IMC [RISC-V](https://riscv.org) core — over the alternatives ([VexRiscv](https://github.com/SpinalHDL/VexRiscv), [Ibex](https://github.com/lowRISC/ibex)) because it is 3,044 lines and semantically tame: a small measured census of sites needing care (see findings), with the worst of Verilog's semantic categories absent. The others are ~550 KB of machine-emitted Verilog with mangled names — tamer in some respects, hostile to authoring an invariant. All three ship in [caravel_mgmt_soc_litex](https://github.com/efabless/caravel_mgmt_soc_litex) as configuration options.
 
 The flow that produced the shipped artifacts is [OpenLane](https://github.com/The-OpenROAD-Project/OpenLane) ([Yosys](https://github.com/YosysHQ/yosys) for synthesis, [OpenROAD](https://github.com/The-OpenROAD-Project/OpenROAD) for place-and-route, [Magic](http://opencircuitdesign.com/magic/) and [netgen](http://opencircuitdesign.com/netgen/) for DRC/LVS), pinned to exact commits — see [Findings](src/findings.md#toolchain-provenance).
 
@@ -65,6 +65,16 @@ tools/fetch-data.sh [all|small|caravel|mgmt|pdk]
 ~490 MB into `data/`, which is gitignored. **Refs are pinned commit SHAs, not branches** — Findings quotes exact byte counts, instance counts and Liberty table values from these files, so a floating ref would silently invalidate the documents. `small` skips the two large binaries (~1 MB total) and is enough for most of the analysis.
 
 If you deliberately move to newer upstream: bump the SHA in [the script](tools/fetch-data.sh), re-run, **and re-derive Findings** — never one without the other.
+
+### The layer scoreboards — `tools/check-l0.py` … `check-l7.py`
+
+```sh
+tools/check-all.py           # every layer, L7 down to L0
+tools/check-l2.py            # one layer
+tools/check-all.py --list    # the obligation census without running anything
+```
+
+**The executable table of contents of each layer's obligations.** Every obligation the book states appears in its layer's checker exactly once: as a running check (`PASS`), a check confirming a recorded adverse finding (`FINDING` — expected, e.g. the failing signoff corners), a documented stub (`TODO`, with what it is blocked on named), or an axiom-register entry no program can reach (`EXTERN`). `FAIL` means the shipped data contradicts something recorded — the checkers are also regression tests on Findings itself, and have already corrected it twice (the L4 construct census, the macro count). This is the working surface of the current phase: checkers, not proofs.
 
 ### Structural checks on the netlist — [`tools/netgraph.py`](tools/netgraph.py)
 

@@ -29,7 +29,7 @@ IN = {'A', 'A0', 'A1', 'A2', 'A3', 'A4', 'A_N', 'A1_N', 'A2_N', 'B', 'B1', 'B2',
 # cutting the combinational graph at every hold-fix buffer (a W3 soundness hole,
 # caught when synccheck.py misfiled them as sequential).
 SEQ = re.compile(r'__(sdf|edf|sedf|df|dlx|dlr|dlclk|sdlclk)')
-# NB: conb_1 is NOT here -- it is a constant *generator* (drives HI/LO), so it is a
+# NB: conb_1 is NOT physical -- it is a constant *generator* (drives HI/LO), so it is a
 # functional cell with a signal output, not an inert filler. W4 caught this
 # misclassification on its first run, which is the check working as intended.
 PHYS = re.compile(r'__(decap|fill|tapvpwrvgnd|tap_|diode)')
@@ -52,11 +52,9 @@ def parse(path):
     return out, ports, txt
 
 
-def main():
-    path = sys.argv[1]
-    insts, ports, txt = parse(path)
-    print(f'{path}: {len(insts):,} instances, {len(ports)} top-level ports\n')
-
+def run(path):
+    """Compute W1-W4 over the netlist; return a results dict (no printing)."""
+    insts, ports, _ = parse(path)
     unknown = collections.Counter()
     drivers = collections.defaultdict(list)   # net -> [(cell, inst, pin)]
     readers = collections.defaultdict(list)
@@ -86,30 +84,15 @@ def main():
             for i in ins:
                 edges[i] |= set(outs)
 
-    if unknown:
-        print('!! UNCLASSIFIED PINS -- fix the table before trusting anything below:')
-        for p, k in unknown.most_common():
-            print(f'   {p} ({k:,})')
-        sys.exit(1)
-
     # W1 contention -- tri-state drivers separated out, they may legitimately share
     multi = {n: d for n, d in drivers.items() if len(d) > 1}
     tri = {n: d for n, d in multi.items() if all(TRI.search(c) for c, _, _ in d)}
     hard = {n: d for n, d in multi.items() if n not in tri}
-    print(f'W1  nets with >1 driver          : {len(multi):,}'
-          f'   (tri-state-only {len(tri):,}, mixed/static {len(hard):,})')
-    for n, d in list(hard.items())[:6]:
-        print(f'    ! {n}  <- ' + ', '.join(f'{c.split("__")[-1]}.{p}' for c, _, p in d[:4]))
-    for n, d in list(tri.items())[:4]:
-        print(f'      tri {n}  <- ' + ', '.join(f'{c.split("__")[-1]}.{p}' for c, _, p in d[:4]))
 
     # W2 floating reads
     undriven = [n for n in readers
                 if n not in drivers and n.lstrip('\\') not in ports
                 and n not in ('1\'b0', '1\'b1') and not n.startswith('1\'b')]
-    print(f'W2  read nets with no driver     : {len(undriven):,}')
-    for n in undriven[:6]:
-        print(f'      {n}  read by {len(readers[n])}')
 
     # W3 combinational cycles (iterative Tarjan)
     idx, low, on, stk, cyc = {}, {}, set(), [], []
@@ -145,21 +128,56 @@ def main():
                         break
                 if len(comp) > 1 or v in edges.get(v, ()):
                     cyc.append(comp)
+
+    tot = sum(ncells.values())
+    return {
+        'path': path, 'ninsts': len(insts), 'nports': len(ports),
+        'unknown': unknown, 'ncells': ncells, 'readers': readers,
+        'w1_multi': multi, 'w1_tri': tri, 'w1_hard': hard,
+        'w2_undriven': undriven, 'w3_sccs': cyc, 'w4_bad': phys_bad,
+        'ntotal': tot,
+        'nphys': sum(k for c, k in ncells.items() if PHYS.search(c)),
+        'nseq': sum(k for c, k in ncells.items() if SEQ.search(c)),
+        'nnets': len(set(drivers) | set(readers)),
+    }
+
+
+def main():
+    path = sys.argv[1]
+    r = run(path)
+    print(f'{path}: {r["ninsts"]:,} instances, {r["nports"]} top-level ports\n')
+
+    if r['unknown']:
+        print('!! UNCLASSIFIED PINS -- fix the table before trusting anything below:')
+        for p, k in r['unknown'].most_common():
+            print(f'   {p} ({k:,})')
+        sys.exit(1)
+
+    multi, tri, hard = r['w1_multi'], r['w1_tri'], r['w1_hard']
+    print(f'W1  nets with >1 driver          : {len(multi):,}'
+          f'   (tri-state-only {len(tri):,}, mixed/static {len(hard):,})')
+    for n, d in list(hard.items())[:6]:
+        print(f'    ! {n}  <- ' + ', '.join(f'{c.split("__")[-1]}.{p}' for c, _, p in d[:4]))
+    for n, d in list(tri.items())[:4]:
+        print(f'      tri {n}  <- ' + ', '.join(f'{c.split("__")[-1]}.{p}' for c, _, p in d[:4]))
+
+    undriven = r['w2_undriven']
+    print(f'W2  read nets with no driver     : {len(undriven):,}')
+    for n in undriven[:6]:
+        print(f'      {n}  read by {len(r["readers"][n])}')
+
+    cyc = r['w3_sccs']
     print(f'W3  combinational cycles (SCCs)  : {len(cyc):,}'
           + (f'   sizes {sorted((len(c) for c in cyc), reverse=True)[:8]}' if cyc else ''))
     for c in sorted(cyc, key=len, reverse=True)[:3]:
         print(f'      SCC of {len(c)} nets, e.g. {c[:3]}')
 
-    # W4 inertness
-    print(f'W4  physical cells w/ signal pins: {len(phys_bad):,}')
-    for c, n, s in phys_bad[:6]:
+    print(f'W4  physical cells w/ signal pins: {len(r["w4_bad"]):,}')
+    for c, n, s in r['w4_bad'][:6]:
         print(f'      {c} {n}: {s}')
 
-    tot = sum(ncells.values())
-    nphys = sum(k for c, k in ncells.items() if PHYS.search(c))
-    nseq = sum(k for c, k in ncells.items() if SEQ.search(c))
-    print(f'\n    cells: {tot:,}  physical {nphys:,} ({100*nphys/tot:.1f}%)  '
-          f'sequential {nseq:,}  nets {len(set(drivers) | set(readers)):,}')
+    print(f'\n    cells: {r["ntotal"]:,}  physical {r["nphys"]:,} ({100*r["nphys"]/r["ntotal"]:.1f}%)  '
+          f'sequential {r["nseq"]:,}  nets {r["nnets"]:,}')
 
 
 if __name__ == '__main__':

@@ -65,7 +65,7 @@ Five layers are **theorems**, three are **definitions** — marked, because a de
 | **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 | 2–4 yr |
 | **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification | 1–1.5 yr |
 | **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 6–9 mo |
-| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | 19 enumerated Verilog sites | 3–6 mo |
+| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | the measured construct census | 3–6 mo |
 | **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 1–2 yr |
 | **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices | 6–9 mo |
 | **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~6 mo |
@@ -82,7 +82,7 @@ device d ∈ Envelope
   ⊨ L1   N and RC well-defined ∀A in the E7 family   [(H1)(H2) checked, E7 ⊨ (H3); M2]
   ⊨ L2   Contracts(N) ⊑ Mealy(N)                     [M5; F1–F4 to clear]       †
   ⊨ L3   Mealy(N) ≈ρ ⟦RTL⟧                           [W1–W4 ✓, CEC, ρ = F5]
-  ≔ L4   ⟦RTL⟧                                       [19 sites]
+  ≔ L4   ⟦RTL⟧                                       [measured census]
   ⊨ L5   ⟦RTL⟧ ⊑ ISA                                 [the invariant]
   ≔ L6   ISA  = Sail-RV32I ⊕ picorv32-IRQ            [S2, S3, S4]
   ≔ L7   Sys(F) = ISA ⊕ memory map ⊕ devices         [X4, bus contract]

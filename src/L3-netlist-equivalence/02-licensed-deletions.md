@@ -18,13 +18,13 @@ Reduce 275,608 instances to the ~21,600 that carry logical content, with **each 
 | CLOCK | 15,306 | 5.6% | cleanliness ([L2/05](../L2-timing/05-clock.md)) + timing closure (M5) ⟹ collapse to the global tick |
 | BUF/INV | 3,109 | 1.1% | `buf = id`, inverter pairs cancel, polarity folds into the consumer's function — library lemmas only |
 | **LOGIC + SEQ** | **15,853 + 5,774** | 7.8% | **kept** — this is `Mealy(N)` |
-| macros | 97 | — | **not deleted: holes**, see below |
+| macros | 96 | — | **not deleted: holes**, see below |
 
 Two remarks on the big rows. The physical deletion is the largest single simplification in the project and rests entirely on W4's one property — which is why [01](01-well-formedness.md) treats that check's self-caught misclassification (`conb_1`) as a feature. The clock deletion is the bridge theorem's payoff made concrete: 15,306 cells — including 9,910 delay buffers that exist purely to shape the arrival function — vanish into the sentence "all flops update together," *conditional on* L2's hypotheses; the deletion is exactly as sound as timing closure is.
 
 ## The macros are holes, and one of them can be opened
 
-The 97 macro instances are not deletions but **boundaries**: `RAM128`/`RAM256`, `housekeeping`, `gpio_control_block` ×38, `gpio_defaults_block` ×38, `spare_logic_block` ×4, `mgmt_protect`, `simple_por`, `digital_pll`, `caravel_clocking`, `user_id_programming`. Each needs either recursion (it has its own gate netlist — verify it with the same machinery, once, amortised over instances) or a contract (analog: `simple_por` X4-class, `digital_pll` X5).
+The 96 macro instances (16 types, measured by `check-l3.py` — an earlier list here was partly wrong: `gpio_control_block` lives one level up and the PLL is flattened into this netlist, not a macro) are not deletions but **boundaries**: `gpio_logic_high` ×38, `gpio_defaults_block` ×38, `spare_logic_block` ×4, `RAM128` ×3, `empty_macro` ×2, and one each of `housekeeping`, `caravel_clocking`, `mprj_io_buffer`, `mgmt_protect_hv`, `user_project_wrapper`, `simple_por`, `xres_buf`, `user_id_programming`, `mprj_logic_high`, `mprj2_logic_high`, `manual_power_connections`. Each needs either recursion (it has its own gate netlist — verify it with the same machinery, once, amortised over instances) or a contract (analog: `simple_por` X4-class, `digital_pll` X5).
 
 The RAM is the important case: **it is not an SRAM macro.** `defines.v` declares `USE_CUSTOM_DFFRAM` — the memory is DFFRAM, a compiled array of standard-cell flops and muxes (2 blocks × 256 words). So the biggest would-be behavioural-model axiom is instead a *recursion target*: its gate netlist exists, W1–W4 apply to it, and its behavioural model ("a memory") becomes a provable per-macro theorem rather than an assumed one. On a design with a foundry SRAM macro this hole cannot be opened; here it can, and should be, because a memory's read-mux tree is exactly the kind of regular structure certificates handle well.
 

@@ -8,14 +8,14 @@ Before anything can be proved about the RTL, the RTL must *mean* something. Veri
 
 ## Statement
 
-A semantics for **the synthesisable subset this design actually uses** — not for Verilog: the simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), with the relationship to the LRM's event scheduler isolated as the scheduler-independence claim — probed by adequacy checks, stateable as a theorem. The subset is measured: 19 sites needing care, and the categories that make Verilog semantics awful are absent.
+A semantics for **the synthesisable subset this design actually uses** — not for Verilog: the simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), with the relationship to the LRM's event scheduler isolated as the scheduler-independence claim — probed by adequacy checks, stateable as a theorem. The subset is measured: 22 construct sites plus 25 don't-care `'bx` literals needing care, with the worst of Verilog's categories absent.
 
 ## Subcomponents
 
 | | | status |
 |---|---|---|
 | [00](00-elaborated-object.md) | `⟦·⟧ : Config → RTL → TransitionSystem`; the simple semantics; **scheduler independence** stated; the shipped configuration as part of the object | weeks |
-| [01](01-subset.md) | The 19-site census; the admissible-subset move (third instance); the enforced boundary | days — census done |
+| [01](01-subset.md) | The census (22 sites + 25 don't-cares, checker-derived); the admissible-subset move (third instance); the enforced boundary | days — census done |
 | [02](02-comb-blocks.md) | Completeness of the 15 `always @*` blocks (latch inference — the check that *changes the circuit* if missed); RTL-level acyclicity; the 2-block blocking-assignment rewrite | days |
 | [03](03-x-and-reset.md) | The two-valued strengthening, split three ways: X-elimination where the spec claims definiteness, refinement into spec nondeterminism where it doesn't, value-independence for the residue | weeks |
 | [04](04-adequacy.md) | Differential simulation; **the CEC cross-check** (disagreement with Yosys is detected, not silent); the FIRRTL counterfactual | weeks; mostly inherited |
@@ -35,7 +35,7 @@ Everything here is the admissible-subset move plus its receipts. [01](01-subset.
 ## Open problems
 
 1. Prove scheduler independence for the subset ([00](00-elaborated-object.md)) — bounded, genuine, severable from the critical path.
-2. The SoC-level census sweep ([01](01-subset.md)) — the 19-site figure is core-only.
+2. The SoC-level census sweep ([01](01-subset.md)) — the census covers the picorv32 file only.
 3. Resolve the one `initial` site against the shipped netlist ([03](03-x-and-reset.md)).
 
 ## First experiments

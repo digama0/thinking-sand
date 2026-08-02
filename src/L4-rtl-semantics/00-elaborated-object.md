@@ -37,7 +37,7 @@ The two known deviations from "order doesn't matter" are exactly the flagged sit
 
 ## Configuration is part of the object
 
-picorv32 is heavily parameterised — `ENABLE_MUL`, `ENABLE_DIV`, `ENABLE_IRQ`, `ENABLE_REGS_16_31`, `BARREL_SHIFTER`, `COMPRESSED_ISA`, counters, … — and `⟦·⟧` takes the **shipped** configuration as an argument. Recording it exactly is a deliverable, not bookkeeping: it determines which ISA subset L6 must cover, whether L3/05's PCPI cones exist, and which of the 19 sites are even elaborated. Elaboration (parameter resolution, `generate` unrolling) happens before the semantics and is part of X1-style front-end validation.
+picorv32 is heavily parameterised — `ENABLE_MUL`, `ENABLE_DIV`, `ENABLE_IRQ`, `ENABLE_REGS_16_31`, `BARREL_SHIFTER`, `COMPRESSED_ISA`, counters, … — and `⟦·⟧` takes the **shipped** configuration as an argument. Recording it exactly is a deliverable, not bookkeeping: it determines which ISA subset L6 must cover, whether L3/05's PCPI cones exist, and which of the census's sites are even elaborated. Elaboration (parameter resolution, `generate` unrolling) happens before the semantics and is part of X1-style front-end validation.
 
 ## Obligations
 

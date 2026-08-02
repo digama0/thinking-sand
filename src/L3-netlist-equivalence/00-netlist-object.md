@@ -49,4 +49,4 @@ Two facts that took the project a while to get right:
 
 ## Effort
 
-Weeks. This is the cleanest formal artifact in the entire stack — the reason the bottom-up route was attractive before L4's 19-site tax was measured — and it should be built early since every other file in L3 types against it.
+Weeks. This is the cleanest formal artifact in the entire stack — the reason the bottom-up route was attractive before L4's census tax was measured — and it should be built early since every other file in L3 types against it.

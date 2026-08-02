@@ -26,7 +26,7 @@ Honest limit shared by the first two: coverage is *this design's* constructs and
 
 The clean architecture this layer exists *instead of*: take a generator's IR with a specified lowering — **FIRRTL** is the canonical case (word-level types, a written-down spec, a defined lowering to netlists) — lower it yourself, compare netlist-to-netlist, and Verilog appears only as a file format. Then L4 shrinks to nearly nothing.
 
-Unavailable here: picorv32 has no generator and no IR — the hand-written Verilog *is* the source artifact. VexRiscv has SpinalHDL's internal representation, but nothing with FIRRTL's status as a specified interchange object. So the choice was: Chisel-class design with the better proof architecture, or Caravel+picorv32 with a theorem about silicon that exists. The project chose the silicon and pays this layer as the tax — 19 sites, three adequacy checks, one deferred theorem. If the project ever moves from validating to generating, the IR route is the right answer and this layer's replacement is already sketched.
+Unavailable here: picorv32 has no generator and no IR — the hand-written Verilog *is* the source artifact. VexRiscv has SpinalHDL's internal representation, but nothing with FIRRTL's status as a specified interchange object. So the choice was: Chisel-class design with the better proof architecture, or Caravel+picorv32 with a theorem about silicon that exists. The project chose the silicon and pays this layer as the tax — the measured census, three adequacy checks, one deferred theorem. If the project ever moves from validating to generating, the IR route is the right answer and this layer's replacement is already sketched.
 
 ## Obligations
 
