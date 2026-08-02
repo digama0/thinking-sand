@@ -19,18 +19,18 @@ L.todo("sail-pin", "import sail-riscv at a pinned commit; record the translation
 L.todo("compliance", "run the architectural compliance suite against the imported model",
        doc="src/L6-isa/00-sail-base.md",
        blocked_on="sail-pin plus the riscv-arch-test harness")
-L.todo("partition", "generate the implemented/unimplemented encoding partition from the configuration record",
+L.todo("partition", "generate the encoding + CSR-address partition from the configuration record",
        doc="src/L6-isa/03-coverage.md",
-       blocked_on="L5/config-record (the shipped parameterisation decides the partition)")
-L.todo("s3-draft-diff", "formalise the README's IRQ prose, then diff against RTL behaviour (the discrepancy log)",
+       note="unblocked: the configuration record is measured (RV32I + Zicsr subset, no C/M/A, no counters); the partition generator is checker-shaped work")
+L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin source, then diff against RTL behaviour",
        doc="src/L6-isa/01-irq-spec.md",
-       note="the doc-first half is authoring; the DIFF is checker-shaped once a simulator harness exists")
-L.todo("c-register", "populate the choice register C1-C7 with RTL-extracted values",
+       note="the plugin-first half is authoring; the DIFF is checker-shaped once a simulator harness exists")
+L.todo("c-register", "populate the choice register C1-C7 with RTL-extracted values (misaligned behaviour, mtvec WARL fields, mtval details)",
        doc="src/L6-isa/02-underspecification.md",
-       blocked_on="L5/config-record for the parameter-valued rows (C1-C3 are direct parameter reads)")
-L.extern("S3-fidelity", "the authored IRQ spec is what was intended",
+       blocked_on="config-record extensions for the measurable rows (C2/C5/C6); the rest is recording discipline")
+L.extern("S3-fidelity", "the authored residue (external-interrupt array) is what was intended",
          doc="src/axioms.md",
-         note="unfalsifiable; anchored by firmware corpus + doc-first discipline, never checked")
+         note="unfalsifiable; anchored by the plugin source, LiteX conventions, and the firmware corpus - never checked")
 L.extern("S4-choices", "the recorded choices are acceptable readings of the standard",
          doc="src/axioms.md",
          note="legislative by nature; what IS checkable (RTL agrees with each pick) lands in L5's lemmas")

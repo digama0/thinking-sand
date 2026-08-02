@@ -14,7 +14,7 @@
   - [05 Operating conditions](L7-system/05-operating-conditions.md)
 - [L6 — The ISA](L6-isa/README.md)
   - [00 The Sail base](L6-isa/00-sail-base.md)
-  - [01 The IRQ spec (S3)](L6-isa/01-irq-spec.md)
+  - [01 The authored residue (S3)](L6-isa/01-irq-spec.md)
   - [02 The choice register (S4)](L6-isa/02-underspecification.md)
   - [03 Coverage](L6-isa/03-coverage.md)
 - [L5 — Microarchitecture](L5-microarchitecture/README.md)

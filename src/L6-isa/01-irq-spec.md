@@ -1,45 +1,41 @@
-# L6/01 — The authored IRQ specification (S3)
+# L6/01 — The authored residue (S3)
 
 ## Background
 
-An **interrupt** is the mechanism by which the outside world interrupts a running program: a device raises a wire, and the processor — at some suitable moment — suspends the program, saves enough state to resume it, and jumps to a *handler* routine that deals with the event. Standard RISC-V specifies this machinery in its privileged architecture: a set of control registers holding the saved program counter and cause, a defined entry sequence, and an `mret` instruction to return. It is a large, carefully-designed edifice, and picorv32 implements **none of it**. Instead, its author built a smaller custom scheme: interrupt state lives in four extra "q-registers," entry jumps to a fixed address, and six nonstandard instructions (occupying encoding space RISC-V reserves for vendor use) read the q-registers, return from the handler, manipulate the interrupt mask, wait for an interrupt, and program a countdown timer.
+Almost everything the shipped core does is covered by the ratified formal model: the base instructions, the machine-mode CSRs, trap entry and `mret` are all *imported* spec ([00](00-sail-base.md)). But no real chip sits entirely inside a standard, and the parts that poke out must have their specification **authored** — written here, by this project, with no external document to defer to. Authoring a spec for hardware you can inspect carries a well-known trap: the natural move — read the RTL, write down what it does — produces a spec that agrees with the implementation *by construction*, and a refinement proof between them verifies nothing at all; bugs get transcribed into the spec and then formally certified. The field calls this "verifying the implementation against itself," and the defence is discipline about *evidence*: gather every description of intended behaviour that is independent of the RTL — generator sources, documentation, conventions, software written against them — formalise those first, and treat every point where the RTL disagrees as a finding to adjudicate deliberately, never a detail to silently copy.
 
-Custom means *informally specified*. The picorv32 README does document the scheme — a section of per-instruction prose descriptions with encodings — but prose is not a transition system: there is no ratified Sail model for these six instructions or for the entry sequence, and questions the refinement proof must have answers to (the exact interleaving of entry with instruction boundaries, simultaneous-line arbitration, the timer's step semantics) are exactly the kind prose leaves open. So the *formal* specification must be **authored** here, with the README as its primary source. That flips the usual epistemics of verification. Everywhere else in this book, spec and implementation come from different parties, and a proof connecting them is evidence against *both* being wrong — an implementation bug and a spec error would have to conspire to cancel. Here the natural move — read the RTL, write down what it does — produces a spec that agrees with the implementation *by construction*, and a refinement proof between them verifies nothing at all: bugs get transcribed into the spec and then formally certified. This trap has a name in the field ("verifying the implementation against itself"), it is the reason this file is flagged as the project's most error-prone artifact, and the methodology section below is the defence: gather every scrap of evidence about intended behaviour that is *independent* of the RTL — the documentation, formalised before looking at the implementation; firmware other people wrote against that documentation; third-party checkers — and treat every point where the RTL disagrees with an anchor as a finding to adjudicate deliberately, never a detail to silently copy.
-
-One spec-craft subtlety recurs enough to preview. A specification with *two kinds of step* — ordinary instruction execution, and spec-level events like "an interrupt is taken" — must say how the kinds interleave: can an interrupt fire mid-instruction? Between which instructions *must* it fire? The standard's own language ("interrupts are taken eventually") is too loose to refine against, so the authored spec has to make the interleaving precise — one of several places where writing the spec means making choices, a discipline [02](02-underspecification.md) systematises.
+For this core the residue is mercifully small, and every piece of it is a measured fact of the [configuration record](../tools/config-record.py). The centrepiece is the **external-interrupt array**: 32 interrupt lines with a mask register and a pending register exposed as two custom CSRs (`0xBC0`/`0xFC0`), whose OR funnels into the standard external-interrupt pending bit — machinery from the [`ExternalInterruptArrayPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ExternalInterruptArrayPlugin.scala), outside any ratified document. Around it, three smaller residues: the standard software and timer interrupts are **never pending** (their wires are tied to zero at [instantiation](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/rtl/mgmt_core.v) — a fact the spec must state, since the imported model would otherwise permit them); the **reset vector arrives from a register** (LiteX's CSR-writable reset address) rather than a constant, so the spec's reset section is parameterised where the standard expects a platform constant; and the **debug unit** ([`DebugPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/DebugPlugin.scala)) can reach architectural state out of band — excluded from the spec by the debug-inactive conditionality (L5/04) rather than specified.
 
 ## Statement
 
-Write the formal specification that does not exist: picorv32's interrupt mechanism is **custom** — no standard to conform to, only the README's informal description — and its spec must be authored before L5/05 can prove anything against it. This is the single most error-prone artifact in the project and the least likely to be caught by anything downstream: **S3, the sharpest surviving specification axiom.**
+Author the residue: the spec fragments for exactly the behaviours outside the ratified model, composed with the Sail import as `⊕`-extensions. **S3** is the axiom that this authored fragment is what was intended — unfalsifiable in the same sense as any specification-fidelity claim, and priced in the [register](../axioms.md).
 
-## What must be specified
+**State.** The 32-bit array-pending register and array-mask register (the two custom CSRs), read/written by the standard `csrr*` instructions like any CSR.
 
-The spec extends the Sail base with state and steps:
+**Steps / invariants.**
 
-**State.** The 32-line pending set (with per-line latching per `LATCHED_IRQ` and permanent masks per `MASKED_IRQ`); the software mask register; the four q-registers; the timer's countdown register — *architectural*, since `timer` reads/writes it; and — a requirement discovered by L5's measure analysis — an explicit **waiting state** for `waitirq`, so the implementation's stall is a spec-visible stutter rather than a liveness violation.
-
-**Steps**, joining the instruction step as the spec's second kind ([L5/01](../L5-microarchitecture/01-refinement.md)'s disjunction):
-
-- **IRQ entry**: at an instruction boundary with unmasked pending lines — return pc and pending set delivered into q-registers, mask updated, jump to `PROGADDR_IRQ`, *atomically* (no observable intermediate — L5/05's obligation 2 is the implementation side).
-- **The six instructions**: `getq`/`setq` (q-register access), `retirq` (return + unmask), `maskirq` (mask exchange), `waitirq` (enter the waiting state), `timer` (exchange countdown). Encodings occupy custom-0 space; [03](03-coverage.md) must treat them as implemented.
-- **Timer expiry** raising its line; external lines set by the environment (the IRQ *map* — which device drives which line — is deliberately **not** here: it is L7/03's system wiring. This spec is parameterised by the lines, portable with the core).
-
-**Underspecification within S3 itself** — the authored spec inherits [02](02-underspecification.md)'s discipline: e.g. simultaneous-line arbitration order and the exact boundary cycle of entry ("eventually, at a commit point" vs. "at the next commit point") are choices to record, not facts to discover.
+- **Capture**: an asserted external line sets its pending bit; pending bits persist until cleared by software (the capture/clear discipline — level vs. latched — is exactly the kind of detail the RTL diff must settle, not assume).
+- **The funnel**: the machine-mode external-interrupt pending bit equals `(pending ∧ mask) ≠ 0`. Interrupt *taking* is then entirely the imported spec's business (`mstatus.MIE`, `mie`, trap entry).
+- **Never-pending**: the software-interrupt and timer-interrupt pending bits are constant zero.
+- **Dispatch is software's problem**: all 32 lines share the one external-interrupt trap cause; the handler reads `0xFC0` to find the source. (Which device drives which line is system wiring — L7/03's map, not this spec.)
 
 ## Authoring methodology: breaking the circularity
 
-Spec and implementation share an author here; the evidence must not. The anchors, in order of independence (developed in [L5/05](../L5-microarchitecture/05-interrupts.md)):
+The spec and the implementation cannot share their evidence. The anchors, in order of independence:
 
-1. **Formalise the documentation first** — picorv32's README prose — *then* diff against RTL behaviour, so every discrepancy surfaces as a recorded finding resolved in one deliberate direction, never silently toward the RTL.
-2. **Shipped and third-party firmware** using the IRQ instructions: the spec must make observed, working software correct. Software written by others against the documentation is the nearest thing to an independent semantics.
-3. **riscv-formal's IRQ checks** via RVFI's `rvfi_intr` — prior art for what "an interrupt retired correctly" observably means.
+1. **The generator source**: the [plugin](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ExternalInterruptArrayPlugin.scala) is ~60 lines of SpinalHDL and *is* the design intent — formalise it first, then diff the formalisation against the emitted Verilog's behaviour (a generator bug would surface as exactly that diff).
+2. **The [LiteX](https://github.com/enjoy-digital/litex) interrupt conventions** and the shipped BIOS/firmware: software written against the intended semantics; the spec must make observed, working interrupt handling correct.
+3. **[riscv-formal](https://github.com/YosysHQ/riscv-formal)'s VexRiscv checks**: prior art for what "an interrupt retired correctly" observably means at the RVFI boundary.
+
+Discrepancies between anchors and RTL are *results*; choices the anchors leave open go to [02](02-underspecification.md)'s register, not improvised here.
 
 ## Obligations
 
-1. The state + step formalisation above, parameterised by lines and by the relevant configuration bits (`ENABLE_IRQ_QREGS`, `ENABLE_IRQ_TIMER`).
-2. The doc-first draft, the RTL diff, and the discrepancy log (each entry an S3-fidelity data point).
+1. The state + step formalisation above, as a `⊕`-extension of the Sail import.
+2. The plugin-first draft, the RTL diff, and the discrepancy log (each entry an S3-fidelity data point).
 3. The firmware anchor corpus (shared with L5/05).
+4. The never-pending and register-reset-vector clauses, stated in the spec rather than assumed.
 
 ## Effort
 
-Months, thinking-dominated — the counterweight to [03](03-coverage.md)'s typing-dominated bulk. The fidelity risk is priced in Axioms as S3 and cannot be engineered away, only anchored.
+Weeks, thinking-dominated — but a fraction of what a fully custom interrupt scheme would cost: the trap machinery itself is imported, and the residue is two registers, a funnel, and two tie-offs. The fidelity risk is priced in [axioms](../axioms.md) as S3 and cannot be engineered away, only anchored.

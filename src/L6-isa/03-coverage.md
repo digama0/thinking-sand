@@ -14,31 +14,29 @@ The wide, shallow obligations that make `ISA` *total* over the 32-bit word space
 
 ## The partition
 
-From L4's configuration record, the word space partitions:
+From the [configuration record](../tools/config-record.py), the word space partitions with unusual severity:
 
 ```
-implemented    RV32I base  ⊕  M (iff PCPI)  ⊕  C (iff COMPRESSED_ISA)
-               ⊕ counters  ⊕  the six custom-0 IRQ instructions (S3)
-unimplemented  everything else — including, if C is off, all words with [1:0] ≠ 11
+implemented    RV32I base  ⊕  Zicsr (csrr* against the implemented CSR set)
+               ⊕  fence / fence.i  ⊕  ecall / ebreak / mret
+unimplemented  everything else — ALL of C ([1:0] ≠ 11, three quadrants of the
+               16-bit space), all of M and A, reads of the absent CSRs
+               (mscratch, misa, the counters), and every reserved region
 ```
 
-Each implemented encoding gets the decode-bijection + execute lemma pair (L5/03, templated by [00](00-sail-base.md)'s `addi`/`beq` example). Each unimplemented encoding gets **traps-correctly**: decode raises no flag, the FSM reaches `trap` (`CATCH_ILLINSN`), matching the spec's illegal-instruction step per choice C3.
+Each implemented encoding gets the decode-equivalence + execute lemma pair (L5/03, templated by [00](00-sail-base.md)'s `addi`/`beq` example). Each unimplemented encoding gets **traps-correctly**: the decoder raises the illegal-instruction exception and the machine takes the imported spec's trap step — `mcause`/`mtval` included, per the S4 rows. Note the CSR subtlety: a `csrrw` to an *absent* CSR is a legal instruction *encoding* whose execution traps — the sweep partitions CSR address space as well as opcode space.
 
 ## Why this is the model case of cheap entropy
 
-~40 implemented patterns and the unimplemented complement: high raw *spec* entropy, **zero invariant entropy** — each obligation is one SAT-shaped query, independent of all others, because L5's invariant cuts every cross-instruction dependency at the fetch boundary. A lot of typing, almost no thinking; the thinking concentrated in S3 ([01](01-irq-spec.md)) and S4 ([02](02-underspecification.md)). Most of L6 has this character, and the layer's effort estimate is dominated by it.
+~40 implemented patterns and the unimplemented complement: high raw *spec* entropy, **zero invariant entropy** — each obligation is one SAT-shaped query, independent of all others, because L5's interlocks cut every cross-instruction dependency at the register file. A lot of typing, almost no thinking; the thinking concentrated in S3 ([01](01-irq-spec.md)) and S4 ([02](02-underspecification.md)). Most of L6 has this character, and the layer's effort estimate is dominated by it.
 
-The sweep is also where **encoding-space structure pays**: the partition is decided by major opcode and format fields, so the unimplemented half is a small set of *regions*, not 2³² cases — the custom-0 occupancy by the IRQ instructions being the one subtlety (a standard-RISC-V-only reading would call them illegal; `ISA = Sail ⊕ S3` calls them implemented; the sweep must use the ⊕).
-
-## The PCPI timeout edge
-
-One coverage case is neither decode-time nor static: an M-extension word with `ENABLE_PCPI` variants live but *no unit claiming it* resolves to the illegal trap only after the PCPI timeout (L5/04's nobody-claims clause). Coverage must treat "implemented" as configuration-*and*-topology dependent: the letter M is implemented iff the claiming unit is instantiated, and the sweep's partition follows the instantiated design, not the parameter alone.
+The sweep is also where **encoding-space structure pays**: the partition is decided by major opcode and format fields, so the unimplemented half is a small set of *regions*, not 2³² cases. This core adds no custom opcodes — its custom behaviour is two CSR *addresses* ([01](01-irq-spec.md)), handled in the CSR half of the sweep — so the opcode-space partition is pure standard subsetting.
 
 ## Obligations
 
-1. Generate the partition from the configuration record; publish it as the single source both L5/03 and the compliance harness consume.
+1. Generate the partition — opcode regions *and* CSR addresses — from the [configuration record](../tools/config-record.py); publish it as the single source both L5/03 and the compliance harness consume.
 2. The traps-correctly sweep, mechanised (regions, not words).
-3. The custom-0 and PCPI-timeout edges as explicit cases with their own lemmas.
+3. The absent-CSR cases (including the counters) as explicit rows of the sweep.
 
 ## Effort
 

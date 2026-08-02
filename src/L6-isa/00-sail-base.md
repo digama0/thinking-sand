@@ -2,7 +2,7 @@
 
 ## Background
 
-An **ISA** — instruction set architecture — is the contract between hardware and software: the complete list of instructions a processor executes, what state they act on (registers, the program counter, memory), and exactly what each one does to that state. It is the one interface in computing with different vendors on each side — compilers target it, processors implement it, and neither party ever sees the other's internals. RISC-V, the ISA of this project, is distinctive in being an *open standard*: its specification documents are public, governed by a nonprofit, and implementable by anyone without a license — which is why an open-source core like picorv32 can exist at all.
+An **ISA** — instruction set architecture — is the contract between hardware and software: the complete list of instructions a processor executes, what state they act on (registers, the program counter, memory), and exactly what each one does to that state. It is the one interface in computing with different vendors on each side — compilers target it, processors implement it, and neither party ever sees the other's internals. RISC-V, the ISA of this project, is distinctive in being an *open standard*: its specification documents are public, governed by a nonprofit, and implementable by anyone without a license — which is why open-source cores like VexRiscv can exist at all.
 
 For most of computing history, ISAs were specified in English. An instruction's behaviour would be given as a page of prose plus a register-transfer sketch, and the thousands of edge-case questions (what does a shift by 32 do? what happens to the upper bits? in what order do a trap and a pending interrupt resolve?) were settled by tribal knowledge, reference implementations, and vendor errata. A refinement proof cannot consume prose. It needs the ISA as a mathematical object — a **transition system**: a set of states and a step relation, in which "execute one instruction" is a defined function of the current state. Producing that object by hand from the manual would itself be a large, error-prone authoring job, and any mistakes would be *specification* errors — the kind no downstream proof can catch, since the proof would faithfully verify the processor against the wrong contract.
 
@@ -12,13 +12,13 @@ One structural fact to hold on to before the details: a RISC-V instruction is a 
 
 ## Statement
 
-Import `Sail-RV32I(config)` as the received core of `ISA` — and first, fix what the object being imported *is*, since the standard's structure is what makes the import modular and the subsetting principled.
+Import `Sail-RV32(config)` — the base ISA *and* the machine-mode subset of the privileged architecture — as the received core of `ISA`. First, fix what the object being imported *is*, since the standard's structure is what makes the import modular and the subsetting principled.
 
 ## How RISC-V is structured
 
-**Two volumes.** The *unprivileged* spec (Volume I): the instructions a program sees. The *privileged* spec (Volume II): machine/supervisor modes, CSRs, traps, virtual memory. **picorv32 implements only a fragment of Volume I** — no privilege levels, no standard trap machinery; the custom IRQ scheme ([01](01-irq-spec.md)) occupies the place Volume II would.
+**Two volumes.** The *unprivileged* spec (Volume I): the instructions a program sees. The *privileged* spec (Volume II): machine/supervisor modes, CSRs, traps, virtual memory. The shipped core implements Volume I's base plus **Volume II's machine-mode fragment** — the trap/interrupt CSRs and their semantics, measured in the [configuration record](../tools/config-record.py) — and nothing above it: no supervisor mode, no virtual memory. So the import cuts *inside* Volume II, at the machine-mode boundary, and the subset must be carved by CSR rather than by volume.
 
-**Base + extension letters.** A base ISA (`RV32I`: ~40 instructions — integer ops, loads/stores, branches, jumps) plus optional extensions, each a letter with its own ratification: `M` (8 instructions: multiply/divide), `C` (compressed 16-bit re-encodings), `Zicsr`/`Zicntr` (CSR access / counters), and many more (`A`, `F`, `D`, `V`… — all absent here). The letters are the configuration vocabulary: L4's record picks out exactly `RV32I` ⊕ (M iff PCPI live) ⊕ (C iff `COMPRESSED_ISA`) ⊕ counters. Crucially **C is a decode-layer extension**: each 16-bit encoding *expands to* a base instruction — new syntax, no new semantics — so its spec cost is a second decoder, not a second execution model.
+**Base + extension letters.** A base ISA (`RV32I`: ~40 instructions — integer ops, loads/stores, branches, jumps) plus optional extensions, each a letter with its own ratification: `M` (multiply/divide), `C` (compressed 16-bit re-encodings), `Zicsr`/`Zicntr` (CSR access / counters), and many more (`A`, `F`, `D`, `V`…). The letters are the configuration vocabulary, and the [measured record](../tools/config-record.py) is brutal in its economy: **`RV32I ⊕ Zicsr`, nothing else** — no M (mul/div trap to software), no C, no A, and not even `Zicntr` (the counter CSRs trap). Every absent letter is spec the import does not carry and the coverage sweep must instead prove *traps*.
 
 **The encoding space.** 32-bit words with `[1:0] = 11` (the other three values are the compressed quadrants); major opcode in `[6:2]`; then six **formats** fixing where operands live:
 
@@ -29,7 +29,7 @@ S/B:  imm split around rs2|rs1, funct3, imm|opcode  stores / branches
 U/J:  imm[31:12]              | rd | opcode         lui, auipc / jal
 ```
 
-The immediates in S/B/J are bit-scrambled — deliberately, so that register fields sit at fixed positions and the sign bit is always bit 31: the standard is shaped for cheap decoders, and the scrambling is spec content the decode lemmas must get right. The space reserves **custom-0/custom-1** major opcodes for vendor instructions — which is where picorv32's six IRQ instructions live, so the custom extension occupies sanctioned space rather than colliding with future standard extensions.
+The immediates in S/B/J are bit-scrambled — deliberately, so that register fields sit at fixed positions and the sign bit is always bit 31: the standard is shaped for cheap decoders, and the scrambling is spec content the decode lemmas must get right. The space reserves **custom-0/custom-1** major opcodes for vendor instructions; the shipped core uses none of them — its custom behaviour lives entirely in **CSR address space** (the two external-interrupt array registers, [01](01-irq-spec.md)), which is the tamer kind of custom: no new encodings, no new step relation, just two more registers with authored semantics.
 
 ## How Sail specifies it — a worked example
 
@@ -56,18 +56,18 @@ A branch (`beq`, B-format) adds the two remaining ingredients: the scrambled imm
 
 `sail-riscv` is the standard's **official golden model** — adopted by RISC-V International, with extensions required to extend it for ratification — which makes S2 smaller than it looks: its residue is the model's fidelity to the ratified manuals plus the translation path. Mitigation: run the official architectural compliance suite against the *imported* model (post-translation, in our prover), not against upstream. The Sail→prover translation (which backend, which version, deep vs. shallow, how Sail bitvector primitives map) is conventionally trusted; state it as S2's ledger line and pin it like the toolchain.
 
-**Subset by configuration, not by hand**: the implemented/unimplemented boundary is *derived* from L4's record and exported to [03](03-coverage.md) — a hand-maintained list would drift.
+**Subset by configuration, not by hand**: the implemented/unimplemented boundary is *derived* from the [configuration record](../tools/config-record.py) and exported to [03](03-coverage.md) — a hand-maintained list would drift. The machine-mode carve is part of the same derivation: exactly the measured CSR set, with reads of absent CSRs (`mscratch`, `misa`, the counters) landing in the trap sweep.
 
 ## Deliberately out of scope
 
-The memory model (RVWMO — axiomatic↔operational equivalence plus a multicore RTL refinement, unattempted at any scale), virtual memory, floating point, and all of Volume II. picorv32 has none of them — a large part of why it was chosen — and the import must cut at the unprivileged boundary, with the counters as the only CSR-shaped survivors.
+The memory model (RVWMO — axiomatic↔operational equivalence plus a multicore RTL refinement, unattempted at any scale), virtual memory, floating point, supervisor mode, and PMP. The shipped core has none of them, and the import cuts at the machine-mode boundary — everything of Volume II above that line stays out.
 
 ## Obligations
 
 1. The pinned import with the translation's guarantees written down.
 2. The compliance-suite harness against the imported model.
 3. The configuration-derived subset boundary.
-4. The `addi`/`beq` worked pair as the first end-to-end spec objects — cheap, and they template the rest.
+4. The `addi`/`beq` worked pair as the first end-to-end spec objects — cheap, and they template the rest; a trap-entry/`mret` pair from the machine-mode subset alongside them, since the privileged clauses are new to the import.
 
 ## Effort
 

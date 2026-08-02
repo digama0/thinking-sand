@@ -4,7 +4,7 @@
 
 A standard written for many implementers cannot pin everything down, and does not want to. If the RISC-V spec dictated the reset value of every register, the handling of every misaligned access, and the priority of every simultaneous event, it would outlaw legitimate design choices and burden every implementation with someone else's decisions. So standards **deliberately underspecify**: "the contents of registers after reset are unspecified"; "a misaligned load may trap, or may be handled"; "pending interrupts are taken eventually." Each such sentence licenses a *family* of behaviours, and any member of the family is *conformant*. This is a feature — for implementers.
 
-For a refinement proof it is a complication with a precise shape. Refinement (`⊑`) says every implementation behaviour is among the spec's allowed behaviours, so spec-side freedom is fine *in principle* — nondeterminism in the spec is exactly how "unspecified" is expressed formally. The problem is practical: a proof about *this* chip constantly needs to know which member of the family it is facing. When an L5 lemma about the trap handler needs to know whether a misaligned load traps, "the standard permits either" is not an answer the proof can use; the proof needs *the* answer for picorv32, and that answer — trap, because the `CATCH_MISALIGN` parameter is set — is not derivable from the standard. It is a **choice**: a decision that narrows the standard's family down to the one behaviour this implementation exhibits.
+For a refinement proof it is a complication with a precise shape. Refinement (`⊑`) says every implementation behaviour is among the spec's allowed behaviours, so spec-side freedom is fine *in principle* — nondeterminism in the spec is exactly how "unspecified" is expressed formally. The problem is practical: a proof about *this* chip constantly needs to know which member of the family it is facing. When an L5 lemma about the trap handler needs to know whether a misaligned load traps, "the standard permits either" is not an answer the proof can use; the proof needs *the* answer for the shipped core, and that answer is not derivable from the standard — only from the implementation and its configuration. It is a **choice**: a decision that narrows the standard's family down to the one behaviour this implementation exhibits.
 
 Choices of this kind are epistemically different from theorems, and that difference is why they get their own register in the axiom ledger (S4). That the RTL *agrees with* a recorded choice is checkable — a lemma. That the choice itself is the right reading of the standard's freedom is not checkable by anything; it is legislative, like an editor resolving an ambiguity. The danger is not making choices — that is unavoidable — but making them *invisibly*: a proof that silently assumes registers reset to zero has narrowed the spec without anyone deciding to, and the narrowing is now load-bearing and unrecorded. Hence the discipline of this file: every choice is written down before it is used, with what the standard left open, what was picked, and which proof consumes it. (One instance of the pattern has a standard name worth knowing: **WARL** fields — "write any, read legal" — register bits where software may write anything and the hardware is free to read back any legal value, the standard's own idiom for per-field underspecification.)
 
@@ -14,21 +14,21 @@ Where RISC-V is deliberately underspecified, **conformance is not a statement** 
 
 ## The known entries
 
-| # | underspecified in the standard | the choice (= what picorv32 does, recorded) |
+| # | underspecified in the standard | the choice (= what the shipped core does, to be recorded) |
 |---|---|---|
-| C1 | reset state of general registers | unspecified — and *used*: L4/03's X-matching refines into exactly this nondeterminism (`REGS_INIT_ZERO=0`) |
-| C2 | misaligned loads/stores | trap (`CATCH_MISALIGN=1`); the standard permits trapping or handling |
-| C3 | illegal/unimplemented encodings | trap (`CATCH_ILLINSN=1`) — feeds [03](03-coverage.md)'s sweep |
-| C4 | interrupt timing ("eventually") | taken at the next commit point when unmasked — the S3 spec makes this precise ([01](01-irq-spec.md)) |
-| C5 | simultaneous IRQ arbitration | S3-internal choice; record the line-priority order the RTL implements |
-| C6 | counter width/rollover behaviour per `ENABLE_COUNTERS64` | per configuration; the 32-bit variant's rollover is a real choice |
-| C7 | WARL-style register fields | largely moot (no standard CSR file), but the mask/timer registers have analogous writable-bits questions — record per register |
+| C1 | reset state of general registers | unspecified by the standard — and *used*: L4/03's X-matching refines into exactly this nondeterminism (the [regfile](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/RegFilePlugin.scala) powers up unwritten) |
+| C2 | misaligned loads/stores | the standard permits trapping or handling — extract which the shipped [`DBusSimplePlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala) configuration does (a [config-record](../tools/config-record.py) extension) |
+| C3 | illegal/unimplemented encodings | trap, with `mcause`/`mtval` per the machine-mode spec — feeds [03](03-coverage.md)'s sweep; the decoder's catch behaviour to be pinned by measurement |
+| C4 | interrupt timing ("eventually") | taken at the next retirement boundary when enabled — L5/05's preemption obligation makes this precise |
+| C5 | `mtvec` writability and mode bits (WARL) | the implemented `mtvec` fields: which bits stick, vectored vs. direct — read back from the RTL, recorded per field |
+| C6 | trap-value details (`mtval` on each cause) | what the core actually writes per exception class — measure and record |
+| C7 | the custom-CSR fields ([01](01-irq-spec.md)) | writable bits of the array mask/pending pair — the residue's own WARL questions, recorded per register |
 
 The table is expected to grow; its *shape* is the point. Every entry has the same three fields: what the standard leaves open, what we fix, and where the fix is used. An entry whose third field is empty is a choice nobody needed — delete it rather than carry it.
 
 ## Two disciplines
 
-**Choices are S4-axioms, not theorems.** "The choice is acceptable" is unfalsifiable in the same sense as S3's fidelity — the standard blesses the whole family, and picking is legislative. What *is* checkable: that the RTL agrees with the pick (an L5 lemma per entry), and that no lemma silently depends on an unrecorded pick (reviewable by grepping proofs for appeals to behaviour not derivable from Sail ⊕ S3 ⊕ this table).
+**Choices are S4-axioms, not theorems.** "The choice is acceptable" is unfalsifiable in the same sense as S3's fidelity — the standard blesses the whole family, and picking is legislative. What *is* checkable: that the RTL agrees with the pick (an L5 lemma per entry, and for the measurable rows a [config-record](../tools/config-record.py) extension *now*), and that no lemma silently depends on an unrecorded pick (reviewable by grepping proofs for appeals to behaviour not derivable from Sail ⊕ S3 ⊕ this table).
 
 **Choices flow down, never up.** A pick is made here and consumed by L5/L7; an L5 proof discovering it needs a behaviour fixed must *stop and file the entry*, not embed the assumption. The register is what makes "the spec" a single referent across three layers.
 
