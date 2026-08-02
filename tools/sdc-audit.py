@@ -18,7 +18,11 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SDC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data/caravel/caravel.sdc"
+# NB: resolved lazily in main(), never from sys.argv at import time — this module is
+# imported by check-l2.py, whose own flags (--md, --list) must not leak into the
+# SDC path (they did once: CI ran `tclsh sdc-elaborate.tcl --md ...` and the
+# published scoreboard's first deploy carried three FAILs).
+SDC = ROOT / "data/caravel/caravel.sdc"
 TCL = ROOT / "tools/sdc-elaborate.tcl"
 
 MODES = [(io4, ios, sync) for io4 in ("SCK", "GPIO") for ios in ("IN", "OUT") for sync in ("0", "1")]
@@ -59,6 +63,10 @@ def classify_false_path(args):
 
 
 def main():
+    global SDC
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if args:
+        SDC = Path(args[0])
     per_mode = {m: elaborate(m) for m in MODES}
 
     print("# SDC audit — elaborated mode space of caravel.sdc\n")
