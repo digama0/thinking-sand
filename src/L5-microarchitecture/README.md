@@ -2,7 +2,7 @@
 
 > **Spec below:** `⟦RTL⟧` (L4). **Spec above:** `ISA` (L6). **Kind: theorem** — the irreducible one.
 
-> **Retarget note (2026-08-02, F7).** Everything concrete below — the 8-state FSM anatomy, commit points at fetch, the absence table with picorv32 at baseline, the WCET table's exact composition, the custom-IRQ quarantine — was scoped against picorv32, now the pinned *comparison* core. The shipped target, VexRiscv `MinDebugCache`, is a **pipelined** RV32I with an **instruction cache**: two absence-table rows come home to roost (hazard/forwarding invariants; flushing-style or WEB-style α instead of visit-the-abstraction-every-cycle; cache state in the invariant and history-dependent timing that breaks naive WCET addition). Working in the target's favour: riscv-formal/RVFI supports VexRiscv, the plugin structure gives the invariant natural seams, and the machine-mode interrupt machinery is *standard* rather than custom. The layer's estimates are stale until re-scoped; the picorv32 analysis stands as the method's worked baseline.
+> **Retarget note (2026-08-02, F7).** [00](00-microarchitecture.md) now tours the shipped core — VexRiscv `MinDebugCache`, a pipelined RV32I with a direct-mapped I-cache, measured from source — with both presences and absences priced. [01](01-refinement.md)–[05](05-interrupts.md) remain worked against picorv32 (the pinned comparison core): the method they teach transfers, their concrete numbers do not. What the pipeline and cache change: hazard/flush invariant families, flushing- or WEB-style α at retirement instead of visit-the-abstraction-every-cycle, an I-cache agreement invariant, history-dependent WCET. In the target's favour: RVFI supports VexRiscv, the plugin structure seams the invariant, and interrupts are the *standard* machine-mode machinery. Estimates stale until 01–05 are re-scoped.
 
 ## Background
 
@@ -16,7 +16,7 @@ This is the layer a computer-architecture course would recognise: prove that the
 
 | | | status |
 |---|---|---|
-| [00](00-microarchitecture.md) | **What the machine actually is** — the arch-class tour of picorv32, measured from source; the absence table with each absence priced | descriptive; days |
+| [00](00-microarchitecture.md) | **What the machine actually is** — the arch-class tour of the shipped VexRiscv core (pipeline stages, I-cache, hazards, CSRs, debug — measured from source); presence *and* absence priced; picorv32 compressed as the comparison baseline | re-derived for the target |
 | [01](01-refinement.md) | The statement: `(I, α, m)`, commit points = FSM structure, **RVFI as the designer's own α**, IRQ preemption in the diagram; the measure read quantitatively = **the WCET table**, hard real time for free | weeks; do first |
 | [02](02-invariant.md) | The invariant: entropy argument, the six-clause sketch, IC3 calibration plan | **the heart of the estimate** |
 | [03](03-instruction-obligations.md) | Wide-shallow per-instruction lemmas: decode bijection + unimplemented sweep, ALU, iterative shifts, load/store, counters | months; harness-dominated |
@@ -33,7 +33,7 @@ None of its own; this is where the others are cashed in. The conditionality is e
 
 ## The layer's shape
 
-[00](00-microarchitecture.md) fixes what is being verified — an 8-state one-hot FSM with one instruction ever in flight, whose absences (cache, pipeline, speculation, OOO, MMU) are each priced and are collectively *why this core was chosen*. The FSM's structure then does triple duty: it defines the commit points ([01](01-refinement.md)), organises the invariant per state ([02](02-invariant.md)), and cuts every cross-instruction dependency so the per-instruction obligations are independent ([03](03-instruction-obligations.md)). The two ports where the world enters are assume-guarantee pairs ([04](04-memory-pcpi.md)), and the one genuinely bespoke-vs-bespoke confrontation — custom hardware against authored spec — is quarantined behind a non-interference theorem ([05](05-interrupts.md)).
+[00](00-microarchitecture.md) fixes what is being verified — for the shipped core, a 4+fetch-stage pipeline with a direct-mapped I-cache, whose *presences* now carry the pricing the old absence table only threatened. The structural role the comparison core's FSM played (commit points, invariant organisation, cross-instruction independence — [01](01-refinement.md)/[02](02-invariant.md)/[03](03-instruction-obligations.md)) passes to the pipeline's stage structure: retirement at WriteBack defines the commit points, the stage registers organise the invariant per stage, and the hazard interlocks are precisely what restores per-instruction independence where the pipeline broke it. The two ports where the world enters are assume-guarantee pairs ([04](04-memory-pcpi.md)), and the one genuinely bespoke-vs-bespoke confrontation — custom hardware against authored spec — is quarantined behind a non-interference theorem ([05](05-interrupts.md)).
 
 ## Open problems
 
@@ -49,7 +49,7 @@ None of its own; this is where the others are cashed in. The conditionality is e
 
 ## Effort
 
-1–2 years — yet the irreducible content is plausibly a few hundred lines of clauses plus a glue lemma; the residual is the invariant's genuine unknown plus this layer's share of the project-wide infrastructure item (the overview's accounting: symbolic simulation, bitvector automation, the stuttering framework). picorv32 sits at the baseline of every effort multiplier: store buffer ×1.5, non-blocking cache ×3, precise exceptions on a deep pipe ×3, VM ×5, FP ×10, multicore/RVWMO ×20 — all absent.
+1–2 years *as scoped against picorv32*, which sat at the baseline of every effort multiplier. The shipped core occupies two multiplier rows (pipeline, I-cache — each the old table's ~×3 class), so the honest current statement is: **stale, pending the re-scoping of 01–05**; the irreducible-content observation (a few hundred lines of clauses plus glue, the rest infrastructure) is expected to survive with more clauses.
 
 ## Reading
 

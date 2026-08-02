@@ -36,9 +36,31 @@ def _(ctx):
 L.todo("config-record", "extract the shipped configuration record (LiteX CSR map, cache geometry, VexRiscv plugin parameters)",
        doc="src/L5-microarchitecture/00-microarchitecture.md",
        note="the shipped RTL pair is now pinned (mgmt_core.v + VexRiscv_MinDebugCache.v); the record is read out of them — checker-shaped, next in line for this layer")
-L.todo("fsm-graph", "extract the 8-state FSM graph and its per-instruction path bounds",
+@L.check("pipeline", "the shipped pipeline's measured shape (stages, cache mapping, no predictor)",
+         doc="src/L5-microarchitecture/00-microarchitecture.md")
+def _(ctx):
+    import re
+    vex = DATA / "mgmt/VexRiscv_MinDebugCache.v"
+    if m := need(vex):
+        return FAIL, f"missing {m}"
+    txt = vex.read_text(errors="replace")
+    # count DECLARED registers per bank (usage-site identifiers include derived
+    # wires with the same prefix; the bank is the declarations)
+    banks = {p: len(set(re.findall(r"reg\s*(?:\[[^\]]*\]\s*)?(" + p + r"[A-Za-z_0-9]+)", txt)))
+             for p in ("decode_to_execute_", "execute_to_memory_", "memory_to_writeBack_")}
+    ways2 = len(re.findall(r"ways_1|banks_1", txt))
+    pred = len(re.findall(r"BranchPredictor|BTB|branch.*predict", txt))
+    expect = {"decode_to_execute_": 38, "execute_to_memory_": 16, "memory_to_writeBack_": 12}
+    if banks != expect or ways2 != 0 or pred != 0:
+        return FAIL, f"pipeline census changed: banks={banks}, multiway={ways2}, predictor={pred}"
+    return PASS, ("4 main stages behind the cached fetch: 38/16/12 distinct inter-stage "
+                  "registers; I-cache single-way single-bank (direct-mapped); zero "
+                  "branch-prediction structures — the shape L5/00's tour describes")
+
+
+L.todo("stage-graph", "extract the pipeline stall/flush/arbitration structure and per-instruction occupancy bounds",
        doc="src/L5-microarchitecture/01-refinement.md",
-       blocked_on="a Verilog front end for picorv32.v (shared with L4's parser needs)")
+       blocked_on="a Verilog front end for the VexRiscv source (shared with L4's parser needs)")
 L.todo("wcet-table", "derive w(i), the per-instruction WCET table, and validate against the README's cycle counts",
        doc="src/L5-microarchitecture/01-refinement.md",
        blocked_on="fsm-graph, plus B(config) from L7's bus contract")
