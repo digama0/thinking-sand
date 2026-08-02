@@ -176,9 +176,58 @@ def _(ctx):
 L.todo("f6-pll-range", "reachable PLL configurations vs the signoff clock period (F6)",
        doc="src/L2-timing/05-clock.md",
        blocked_on="the housekeeping register map for itrim/divider/source-mux reachable values")
-L.todo("f1-match", "match the failing in2reg hold paths to their covering exceptions (close F1)",
+@L.check("sdc-core", "the core signoff's own SDC: synchronous-input fiction, two true false paths",
+         doc="src/L2-timing/04-sdc-exceptions.md")
+def _(ctx):
+    sa = load("sdc-audit")
+    sa.SDC = DATA / "caravel/caravel_core.sdc"
+    if m := need(sa.SDC):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    cons = sa.elaborate(("SCK", "OUT", "0"))  # no mode branches; forcing is a no-op
+    fps = sorted(a for _, c, a in cons if c == "set_false_path")
+    clocks = [a for _, c, a in cons if c == "create_clock"]
+    case = [a for _, c, a in cons if c == "set_case_analysis"]
+    indelay = [a for _, c, a in cons if c == "set_input_delay" and "all_inputs" in a]
+    ok = (fps == ["-from [get_ports gpio_in_core]", "-from [get_ports rstb_h]"]
+          and any("hkspi_clk" in a and "mprj_io_in[4]" in a for a in clocks)
+          and case == ["0 [get_pins housekeeping/_6817_/Q]"]
+          and len(indelay) == 1 and indelay[0].startswith("4 "))
+    if not ok:
+        return FAIL, f"core SDC changed: fps={fps}, clocks={clocks}, case={case}, indelay={indelay}"
+    return FINDING, ("the caravel_core signoff used its OWN single-mode SDC: input_delay 4 "
+                     "vs clk on ALL inputs (async pads constrained as synchronous), false "
+                     "paths on exactly rstb_h + gpio_in_core (the two synccheck-verified "
+                     "structures), hkspi_clk on mprj_io_in[4], _6817_ = hkspi_disable "
+                     "(named by the SDC's own comment). The mprj false paths exist only "
+                     "in the chip-level SDC — the failing in2reg paths were real "
+                     "constrained paths")
+
+
+@L.check("sta-shipped", "the shipped per-path reports carry no evidence for the failing corners",
+         doc="src/L2-timing/01-bridge-theorem.md")
+def _(ctx):
+    rpt = DATA / "caravel/sta.min.rpt"
+    ws = DATA / "caravel/sta.worst_slack.rpt"
+    if m := need(rpt, ws):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    mins = rpt.read_text(errors="replace")
+    nviol = mins.count("VIOLATED")
+    npaths = mins.count("Startpoint:")
+    import re as _re
+    slacks = dict(_re.findall(r"report_worst_slack -(\w+).*?worst slack (\S+)",
+                              ws.read_text(), _re.S))
+    if nviol != 0 or float(slacks.get("min", "nan")) != 0.58 or float(slacks.get("max", "nan")) != 4.52:
+        return FAIL, f"shipped reports changed: {nviol} violations, {npaths} paths, slacks {slacks}"
+    return FINDING, (f"the shipped 42-rcx_sta reports are the final nom run: {npaths} reported "
+                     "paths, all MET (worst hold +0.58, setup +4.52). The s-corner in2reg "
+                     "failures exist in the shipped tree only as signoff.rpt's one-line "
+                     "verdicts — the mcsta per-path logs were never committed, so the "
+                     "waiver rests on evidence outside the record")
+
+
+L.todo("f1-match", "reproduce the ss-corner STA and match failing endpoints to the synchroniser census (close F1)",
        doc="src/L2-timing/04-sdc-exceptions.md",
-       blocked_on="per-path signoff logs (signoff.rpt is verdict-only; needs the full STA reports or a re-run)")
+       blocked_on="an OpenSTA run — every input is pinned and fetched (netlist + SPEF + core SDC + Liberty); the engine is not in this environment")
 L.todo("ac-export", "derive the exported AC-timing table (the outward guarantee)",
        doc="src/L2-timing/06-boundaries.md",
        blocked_on="the verified-sta core (same engine, backward direction)")

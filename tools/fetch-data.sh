@@ -47,6 +47,13 @@ fetch_small_caravel() {
   # housekeeping is a macro inside caravel_core; its own gate netlist is needed to
   # trace async inputs to their synchronisers (synccheck.py / F1, F3)
   get $CARAVEL verilog/gl/housekeeping.v             data/caravel/gl_housekeeping.v
+  # the caravel_core run's OWN sdc (distinct from signoff/caravel/caravel.sdc!)
+  # and its per-path STA reports — the raw material for closing F1
+  get $CARAVEL signoff/caravel_core/caravel_core.sdc                     data/caravel/caravel_core.sdc
+  get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.min.rpt data/caravel/sta.min.rpt
+  get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.max.rpt data/caravel/sta.max.rpt
+  get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.worst_slack.rpt data/caravel/sta.worst_slack.rpt
+  get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.wns.rpt data/caravel/sta.wns.rpt
 }
 
 fetch_big_caravel() {

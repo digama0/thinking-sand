@@ -18,7 +18,9 @@ The shipped inventory (`signoff/caravel/caravel.sdc`, 406 lines): **112** `set_f
 
 SDC is Tcl — conditionals, variables (`$clk_period`), mode branches. The same flop output (`housekeeping/_6817_/Q`) is pinned to **both 0 and 1** in different branches. Nothing can be classified until the Tcl is *elaborated* into flat per-mode constraint sets; the flat sets, not the script, are the objects the claims below attach to.
 
-**Done** — `tools/sdc-audit.py` (a tclsh harness stubbing every SDC command) elaborates the full mode space: **8 modes** (`io_4_mode` × `ios_mode` × `IO_SYNC`), shipped setting SCK/OUT/0, 87–139 flat constraints each; results in [Findings](../findings.md#sdc-exceptions). The `_6817_` double-pin resolved as **modes, not a bug**: 0 in all SCK modes, 1 in all GPIO modes — it is the pad-4 function select, and the other cross-mode conflicts are exactly the `DM[2:0]` pad drive-mode bus.
+**Done** — `tools/sdc-audit.py` (a tclsh harness stubbing every SDC command) elaborates the full mode space: **8 modes** (`io_4_mode` × `ios_mode` × `IO_SYNC`), shipped setting SCK/OUT/0, 87–139 flat constraints each; results in [Findings](../findings.md#sdc-exceptions). The `_6817_` double-pin resolved as **modes, not a bug**: 0 in all SCK modes, 1 in all GPIO modes — it is `hkspi_disable` (named by the core SDC's own comment), and the other cross-mode conflicts are exactly the `DM[2:0]` pad drive-mode bus.
+
+**Scoping note — there are two SDCs.** The 8-mode file above is the *chip-level* `signoff/caravel/caravel.sdc`. The `caravel_core` signoff used its own single-mode `caravel_core.sdc`, which constrains **all** inputs as 4 ns synchronous arrivals against `clk` and false-paths only `rstb_h` and `gpio_in_core` — so at the core level the failing `in2reg` hold paths were *real constrained paths*, not excepted ones ([Findings: F1 confronted](../findings.md#f1-confronted-the-shipped-timing-evidence)). Both files are audited by `check-l2.py`.
 
 ## The four classes, with their discharge statements
 

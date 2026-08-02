@@ -32,7 +32,7 @@ s-max  Failed (in2reg hold)
 
 Three of nine corners fail **hold** — the frequency-independent, unfixable-in-silicon kind. A fourth passes only modulo transition/capacitance limits, i.e. parts of the design sit outside the Liberty characterisation range.
 
-Caravel has been fabricated repeatedly and works, so these are presumably waived for good reasons (the `in2reg` paths are GPIO inputs with no meaningful external timing spec — hence the 112 false paths). "Presumably" is doing all the work.
+Caravel has been fabricated repeatedly and works, so these were waived — and the waiver's evidence trail is examined below ([F1 confronted](#f1-confronted-the-shipped-timing-evidence)): the failing paths are *real constrained paths* under the core signoff's own SDC (which sets `input_delay 4` on all inputs and false-paths nothing on `mprj_io_in`), and the per-path reports for the failing corners were never committed.
 
 ## Layout artifacts
 
@@ -227,6 +227,20 @@ Practical note: **SDC is a Tcl script**, not declarative data — conditionals, 
 **22 construct sites plus 25 don't-care literals**, each individually inspectable. Not "formalise Verilog".
 
 **Correction (2026-08-02).** The original census — recorded here before any checker existed — was wrong in three cells: it claimed **0** X literals (there are 25: `alu_out = 'bx`, `decoded_rs = 'bx`, … — the deliberate don't-care idiom, letting synthesis choose while simulation propagates X, which is precisely the simulation/synthesis divergence class the old table claimed absent; each site becomes a value-independence obligation or refines into spec nondeterminism per L4/03), **2 of 25** blocking-assignment blocks (it is 5 of 24 — decoder, state-decode, main FSM, regfile read, PCPI mux, all local-temporary style), and hence the "**19 sites**" headline. `check-l4.py` now owns these numbers; prose defers to it.
+
+## F1 confronted: the shipped timing evidence
+
+Fetching the per-path material at the pinned SHA (now in `fetch-data.sh checks`) resolved F1's structure — and turned up two artifacts nobody had looked at.
+
+**There are two SDCs.** The 406-line, 8-mode file this audit elaborated is `signoff/caravel/caravel.sdc` — the *chip-level* constraints. The `caravel_core` run used its own `signoff/caravel_core/caravel_core.sdc`: 2.6 KB, **single mode**, and very different in effect — `input_delay 4 -clock clk` on **all** inputs (every `mprj_io_in` bit is constrained as a 4 ns *synchronous* input, which the pads are not), exactly **two** false paths (`rstb_h`, `gpio_in_core` — precisely the two structures `synccheck.py` verified: the xres_buf reset path and the design's one true two-flop synchroniser), `hkspi_clk` created on `mprj_io_in[4]`, and ±3.75% timing derates. Its comment also names `_6817_`: **`hkspi_disable`** (the "pad-4 function select" of the mode analysis, now with its real name).
+
+**The failing corners' path evidence was never committed.** The shipped `42-rcx_sta.min.rpt` is the *final nom run*: every reported hold path is MET (worst slack **+0.58**; setup **+4.52**). The s-corner `in2reg` failures exist in the repo only as `signoff.rpt`'s one-line verdicts — the multi-corner STA logs the run produced (`37/39/41-rcx_mcsta.*`) are not in the tree. So the acceptance of three failing corners rests on evidence outside the shipped record.
+
+**F1's shape, final.** The failing `in2reg` hold paths are, under the core SDC, real constrained paths from async pads treated as synchronous — not paths excused by exceptions (the 112 mprj false paths live only in the chip-level file). Closing F1 = reproducing the ss-corner STA from entirely-pinned inputs (shipped netlist + shipped SPEF + shipped SDC + pinned Liberty) and matching the failing endpoints against the synchroniser-audit census; blocked only on an OpenSTA run.
+
+## The management core in the pinned netlist is VexRiscv
+
+Found while reading the hold report: its first path runs through `soc.core.VexRiscv.RegFilePlugin_regFile[7][12]`. Checked directly: the pinned `gl_caravel_core.v` contains **14,297** `VexRiscv`-prefixed identifiers and **zero** `picorv32` anywhere (the pinned `rtl_caravel_core.v` likewise). **The fabricated artifact this repository pins carries the VexRiscv/LiteX management core, not picorv32.** The picorv32 configuration exists in the ecosystem (`caravel_pico`), but it is not what this netlist is. Consequence: every netlist-level number in this file (5,774 flops, the clock census, the synchroniser audit's housekeeping half — housekeeping is core-independent) describes the VexRiscv build, while L4/L5's scoping targets picorv32. **A target decision is pending: re-pin the data to a picorv32 Caravel build, or state the divergence in the book's claim.** Filed as F7.
 
 ## Management-core options
 
