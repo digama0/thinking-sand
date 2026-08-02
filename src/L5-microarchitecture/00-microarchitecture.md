@@ -27,11 +27,11 @@ Five-ish instructions in flight. The stage registers (`decode_to_execute_*`, `ex
 
 ## The tour
 
-**Fetch and the I-cache.** `IBusCachedPlugin`: a **direct-mapped** instruction cache — single way, single bank (measured: `ways_0`/`banks_0` and no second of either) — read in the first fetch stage, hit-checked in the second, with a miss triggering a bus refill and a redo. The cache is the layer's biggest new proof object: an invariant tying every valid cache line to backing memory, an interaction with `fence.i` (the ISA's explicit synchronise-instruction-stream operation — with no D-cache, self-modifying code is visible in memory immediately, but the *I-cache* can hold stale code until flushed), and history-dependent fetch timing that breaks the naive per-instruction WCET addition of [01](01-refinement.md).
+**Fetch and the I-cache.** `IBusCachedPlugin`: a **direct-mapped** instruction cache of exactly **64 bytes — 2 lines × 32 B** (measured from the array declarations; single way, single bank) — read in the first fetch stage, hit-checked in the second, with a miss triggering a bus refill and a redo. Two lines is a fetch buffer more than a cache: the agreement invariant quantifies over two entries, and a miss-every-line WCET bound is nearly tight. The cache is the layer's biggest new proof object: an invariant tying every valid cache line to backing memory, an interaction with `fence.i` (the ISA's explicit synchronise-instruction-stream operation — with no D-cache, self-modifying code is visible in memory immediately, but the *I-cache* can hold stale code until flushed), and history-dependent fetch timing that breaks the naive per-instruction WCET addition of [01](01-refinement.md).
 
 **Decode.** A generated decoder (SpinalHDL emits it as masked pattern-matches) producing the control bundle that rides the stage registers. No latched one-hot flags; exhaustiveness/exclusivity obligations attach to the decoder function itself, per L6's coverage sweep.
 
-**Hazards.** `HazardSimplePlugin`, interlock-style: a younger instruction reading a register with an in-flight writer **stalls** in Decode until the value lands. A small **write-back buffer** holds the retiring write during the race window. Whether any bypass paths are configured is part of the configuration record (open obligation below) — the invariant's shape depends on it (pure interlocks need only "no reader advances past an unresolved writer"; each bypass adds a forwarding-correctness clause).
+**Hazards.** `HazardSimplePlugin`, **interlock-only — resolved by the configuration record**: a younger instruction reading a register with an in-flight writer **stalls** in Decode until the value lands, and even a write-back-buffer address match raises a hazard (stall) rather than forwarding — no bypass muxes exist. The invariant needs only "no reader advances past an unresolved writer"; the forwarding-correctness clause family is avoided entirely.
 
 **Execute.** ALU and address generation; `LightShifterPlugin` — an **iterative** shifter, one bit per cycle, the same loop-invariant obligation picorv32's two-stage shifter posed; and branch resolution: **no predictor** (measured: zero prediction structures), so a taken branch flushes the younger pipeline contents — the flush is a spec-visible stutter burst, and "flushed instructions have no architectural effect" is an invariant clause with real content.
 
@@ -39,7 +39,7 @@ Five-ish instructions in flight. The stage registers (`decode_to_execute_*`, `ex
 
 **WriteBack.** The register-file write and the **retirement point** — the natural commit point for α, and where RVFI pulses: riscv-formal supports VexRiscv, so the designer-declared retirement interface survives the retarget.
 
-**CSRs and interrupts.** `CsrPlugin` implements the **standard machine-mode subset**: `mstatus`/`mie`/`mip`/`mtvec`/`mepc`/`mcause`, trap entry, `mret`. This is what dissolved the old S3: the interrupt spec is now imported (the Sail privileged subset) rather than authored, and [05](05-interrupts.md)'s obligations restate against it.
+**CSRs and interrupts.** `CsrPlugin` implements the **standard machine-mode subset** — measured: `mstatus`/`mie`/`mip`/`mtvec`/`mepc`/`mcause`/`mtval`, trap entry, `mret` — plus two **custom CSRs** (`0xBC0`/`0xFC0`, the LiteX external-interrupt mask/pending pair), and *without* `mscratch`, `misa`, or the counters (`rdcycle`/`rdinstret` trap). `softwareInterrupt`/`timerInterrupt` are tied to zero at instantiation: the standard MSIP/MTIP mechanisms are structurally dead, and every interrupt arrives via the 32-bit external array. So the dissolved-S3 story lands precisely: the trap machinery is imported (Sail privileged subset), while the custom CSR pair and the array semantics are the *residual* authored spec. The **reset vector is a CSR-writable register** (init `0x10000000`, the flash XIP base) — a register-dependent spec hypothesis of the F4/F6 family.
 
 **The debug unit.** `DebugPlugin`: halt, step, and instruction injection over a debug bus — out-of-band access to architectural state. The refinement must be stated **conditional on debug-inactive** (the same move as scan chains in L3/05's contingency table), with the debug session itself specced separately or excluded.
 
@@ -66,7 +66,7 @@ picorv32 (pinned; the original scoping target): an 8-state one-hot multicycle FS
 
 ## Obligations
 
-1. **The configuration record** (`check-l5.py` TODO): cache geometry (size/line), bypass configuration, the implemented CSR list, reset vectors — read out of the pinned RTL pair.
+1. ~~The configuration record~~ — **extracted and pinned** (`tools/config-record.py`, checked by `check-l5.py`): RV32I, no C/M/A; the CSR set above; 64 B I-cache; interlock-only hazards; CSR-writable reset vector at `0x10000000`; interrupts via the external array only.
 2. Re-derive [01](01-refinement.md)'s commit-point/α story for retirement-at-WriteBack with flushes (RVFI-anchored), and [02](02-invariant.md)'s clause sketch per stage.
 3. The I-cache agreement invariant and `fence.i` obligation, stated.
 4. The debug-inactive conditionality, stated once and threaded.

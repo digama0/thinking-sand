@@ -33,9 +33,27 @@ def _(ctx):
                   "pipelined RV32I + I-cache + machine-mode CSRs + debug, no hardware M")
 
 
-L.todo("config-record", "extract the shipped configuration record (LiteX CSR map, cache geometry, VexRiscv plugin parameters)",
-       doc="src/L5-microarchitecture/00-microarchitecture.md",
-       note="the shipped RTL pair is now pinned (mgmt_core.v + VexRiscv_MinDebugCache.v); the record is read out of them — checker-shaped, next in line for this layer")
+@L.check("config-record", "the shipped configuration record, extracted and pinned",
+         doc="src/L5-microarchitecture/00-microarchitecture.md")
+def _(ctx):
+    from checklib import load
+    cr = load("config-record")
+    r = cr.record()
+    ok = (not r["compressed"] and not r["muldiv"] and not r["atomics"]
+          and r["csrs"] == [0x300, 0x304, 0x305, 0x341, 0x342, 0x343, 0x344, 0xBC0, 0xFC0]
+          and r["icache"] == {"bytes": 64, "lines": 2, "line_bytes": 32,
+                              "tag_bits": 28, "ways": 1}
+          and r["hazards"].startswith("interlock")
+          and r["reset_vector"]["init"] == "0x10000000"
+          and r["sw_timer_irq_tied_0"] and r["ext_irq_array_bits"] == 32)
+    if not ok:
+        return FAIL, f"configuration record changed: {r}"
+    return PASS, ("RV32I (no C/M/A); CSRs mstatus/mie/mtvec/mepc/mcause/mtval/mip + "
+                  "custom 0xBC0/0xFC0 (no mscratch, no misa, NO counters); I-cache 64 B = "
+                  "2x32 B direct-mapped; hazards interlock-only (writeBackBuffer match "
+                  "stalls); reset vector = CSR-writable register init 0x10000000 (flash "
+                  "XIP base); software/timer interrupts tied to 0, all IRQs via the "
+                  "32-bit external array; both buses Wishbone with burst signals")
 @L.check("pipeline", "the shipped pipeline's measured shape (stages, cache mapping, no predictor)",
          doc="src/L5-microarchitecture/00-microarchitecture.md")
 def _(ctx):
