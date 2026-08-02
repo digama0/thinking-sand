@@ -68,6 +68,96 @@ def record():
     return r
 
 
+def choices():
+    """The measurable choice-register rows (L6/02) and trap-detail deviations,
+    read from the shipped core. Each value is a *presence check* of the exact
+    generated construct, so a re-generation that changes behaviour flips it."""
+    vex = VEX.read_text(errors="replace")
+    c = {}
+
+    # C2 — misaligned data accesses: trap (word: addr[1:0]!=0, half: addr[0]!=0),
+    # with the bus command SUPPRESSED (no side effect), causes 4 (load) / 6 (store)
+    c["C2_misaligned"] = {
+        "detect": bool(re.search(
+            r"assign execute_ALIGNEMENT_FAULT = \(\(\(dBus_cmd_payload_size == 2'b10\) "
+            r"&& \(dBus_cmd_payload_address\[1 : 0\] != 2'b00\)\) \|\| "
+            r"\(\(dBus_cmd_payload_size == 2'b01\) && "
+            r"\(dBus_cmd_payload_address\[0 : 0\] != 1'b0\)\)\);", vex)),
+        "bus_cmd_suppressed": bool(re.search(
+            r"if\(execute_ALIGNEMENT_FAULT\) begin\s*\n\s*"
+            r"execute_DBusSimplePlugin_skipCmd = 1'b1;", vex)),
+        "causes_4_load_6_store": "(memory_MEMORY_STORE ? 3'b110 : 3'b100)" in vex,
+    }
+
+    # C3/C6 — illegal instruction: cause 2, mtval = the instruction word
+    c["C3_illegal"] = {
+        "cause_2": "assign decodeExceptionPort_payload_code = 4'b0010;" in vex,
+        "mtval_instruction":
+            "assign decodeExceptionPort_payload_badAddr = decode_INSTRUCTION;" in vex,
+    }
+
+    # C5 — mtvec: base[31:2] and mode[1:0] both writable and STORED, but the
+    # trap redirect is unconditionally {base,00} — vectored mode is not
+    # implemented, the mode bits are inert storage; and mtvec has NO reset value
+    c["C5_mtvec"] = {
+        "base_mode_writable": bool(re.search(
+            r"CsrPlugin_mtvec_base <= CsrPlugin_csrMapping_writeDataSignal\[31 : 2\];\s*\n\s*"
+            r"CsrPlugin_mtvec_mode <= CsrPlugin_csrMapping_writeDataSignal\[1 : 0\];", vex)),
+        "redirect_ignores_mode":
+            "CsrPlugin_jumpInterface_payload = {CsrPlugin_xtvec_base,2'b00};" in vex
+            and not re.search(r"xtvec_mode\s*==", vex),
+        "no_reset_value": not re.search(r"CsrPlugin_mtvec_(base|mode) <= (?!CsrPlugin_csrMapping)", vex),
+    }
+
+    # C6 — the remaining mtval sources: one context register feeds mtval on
+    # every trap; per-cause payloads measured at their ports
+    c["C6_mtval_sources"] = {
+        "single_write_site":
+            len(re.findall(r"CsrPlugin_mtval <= ", vex)) == 1,
+        "fetch_fault_addr_aligned": bool(re.search(
+            r"assign IBusCachedPlugin_decodeExceptionPort_payload_badAddr = "
+            r"\{IBusCachedPlugin_iBusRsp_stages_2_input_payload\[31 : 2\],2'b00\};", vex)),
+        "load_store_addr":
+            "assign DBusSimplePlugin_memoryExceptionPort_payload_badAddr = memory_REGFILE_WRITE_DATA;" in vex,
+        "branch_target":
+            "assign BranchPlugin_branchExceptionPort_payload_badAddr = BranchPlugin_jumpInterface_payload;" in vex,
+        "ecall_writes_instruction":
+            "assign CsrPlugin_selfException_payload_badAddr = execute_INSTRUCTION;" in vex,
+    }
+
+    # deviations from the ratified trap semantics, measured
+    c["ebreak_no_exception"] = {
+        # EBREAK only feeds the debug-halt path, gated on an active debug session;
+        # there is no breakpoint (cause 3) exception path at all
+        "debug_gated": bool(re.search(
+            r"assign decode_DO_EBREAK = \(\(\(! DebugPlugin_haltIt\) && "
+            r"\(decode_IS_EBREAK \|\| 1'b0\)\) && DebugPlugin_allowEBreak\);", vex)),
+        "no_cause_3_path": "= 4'b0011;" not in
+            "".join(re.findall(r"ExceptionPort_payload_code = .*;|selfException_payload_code = .*;", vex)),
+    }
+    c["ecall_cause_11"] = bool(re.search(
+        r"default : begin\s*\n\s*CsrPlugin_selfException_payload_code = 4'b1011;", vex))
+    # access faults are UNREACHABLE: the core's own Wishbone bridges tie both
+    # error inputs to zero (the SoC-side ERR wiring is discarded at the core
+    # boundary), and the MMU exception path is tied off — so the cause-1/5/7
+    # logic that exists in the plugins is structurally dead. Additionally the
+    # load-only guard means even a live dBus error would never fault a store.
+    c["access_faults_unreachable"] = {
+        "ibus_err_tied_0": "assign iBus_rsp_payload_error = 1'b0;" in vex,
+        "dbus_err_tied_0": "assign dBus_rsp_error = 1'b0;" in vex,
+        "mmu_path_tied_off": "assign IBusCachedPlugin_mmuBus_rsp_isPaging = 1'b0;" in vex,
+        "store_error_ignored_anyway": bool(re.search(
+            r"assign when_DBusSimplePlugin_l486 = \(\(dBus_rsp_ready && dBus_rsp_error\) "
+            r"&& \(! memory_MEMORY_STORE\)\);", vex)),
+    }
+    c["branch_misaligned_cause_0"] = \
+        "assign BranchPlugin_branchExceptionPort_payload_code = 4'b0000;" in vex
+    # the complete reachable synchronous trap surface follows: causes
+    # 0 (fetch-target misaligned), 2 (illegal), 4/6 (load/store misaligned),
+    # 11 (ecall); interrupts: external (11) only, software/timer tied off
+    return c
+
+
 def main():
     r = record()
     print("# The shipped configuration record (measured)\n")
@@ -86,6 +176,14 @@ def main():
     print(f"interrupts     : software/timer tied to 0 = {r['sw_timer_irq_tied_0']}; "
           f"external array width {r['ext_irq_array_bits']}")
     print(f"buses          : iBus {r['buses']['iBus']}; dBus {r['buses']['dBus']}")
+
+    print("\n# The measured choice-register rows (L6/02) and trap details\n")
+    for row, val in choices().items():
+        if isinstance(val, dict):
+            bad = [k for k, v in val.items() if not v]
+            print(f"{row:<34}: {'all measured facts hold' if not bad else 'CHANGED: ' + ', '.join(bad)}")
+        else:
+            print(f"{row:<34}: {val}")
 
 
 if __name__ == "__main__":

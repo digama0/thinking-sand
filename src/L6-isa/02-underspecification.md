@@ -17,14 +17,16 @@ Where RISC-V is deliberately underspecified, **conformance is not a statement** 
 | # | underspecified in the standard | the choice (= what the shipped core does, to be recorded) |
 |---|---|---|
 | C1 | reset state of general registers | unspecified by the standard — and *used*: L4/03's X-matching refines into exactly this nondeterminism (the [regfile](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/RegFilePlugin.scala) powers up unwritten) |
-| C2 | misaligned loads/stores | the standard permits trapping or handling — extract which the shipped [`DBusSimplePlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala) configuration does (a [config-record](../tools/config-record.py) extension) |
-| C3 | illegal/unimplemented encodings | trap, with `mcause`/`mtval` per the machine-mode spec — feeds [03](03-coverage.md)'s sweep; the decoder's catch behaviour to be pinned by measurement |
+| C2 | misaligned loads/stores | **measured** ([config-record](../tools/config-record.py)): they trap — cause 4 (load) / 6 (store), detected at Execute (`addr[1:0]≠0` for words, `addr[0]≠0` for halves), and the bus command is *suppressed*, so a misaligned access has no side effect |
+| C3 | illegal/unimplemented encodings | **measured**: trap with cause 2, `mtval` = the faulting instruction word — feeds [03](03-coverage.md)'s sweep |
 | C4 | interrupt timing ("eventually") | taken at the next retirement boundary when enabled — L5/05's preemption obligation makes this precise |
-| C5 | `mtvec` writability and mode bits (WARL) | the implemented `mtvec` fields: which bits stick, vectored vs. direct — read back from the RTL, recorded per field |
-| C6 | trap-value details (`mtval` on each cause) | what the core actually writes per exception class — measure and record |
-| C7 | the custom-CSR fields ([01](01-irq-spec.md)) | writable bits of the array mask/pending pair — the residue's own WARL questions, recorded per register |
+| C5 | `mtvec` writability and mode bits (WARL) | **measured**: `base[31:2]` and `mode[1:0]` are both fully writable *storage*, but the trap redirect is unconditionally `{base, 00}` — vectored mode does not exist behaviourally, and the mode field reads back whatever was written (including reserved values — a WARL readback to adjudicate). `mtvec` has **no reset value**: software must write it before enabling any trap source |
+| C6 | trap-value details (`mtval` on each cause) | **measured**: one context register feeds `mtval` on every trap; for the *reachable* causes — misaligned load/store: the effective address; branch/jump to a misaligned target (cause 0): the target; illegal: the instruction word (the access-fault `mtval` sources exist but are dead logic, [01](01-irq-spec.md)) |
+| C7 | the custom-CSR fields ([01](01-irq-spec.md)) | **measured** ([irqmap](../tools/irqmap.py)): the mask (`0xBC0`) is a full 32-bit read/write register reset to 0; the pending view (`0xFC0`) is read-only — writes trap |
 
 The table is expected to grow; its *shape* is the point. Every entry has the same three fields: what the standard leaves open, what we fix, and where the fix is used. An entry whose third field is empty is a choice nobody needed — delete it rather than carry it.
+
+Measuring the rows also surfaced behaviours that are **not** choices, because the standard does not offer them: `ebreak` has no breakpoint-exception path, `ecall` writes the instruction word into `mtval` where the standard says zero, and no access fault is reachable at all — the core's bus bridges tie their error inputs to zero. Those are *deviations* and live in [01](01-irq-spec.md)'s authored residue — this register only holds picks the standard's freedom licenses.
 
 ## Two disciplines
 
@@ -38,7 +40,7 @@ L7's operating-conditions clause (out-of-envelope configuration → X-flood) and
 
 ## Obligations
 
-1. Populate C1–C7 with their RTL-extracted values; open the standing review discipline.
+1. The measurable rows carry their RTL-extracted values (pinned by [`check-l6.py`](../tools/check-l6.py)); what remains is adjudicating the flagged readbacks (C5's reserved-mode WARL question) and the standing review discipline.
 2. The per-entry agreement lemmas, handed to L5/03.
 3. The grep-shaped audit: no proof appeals to un-registered behaviour.
 

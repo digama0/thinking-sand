@@ -49,9 +49,37 @@ L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin 
        doc="src/L6-isa/01-irq-spec.md",
        note="the structural half is done (irqmap.py / L7 irq-map: mask R/W, pending read-only "
             "live view, funnel); the behavioural diff needs the authored draft plus a simulator harness")
-L.todo("c-register", "populate the choice register C1-C7 with RTL-extracted values (misaligned behaviour, mtvec WARL fields, mtval details)",
-       doc="src/L6-isa/02-underspecification.md",
-       blocked_on="config-record extensions for the measurable rows (C2/C5/C6); the rest is recording discipline")
+@L.check("c-register", "the measurable choice-register rows (C2/C3/C5/C6) extracted from the shipped core",
+         doc="src/L6-isa/02-underspecification.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    if m := need(DATA / "mgmt/VexRiscv_MinDebugCache.v"):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh mgmt)"
+    cr = load("config-record")
+    c = cr.choices()
+    bad = []
+    for row, val in c.items():
+        if isinstance(val, dict):
+            bad += [f"{row}.{k}" for k, v in val.items() if not v]
+        elif not val:
+            bad.append(row)
+    if bad:
+        return FAIL, f"a measured choice-register fact changed: {bad}"
+    return FINDING, ("the C-rows are measured: misaligned accesses trap (causes 4/6) with the "
+                     "bus command suppressed; illegal instructions trap with cause 2 and "
+                     "mtval = the instruction word; mtvec has NO reset value, and its mode "
+                     "bits are inert storage - the trap redirect is always {base,00}, so "
+                     "vectored mode reads back as written but does not exist. Three "
+                     "deviations from the ratified trap semantics: EBREAK has no breakpoint "
+                     "exception path at all (debug-halt when a debug session is active, "
+                     "otherwise it retires as a NOP); ecall writes the instruction word "
+                     "into mtval (the spec says zero); and ALL access faults (causes 1/5/7) "
+                     "are unreachable - the core's own Wishbone bridges tie both bus-error "
+                     "inputs to zero, discarding the SoC's ERR wiring at the core boundary. "
+                     "The complete reachable synchronous trap surface is causes 0/2/4/6/11, "
+                     "plus the external interrupt. The deviations go to L6/01's authored "
+                     "residue, not the choice register - they are not choices the standard "
+                     "offers")
 L.extern("S3-fidelity", "the authored residue (external-interrupt array) is what was intended",
          doc="src/axioms.md",
          note="unfalsifiable; anchored by the plugin source, LiteX conventions, and the firmware corpus - never checked")
