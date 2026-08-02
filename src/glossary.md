@@ -98,7 +98,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **SPI / UART** | the two serial interfaces here: SPI is clocked and master-driven (the flash); UART is asynchronous and baud-framed (the observable output channel) |
 | **GPIO** | general-purpose I/O — the 38 runtime-configurable user pads |
 | **CSR / WARL** | RISC-V's control-and-status registers; WARL fields ("write any values, read legal values") are where the standard deliberately leaves behaviour implementation-defined (S4) |
-| **q-registers** | picorv32's four custom interrupt registers (comparison core) — the original S3; the shipped VexRiscv core uses standard machine-mode CSRs instead |
+| **q-registers** | picorv32's four custom interrupt registers (comparison core); the shipped core uses standard machine-mode CSRs |
 | **LRM** | the Verilog Language Reference Manual — the event-driven semantics this project deliberately does *not* formalise (L4/00) |
 | **Tcl** | the scripting language EDA tools embed; an SDC file is a Tcl *program*, which is why it must be elaborated before it can be analysed |
 

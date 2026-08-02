@@ -2,44 +2,45 @@
 
 ## Background
 
-With the invariant ([02](02-invariant.md)) holding the machine's global coherence, what remains is to check each instruction individually: that the hardware's handling of `add` matches the spec's `add`, the hardware's `beq` matches the spec's `beq`, and so on through the instruction set. The technique that discharges each one is **symbolic execution**: instead of running the hardware on particular values, run it on *variables*. Start from a state where the registers hold symbols `x` and `y` rather than numbers, walk the FSM through the three-or-four-state path this instruction takes, and the final state comes out as a formula — "register `rd` now holds `x + y`, the pc advanced by 4." The obligation is then that this formula equals what the Sail spec clause computes, which is a question about fixed-width integers (**bitvectors**, in the field's vocabulary) that **SMT solvers** — SAT solvers extended with built-in theories of arithmetic — answer mechanically. One symbolic run covers all 2⁶⁴ concrete operand pairs at once; that is the entire trick.
+With the invariant ([02](02-invariant.md)) holding the machine's global coherence, what remains is to check each instruction individually: that the hardware's handling of `add` matches the spec's `add`, the hardware's `beq` matches the spec's `beq`, and so on through the instruction set. The technique that discharges each one is **symbolic execution**: instead of running the hardware on particular values, run it on *variables*. Start from an invariant state with the instruction at a known station and symbols in the registers, walk the machine to the instruction's retirement, and the final state comes out as a formula — "register `rd` now holds `x + y`, the committed pc advanced by 4." The obligation is then that this formula equals what the Sail clause computes, which is a question about fixed-width integers (**bitvectors**) that **SMT solvers** — SAT solvers extended with built-in theories of arithmetic — answer mechanically. One symbolic run covers all 2⁶⁴ concrete operand pairs at once; that is the entire trick.
 
-The reason this chapter can promise "a lot of lemmas, almost no thinking" is a structural dividend from the invariant: its clauses cut every dependency *between* instructions at the fetch boundary. Whatever instruction executed previously, the invariant says the machine re-enters fetch in a clean, fully-described state — so each per-instruction lemma starts from the same characterised starting line, independent of all the others, and the set of lemmas is embarrassingly parallel. The cost structure follows: build the symbolic-execution harness once (the real expense), then each additional instruction is a template instantiation. Only where an instruction contains an internal *loop* — the iterative shifter, which shifts by four per cycle rather than in one step — does per-case thought reappear, in the form of a small **loop invariant**: a statement like "the accumulator holds the input shifted by (requested − remaining) places," preserved each iteration, the classic Floyd-Hoare pattern in miniature.
+The reason this chapter can promise "a lot of lemmas, almost no thinking" is a structural dividend from the invariant: the interlock clauses cut every dependency *between* instructions at the register file. Whatever ran previously, an instruction reads its sources only when no in-flight writer targets them — so each per-instruction lemma starts from the same characterised conditions, independent of its neighbours, and the set of lemmas is embarrassingly parallel. The cost structure follows: build the symbolic-execution harness once (the real expense), then each additional instruction is a template instantiation. Per-case thought reappears only where an instruction contains an internal *loop* — the iterative shifter — in the form of a small **loop invariant**, the classic Floyd–Hoare pattern in miniature.
 
 ## Statement
 
-The wide-shallow quantification: for each instruction of the shipped configuration, the commit-case square of [01](01-refinement.md) — from a state satisfying `I` with this instruction latched, the FSM path's cumulative effect equals the Sail step. High spec entropy, near-zero invariant entropy: a lot of lemmas, almost no thinking, and most of it plausibly automatable per instruction.
+The wide-shallow quantification: for each instruction of the [configuration record](../tools/config-record.py), the retirement case of [01](01-refinement.md)'s cell — from an invariant state with this instruction in flight, the retiring effect equals the Sail step. High spec entropy, near-zero invariant entropy: a lot of lemmas, almost no thinking, and most of it plausibly automatable per instruction.
 
 ## The obligation classes
 
-**Decode** — the bridge between L6's Sail decoder and [00](00-microarchitecture.md)'s ~50 one-hot flags:
+**Decode** — the bridge between L6's Sail decoder and the generated decoder of the [shipped core](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/rtl/VexRiscv_MinDebugCache.v):
 
 ```
-∀ word w:  the latched flag set after decode(w)  =  one-hot image of Sail-decode(w)
-           (exhaustive: some flag or the illegal-trap; exclusive: at most one class)
+∀ word w:  the control bundle produced for w  =  image of Sail-decode(w)
+           (exhaustive: every word decodes or raises the illegal trap;
+            exclusive: one instruction class per word)
 ```
 
-Per-encoding, SAT-shaped, ~40 patterns plus the **unimplemented-encoding sweep**: every word the configuration does not implement must set no flag and reach `trap` (`CATCH_ILLINSN`) — L6's "traps correctly" obligation landing here as the picorv32 half. Wide, mechanical, unskippable: the refinement is simply false without it.
+Per-encoding, SAT-shaped, ~40 base patterns plus the **unimplemented sweep**: RV32I only, so *every* M, C, and A encoding — and the counter CSR reads — must reach the illegal-instruction trap. L6's "traps correctly" obligation lands here as the implementation half, gated on the configuration record.
 
-**ALU and comparisons** — word-level lemmas per operator: the shared adder's output under the `exec`-state mux equals the Sail arithmetic (bitvector identities, discharged by SMT; the *netlist* structure of the adder was L3/05's business and never appears here). Branches: comparator result drives the pc update exactly as Sail's branch semantics.
+**ALU and comparisons** — word-level lemmas per operator ([`IntAluPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/IntAluPlugin.scala), [`SrcPlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/SrcPlugin.scala)): the Execute-stage result equals the Sail arithmetic — bitvector identities, discharged by SMT; the *netlist* structure of the adder was L3/05's business and never appears here. Branches: the comparison drives the redirect exactly as Sail's branch semantics, with the flush obligation carried by the invariant's clause 5.
 
-**Shifts** — the one place [02](02-invariant.md)'s clause 3 has real content: `TWO_STAGE_SHIFT`'s iterative loop (by 4, then 1) needs the loop invariant `acc = x shifted by (k − counter)` with the measure ticking; the lemma composes the loop to the Sail shift. If the shipped config has `BARREL_SHIFTER`, this degenerates to a mux-tree bitvector lemma.
+**Shifts** — the one place [02](02-invariant.md)'s clause 3 has real content: the [`LightShifter`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ShiftPlugins.scala)'s one-bit-per-cycle loop needs the invariant `acc = x shifted by (k − counter)` with the measure ticking; the lemma composes the loop to the Sail shift.
 
-**Loads/stores** — the densest class: address generation (adder reuse), `wstrb` byte-lane encoding vs. the Sail memory access width, sign/zero extension on `ldmem` writeback, and `CATCH_MISALIGN`'s trap vs. the S4 choice for misaligned access (L6 must *pick* — trap, as picorv32 does — and record it; the lemma is against the pick). The bus's role is contract-abstracted: the lemma says "the value the contract returns for this address," never what RAM did.
+**Loads/stores** — via [`DBusSimplePlugin`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala): address generation, byte-lane select and sign/zero extension vs. the Sail memory access, alignment traps per the spec's choice, and the bus's role contract-abstracted — the lemma says "the value the contract returns for this address," never what RAM did.
 
-**Compressed** (`COMPRESSED_ISA`, config-dependent) — if on: the 16-bit decoder and, more substantively, the fetch alignment machinery (instructions straddling word boundaries) which adds latched-partial-word state to clause 3 and to ρ's reset story. If off: the sweep above must show 16-bit-aligned encodings trap as the config demands. Either way the configuration record decides *before* budgeting.
+**CSR instructions** — `csrrw`/`csrrs`/`csrrc` and immediates against each implemented CSR's semantics: the machine-mode registers from the Sail import, and the two [external-interrupt array](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ExternalInterruptArrayPlugin.scala) CSRs against the residual authored spec ([05](05-interrupts.md)). Reads of the *absent* CSRs (`mscratch`, `misa`, the counters) belong to the trap sweep.
 
-**Counters** (`ENABLE_COUNTERS*`) — `rdcycle/rdinstret`: the lemma ties the counter registers to the *spec's* cycle/retirement counts, which is the one place the ISA-visible state references stuttering structure — instret increments exactly at commit points, tying directly to α's retirement definition.
+**Fences** — `fence` is a no-op on this single-hart, in-order machine (a lemma, not an assumption); `fence.i` invalidates the two cache lines and refetches — the obligation pairs with the invariant's cache-agreement clause.
 
 ## Why this class is cheap per element
 
-Each lemma is: symbolic execution of a ≤5-state FSM path from an `I`-state, compared against one Sail clause — bounded, automatable, independent of every other lemma. This is L6's "decode is the model case of entropy that costs nothing" made concrete: the cost is proportional to the *number* of instructions, not to any interaction between them, because [02](02-invariant.md)'s clauses cut every cross-instruction dependency at the fetch boundary.
+Each lemma is: symbolic execution of one instruction's pipeline transit from an `I`-state, compared against one Sail clause — bounded, automatable, independent of every other lemma, with the interlocks supplying the independence. The cost is proportional to the *number* of instructions, not to any interaction between them.
 
 ## Obligations
 
-1. The decode bijection + unimplemented sweep (gated on the configuration record and L6's Sail import).
-2. Per-class lemma templates: one worked instance each (an ALU op, a shift, a load), then mechanise the remainder.
-3. The counter/α consistency lemma — small, but it is the only place spec state mentions the abstraction map, so get it right early.
+1. The decode equivalence + the unimplemented sweep (gated on the [configuration record](../tools/config-record.py) and L6's Sail import).
+2. Per-class lemma templates: one worked instance each (an ALU op, a shift, a load, a CSR op), then mechanise the remainder.
+3. The `fence.i` lemma, jointly with the invariant's cache clause.
 
 ## Effort
 

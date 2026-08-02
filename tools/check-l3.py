@@ -90,10 +90,9 @@ def _(ctx):
     }
     if dict(kinds) != expect:
         return FAIL, f"macro inventory changed: {dict(kinds)}"
-    return PASS, (f"{total} macro instances in {len(kinds)} types (canonical count: earlier "
-                  f"findings' 97 was a miscount; empty_macro x2 and manual_power_connections "
-                  f"have no named signal pins). Each type needs recursion or a contract; "
-                  f"housekeeping and RAM128 are the open-able ones.")
+    return PASS, (f"{total} macro instances in {len(kinds)} types (empty_macro x2 and "
+                  f"manual_power_connections have no named signal pins). Each type needs "
+                  f"recursion or a contract; housekeeping and RAM128 are the open-able ones.")
 
 
 L.todo("rho", "the register correspondence, by instrumented flow reproduction (F5)",

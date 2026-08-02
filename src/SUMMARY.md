@@ -22,7 +22,7 @@
   - [01 The refinement statement](L5-microarchitecture/01-refinement.md)
   - [02 The invariant](L5-microarchitecture/02-invariant.md)
   - [03 Per-instruction obligations](L5-microarchitecture/03-instruction-obligations.md)
-  - [04 Memory and PCPI](L5-microarchitecture/04-memory-pcpi.md)
+  - [04 Buses and debug](L5-microarchitecture/04-buses-debug.md)
   - [05 Interrupts](L5-microarchitecture/05-interrupts.md)
 - [L4 — RTL semantics](L4-rtl-semantics/README.md)
   - [00 The elaborated object](L4-rtl-semantics/00-elaborated-object.md)

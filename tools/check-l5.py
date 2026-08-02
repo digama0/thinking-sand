@@ -89,18 +89,18 @@ L.todo("wcet-table", "derive w(i), the per-instruction WCET table, and validate 
 L.todo("rvfi-alpha", "define alpha against RVFI and check it on simulation traces",
        doc="src/L5-microarchitecture/01-refinement.md",
        blocked_on="a simulation harness (Verilator) plus the RVFI-enabled build")
-L.todo("decode-sweep", "decode exhaustiveness/exclusivity of the ~50 one-hot flags vs the Sail decoder",
+L.todo("decode-sweep", "decode equivalence of the generated decoder vs the Sail decoder, plus the trap sweep",
        doc="src/L5-microarchitecture/03-instruction-obligations.md",
-       blocked_on="config-record (the partition depends on it) and L6's imported decoder")
+       blocked_on="L6's imported decoder (the partition now follows the measured configuration record)")
 L.todo("ic3-calibrate", "IC3 calibration on invariant clauses 1/2/4 (sizes the layer's real cost)",
        doc="src/L5-microarchitecture/02-invariant.md",
        blocked_on="a model-checking harness over the elaborated core (proof-adjacent; deferred by phase)")
-L.todo("bus-guarantee", "check G1-G3 and the LA preview lemma on testbench traces",
-       doc="src/L5-microarchitecture/04-memory-pcpi.md",
+L.todo("bus-guarantee", "check the Wishbone guarantee clauses (Gi/Gd) on testbench traces",
+       doc="src/L5-microarchitecture/04-buses-debug.md",
        blocked_on="the simulation harness; a trace checker is checker-phase work once traces exist")
-L.todo("irq-anchors", "extract the IRQ-instruction uses from shipped firmware (S3's anchor corpus)",
+L.todo("irq-anchors", "extract the interrupt-facing firmware paths (the residual-spec anchor corpus)",
        doc="src/L5-microarchitecture/05-interrupts.md",
-       blocked_on="fetching the firmware tree at a pinned commit")
+       blocked_on="fetching the BIOS/firmware tree at a pinned commit")
 
 if __name__ == "__main__":
     sys.exit(L.main())

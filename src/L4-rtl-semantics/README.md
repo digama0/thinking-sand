@@ -2,8 +2,6 @@
 
 > **Supplies:** `⟦RTL⟧` — the word-level transition system used on *both* sides of the tower: L3's right-hand side and L5's left-hand side ([the overview](../overview.md#the-spec-tower)). **Kind: definition.** Its obligations are well-definedness and adequacy — there is no refinement theorem here, and the risk profile is inverted accordingly: a wrong definition yields a true theorem about the wrong object.
 
-> **Retarget note (2026-08-02, F7).** The concrete numbers below were scoped against picorv32, now the pinned *comparison* core. The shipped target is the machine-emitted pair `mgmt_core.v` (LiteX) + `VexRiscv_MinDebugCache.v` (SpinalHDL): narrower constructs (0 delays/casex/force-class, 7 don't-cares, 2 blocking-assignment blocks — census in [Findings](../findings.md#the-management-core-in-the-pinned-netlist-is-vexriscv)) but 541 `always @*` blocks, and **no written-down IR semantics behind either generator** — the adequacy tax [04](04-adequacy.md) priced as a counterfactual is now the layer's actual situation.
-
 ## Background
 
 Before anything can be proved about the RTL, the RTL must *mean* something. Verilog's official semantics is an event-driven simulator with deliberately loose scheduling — unusable as a proof object — so this layer defines the design's meaning directly, as a clean synchronous transition system, for exactly the subset of the language this design occupies, with membership mechanically checked rather than assumed ([00](00-elaborated-object.md), [01](01-subset.md)). The two conditions that make combinational logic actually combinational are checked in [02](02-comb-blocks.md); the treatment of unknown values and reset in [03](03-x-and-reset.md); and the question no proof can answer — whether the definition captures what the artifact really means — is made *detectable*, since it cannot be made provable, in [04](04-adequacy.md).
@@ -17,7 +15,7 @@ A semantics for **the synthesisable subset this design actually uses** — not f
 | | | status |
 |---|---|---|
 | [00](00-elaborated-object.md) | `⟦·⟧ : Config → RTL → TransitionSystem`; the simple semantics; **scheduler independence** stated; the shipped configuration as part of the object | weeks |
-| [01](01-subset.md) | The census (22 sites + 25 don't-cares, checker-derived); the admissible-subset move (third instance); the enforced boundary | days — census done |
+| [01](01-subset.md) | The construct census of the shipped pair; the admissible-subset move (third instance); the enforced boundary | census done |
 | [02](02-comb-blocks.md) | Completeness of the 15 `always @*` blocks (latch inference — the check that *changes the circuit* if missed); RTL-level acyclicity; the 2-block blocking-assignment rewrite | days |
 | [03](03-x-and-reset.md) | The two-valued strengthening, split three ways: X-elimination where the spec claims definiteness, refinement into spec nondeterminism where it doesn't, value-independence for the residue | weeks |
 | [04](04-adequacy.md) | Differential simulation; **the CEC cross-check** (disagreement with Yosys is detected, not silent); the FIRRTL counterfactual | weeks; mostly inherited |

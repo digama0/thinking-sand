@@ -8,7 +8,7 @@ The move this chapter makes — the same one the book makes at every layer where
 
 ## Statement
 
-A semantics for **the synthesisable subset this design actually uses** — not for Verilog. The general artifact is large and contested; the specific one is a finite, individually inspectable census — 22 construct sites plus 25 don't-care literals — with the worst categories *absent*, measured rather than hoped (by `tools/check-l4.py`, which corrected this table's original numbers — see [Findings](../findings.md#picorv32-verilog-tameness)):
+A semantics for **the synthesisable subset this design actually uses** — not for Verilog. The target sources are the machine-emitted pair — [`VexRiscv_MinDebugCache.v`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/rtl/VexRiscv_MinDebugCache.v) and [`mgmt_core.v`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/rtl/mgmt_core.v) — whose census ([`check-l4.py`](../tools/check-l4.py); [Findings](../findings.md#the-management-core-in-the-pinned-netlist-is-vexriscv)) is *narrow*: zero delays, zero `casex`, zero force-class constructs, 7 don't-care `'bx` literals, 2 blocking-assignment blocks, and 541 `always @*` blocks between them. For calibration, the census of the hand-written comparison core ([picorv32](https://github.com/YosysHQ/picorv32), also measured by the checker):
 
 | construct | count | consequence |
 |---|---|---|
@@ -30,9 +30,9 @@ This is the same manoeuvre as L1/00 (GDS: forbid pathtype 1, self-intersection, 
 
 The discipline that follows: **write the semantics for exactly what appears.** Every construct in the subset gets its meaning from [00](00-elaborated-object.md)'s simple semantics; every construct outside it is rejected; there is no third category of "handled approximately."
 
-## The trade, and how it actually fell
+## The generated-source situation
 
-The generated cores (VexRiscv/SpinalHDL, the LiteX wrapper) are ~550 KB of machine-emitted Verilog — *narrower* in construct usage but hostile to invariant authoring, and their generators have no written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). Hand-written picorv32 costs a bounded census of care and buys a source a human can state an invariant over. That was the original target-selection argument — **and the target went the other way** (F7): the shipped silicon carries the VexRiscv build, and realism outranks simplicity. The measured consolation: the generated sources are exactly as narrow as predicted (census above and in Findings — the shipped pair has *fewer* dark-corner constructs than picorv32, at 25× the block count), so this chapter's semantics shrinks in per-construct difficulty while its adequacy story ([04](04-adequacy.md)) grows in importance. picorv32's census is retained as the comparison baseline.
+The target sources are machine-emitted — [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) for the core, [LiteX](https://github.com/enjoy-digital/litex) for the SoC — and neither generator has a written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). The consequences cut both ways. Per construct, generated Verilog is *easier*: the emitters use a small, disciplined idiom, and the shipped pair has fewer dark-corner constructs than the hand-written comparison core at 25× the block count. Per meaning, it is *harder*: there is no human-written source to consult when the semantics is in doubt, so the adequacy checks of [04](04-adequacy.md) — differential simulation, the CEC cross-check — carry more of the layer's weight.
 
 ## Obligations
 

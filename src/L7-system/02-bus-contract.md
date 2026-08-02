@@ -14,7 +14,7 @@ One promise in the assume half is quietly the most important: not *that* request
 
 Author the contract at the core's memory port — the formerly orphaned artifact L5 consumes. It is the *interface half of `Sys`*: what the fabric promises the core. Authored here, **assumed** by L5's refinement, **discharged** against the SoC RTL as part of B2.
 
-> **Retarget note (2026-08-02, F7).** The clauses below are stated over picorv32's native valid/ready handshake. The shipped VexRiscv/LiteX core speaks **Wishbone** (and the core's own iBus/dBus behind a bridge); the contract's *shape* — assume/guarantee split, the latency bound `B`, the XIP worst case — carries over unchanged, but the alphabet must be restated over the Wishbone signals when this layer is re-derived.
+> **Scope note.** The shipped core's two masters speak **Wishbone** ([L5/04](../L5-microarchitecture/04-buses-debug.md) has the guarantee halves); the clauses below are written in a generic valid/ready idiom and must be instantiated over the Wishbone signals — the contract's shape (assume/guarantee split, the latency bound `B`, the XIP worst case) is unchanged.
 
 ## The contract
 
@@ -31,7 +31,7 @@ A4  reads from flash-mapped addresses return F's contents,
 A5  reads/writes to RAM/peripheral addresses behave per the memory map [03]
 ```
 
-**Guarantee half** — the core's request discipline (G1–G3: stable-until-ready, well-formed strobes, no overlapping requests) — is *morally part of the core's external spec* and is proved in [L5/04](../L5-microarchitecture/04-memory-pcpi.md); the contract is the assume-guarantee pair, split by polarity across the two layers.
+**Guarantee half** — the core's request discipline (well-formed cycles, stability until acknowledge, no overlapping transactions) — is *morally part of the core's external spec* and is proved in [L5/04](../L5-microarchitecture/04-buses-debug.md); the contract is the assume-guarantee pair, split by polarity across the two layers.
 
 ## The latency bound B is load-bearing
 

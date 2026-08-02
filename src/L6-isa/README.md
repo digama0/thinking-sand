@@ -2,7 +2,7 @@
 
 > **Supplies:** `ISA = Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices` — the transition system L5 proves refinement against, and the core of [L7](../L7-system/README.md)'s `Sys(F)`. **Consumes:** the RISC-V standard, the shipped configuration (L4). **Kind: definition** — specification authoring, not proof; the layer where being wrong is least detectable.
 
-> **Retarget note (2026-08-02, F7).** The sharpest item below — S3, the authored spec for picorv32's custom interrupt scheme — largely **dissolves** for the shipped VexRiscv core, which implements the *standard* machine-mode CSR/trap/interrupt machinery: that content moves into the Sail import (S2 now covers the ratified machine-mode subset of Volume II, not just the base ISA). What remains authored is smaller but real: the LiteX SoC's device/CSR semantics and any core behaviour outside the ratified model (the debug unit, cache side effects). The coverage sweep's partition changes accordingly (RV32I + Zicsr/machine-mode; **no hardware M** — multiply/divide is software).
+> **Scope note.** The shipped core implements the *standard* machine-mode CSR/trap/interrupt machinery, so S2's import covers the ratified machine-mode subset of Volume II alongside the base ISA, and the authored residue (S3) is small: the external-interrupt array CSRs and any core behaviour outside the ratified model. The chapters below predate this scoping and still describe a custom-interrupt authoring problem at full width; they are due the same rewrite L5 received, against the measured [configuration record](../tools/config-record.py) (RV32I, machine-mode subset, no hardware M/C/A, no counters).
 
 ## Background
 
