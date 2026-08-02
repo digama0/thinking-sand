@@ -19,6 +19,26 @@ L.todo("sail-pin", "import sail-riscv at a pinned commit; record the translation
 L.todo("compliance", "run the architectural compliance suite against the imported model",
        doc="src/L6-isa/00-sail-base.md",
        blocked_on="sail-pin plus the riscv-arch-test harness")
+@L.check("spec-pin", "the hand-tabulated spec patterns vs the official riscv-opcodes tables",
+         doc="src/L6-isa/03-coverage.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    pt = load("partition")
+    for f in pt.OPCODE_FILES:
+        if m := need(DATA / "opcodes" / f):
+            return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    mismatches, missing = pt.spec_vs_opcodes()
+    if mismatches or missing:
+        return FAIL, f"spec table diverges from riscv-opcodes: {mismatches + missing}"
+    official = pt.opcodes_spec()
+    if official["sret"] != (0xFFFFFFFF, 0x10200073):
+        return FAIL, f"sret's official encoding changed: {official['sret']}"
+    return PASS, ("all 49 hand-tabulated (mask, match) patterns equal the official "
+                  "riscv-opcodes encodings (rv_i, rv32_i shifts, zifencei, zicsr, "
+                  "system, s - assembler pseudo-forms excluded), and sret's official "
+                  "encoding 0x10200073 confirms the UB set's lone SYSTEM word. The "
+                  "partition's spec side no longer rests on hand transcription")
+
 @L.check("partition", "the encoding partition vs the shipped decoder's legal set",
          doc="src/L6-isa/03-coverage.md")
 def _(ctx):

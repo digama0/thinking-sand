@@ -58,6 +58,63 @@ SPEC = [
 ]
 
 
+# --- the official side: riscv-opcodes' pinned extension files ----------------
+OPCODES = ROOT / "data/opcodes"
+OPCODE_FILES = ("rv_i", "rv32_i", "rv_zifencei", "rv_zicsr", "rv_system", "rv_s")
+
+
+def opcodes_spec():
+    """Parse the pinned riscv-opcodes extension files into name -> (mask, match).
+
+    Line format: `name arg... hi..lo=val ...`; constraint tokens fix bits, named
+    args are variable fields. `$pseudo_op parent name ...` lines carry the RV32
+    shift variants (slli/srli/srai as refinements of the rv64 encodings); later
+    files override earlier ones, so rv32_i's shifts win over any generic entry.
+    """
+    out = {}
+    for fname in OPCODE_FILES:
+        for line in (OPCODES / fname).read_text().splitlines():
+            toks = line.split()
+            if not toks or toks[0].startswith("#"):
+                continue
+            if toks[0] == "$pseudo_op":
+                # assembler shorthands reuse real names (`jal offset` = jal x1);
+                # a pseudo may FILL a name (rv32_i's shifts) but never override
+                name, toks = toks[2], toks[3:]
+                if name in out:
+                    continue
+            elif toks[0].startswith("$"):
+                continue
+            else:
+                name, toks = toks[0], toks[1:]
+            mask = match = 0
+            for t in toks:
+                m = re.fullmatch(r"(\d+)(?:\.\.(\d+))?=(0x[0-9a-fA-F]+|\d+)", t)
+                if not m:
+                    continue
+                hi, lo = int(m.group(1)), int(m.group(2) or m.group(1))
+                width = hi - lo + 1
+                mask |= ((1 << width) - 1) << lo
+                match |= (int(m.group(3), 0) & ((1 << width) - 1)) << lo
+            out[name] = (mask, match)
+    return out
+
+
+def spec_vs_opcodes():
+    """Diff SPEC's hand-tabulated patterns against the official tables.
+    Returns (mismatches, missing); both empty means the spec side is validated."""
+    official = opcodes_spec()
+    mismatches, missing = [], []
+    for mask, match, name in SPEC:
+        if name not in official:
+            missing.append(name)
+        elif official[name] != (mask, match):
+            om, ov = official[name]
+            mismatches.append(f"{name}: ours ({mask:08x},{match:08x}) "
+                              f"official ({om:08x},{ov:08x})")
+    return mismatches, missing
+
+
 # --- the decoder side: extract the legality cubes from the generated Verilog --
 def decoder_cubes():
     txt = VEX.read_text(errors="replace")

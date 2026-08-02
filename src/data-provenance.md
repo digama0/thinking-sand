@@ -9,6 +9,7 @@
 | `efabless/caravel` | `27cbe49c90ba5362ad52c9968dd98e035c30c74f` | 2024-11-04 |
 | `efabless/caravel_mgmt_soc_litex` | `503eda0790085712ffef7f4ad8934c7daed3237f` | 2024-01-03 |
 | `google/skywater-pdk-libs-sky130_fd_sc_hd` | `ac7fb61f06e6470b94e8afdf7c25268f62fbd7b1` | 2020-11-10 |
+| `riscv/riscv-opcodes` | `62a06d2b4a228a9b157ed9149bd99dd3912a5ba8` | 2026-07-30 |
 
 Refs are commit SHAs, not branches. `findings.md` quotes exact byte counts, instance counts, and Liberty table values from these files, and `L0/09` quotes structural-check results. A floating ref would silently invalidate all of it. **If you move to newer upstream: bump the SHA in `tools/fetch-data.sh`, re-run, and re-derive Findings — never one without the other.**
 
@@ -40,6 +41,10 @@ mgmt/
   interrupts.rst          1.3 KB    generated interrupt-assignment docs (irqmap.py)
   picorv32.v               95 KB    the comparison core: hand-written, 3,044 lines (L4 census)
   mgmt_core_wrapper.v, defines.v
+opcodes/
+  rv_i, rv32_i, rv_zifencei, rv_zicsr, rv_system, rv_s
+                                    the official encoding tables — validates the
+                                    partition's hand-tabulated spec side (L6/03)
 pdk/
   inv_1.gds, nand2_1.gds, dfxtp_1.gds          sample cell layouts
   inv_1__{tt_025C_1v80,ss_100C_1v60,ff_n40C_1v95_ccsnoise}.lib.json
@@ -59,7 +64,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/clockcheck.py` | gate netlists | clock-network root/gate census (L2/05) |
 | `tools/sdc-audit.py` + `sdc-elaborate.tcl` | both SDCs | mode elaboration, exception classes (L2/04) |
 | `tools/config-record.py` | `VexRiscv_MinDebugCache.v`, `mgmt_core.v` | the configuration record (L5) |
-| `tools/partition.py` | `VexRiscv_MinDebugCache.v` | the encoding partition + UB set (L6/03) |
+| `tools/partition.py` | `VexRiscv_MinDebugCache.v`, `opcodes/*` | the encoding partition + UB set, spec side validated (L6/03) |
 | `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `memory_map.rst` | the four-way memory-map diff (L7/03) |
 | `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |

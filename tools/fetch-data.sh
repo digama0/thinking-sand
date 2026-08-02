@@ -19,6 +19,7 @@ mkdir -p data/{caravel,mgmt,pdk}
 CARAVEL=efabless/caravel@27cbe49c90ba5362ad52c9968dd98e035c30c74f          # 2024-11-04
 MGMT=efabless/caravel_mgmt_soc_litex@503eda0790085712ffef7f4ad8934c7daed3237f  # 2024-01-03
 PDK=google/skywater-pdk-libs-sky130_fd_sc_hd@ac7fb61f06e6470b94e8afdf7c25268f62fbd7b1  # 2020-11-10
+OPCODES=riscv/riscv-opcodes@62a06d2b4a228a9b157ed9149bd99dd3912a5ba8       # 2026-07-30
 
 get() {  # get <repo@sha> <path-in-repo> <dest>
   local repo="${1%@*}" sha="${1#*@}" src="$2" dst="$3"
@@ -90,6 +91,13 @@ fetch_mgmt() {
   get $MGMT docs/generated/interrupts.rst        data/mgmt/interrupts.rst
 }
 
+fetch_opcodes() {
+  echo "riscv-opcodes (official encoding tables — validates partition.py's SPEC)"
+  for f in rv_i rv32_i rv_zifencei rv_zicsr rv_system rv_s; do
+    get $OPCODES extensions/$f data/opcodes/$f
+  done
+}
+
 fetch_pdk() {
   echo "SKY130 HD library samples"
   get $PDK cells/inv/sky130_fd_sc_hd__inv_1.gds                 data/pdk/inv_1.gds
@@ -106,16 +114,18 @@ fetch_checks() {
   # the two gate netlists, and the mgmt RTL — no GDS/DEF (~40 MB instead of ~490)
   fetch_small_caravel
   fetch_mgmt
+  fetch_opcodes
   get $CARAVEL verilog/gl/caravel_core.v data/caravel/gl_caravel_core.v
 }
 
+mkdir -p data/opcodes
 case "${1:-all}" in
-  small)   fetch_small_caravel; fetch_mgmt; fetch_pdk ;;
+  small)   fetch_small_caravel; fetch_mgmt; fetch_opcodes; fetch_pdk ;;
   caravel) fetch_small_caravel; fetch_big_caravel ;;
   checks)  fetch_checks ;;
   mgmt)    fetch_mgmt ;;
   pdk)     fetch_pdk ;;
-  all)     fetch_small_caravel; fetch_big_caravel; fetch_mgmt; fetch_pdk ;;
+  all)     fetch_small_caravel; fetch_big_caravel; fetch_mgmt; fetch_opcodes; fetch_pdk ;;
   *) echo "usage: $0 [all|small|caravel|checks|mgmt|pdk]" >&2; exit 2 ;;
 esac
 
