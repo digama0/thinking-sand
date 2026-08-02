@@ -37,6 +37,7 @@ mgmt/
   VexRiscv_MinDebugCache.v 238 KB   the SHIPPED core: SpinalHDL output, pipelined RV32I (F7)
   caravel.py               16 KB    the LiteX generator source — the memory map's intent side
   defs.h, csr-defs.h       12 KB    the firmware's address headers — the map's software side
+  interrupts.rst          1.3 KB    generated interrupt-assignment docs (irqmap.py)
   picorv32.v               95 KB    the comparison core: hand-written, 3,044 lines (L4 census)
   mgmt_core_wrapper.v, defines.v
 pdk/
@@ -60,6 +61,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/config-record.py` | `VexRiscv_MinDebugCache.v`, `mgmt_core.v` | the configuration record (L5) |
 | `tools/partition.py` | `VexRiscv_MinDebugCache.v` | the encoding partition + UB set (L6/03) |
 | `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `memory_map.rst` | the four-way memory-map diff (L7/03) |
+| `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.

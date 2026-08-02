@@ -12,10 +12,11 @@ Author the residue: the spec fragments for exactly the behaviours outside the ra
 
 **State.** The 32-bit array-pending register and array-mask register (the two custom CSRs), read/written by the standard `csrr*` instructions like any CSR.
 
-**Steps / invariants.**
+**Steps / invariants** — the capture/clear discipline is exactly the kind of detail the RTL diff must settle rather than assume, and [`irqmap.py`](../tools/irqmap.py) settles it:
 
-- **Capture**: an asserted external line sets its pending bit; pending bits persist until cleared by software (the capture/clear discipline — level vs. latched — is exactly the kind of detail the RTL diff must settle, not assume).
-- **The funnel**: the machine-mode external-interrupt pending bit equals `(pending ∧ mask) ≠ 0`. Interrupt *taking* is then entirely the imported spec's business (`mstatus.MIE`, `mie`, trap entry).
+- **No in-core capture**: the pending CSR (`0xFC0`) is a *live view* — it reads `mask ∧ lines`, where `lines` is the array input delayed by one register — not a latch. It is **read-only**: the RTL raises illegal access on a CSR write to it, so `csrrw`/`csrrs`-with-writes to `0xFC0` trap while pure reads succeed. Nothing in the core remembers a line that dropped; persistence is the *SoC's* job — each line is held by a latched event block upstream (pending ∧ enable, write-one-to-clear) until software clears it there (L7/03's device models, outside this spec).
+- **The mask**: `0xBC0` is an ordinary read/write CSR, reset to zero — so out of reset every array line is masked and the funnel is closed.
+- **The funnel**: the machine-mode external-interrupt pending bit equals `(0xFC0's view) ≠ 0`, i.e. `(mask ∧ lines) ≠ 0`. Interrupt *taking* is then entirely the imported spec's business (`mstatus.MIE`, `mie`, trap entry).
 - **Never-pending**: the software-interrupt and timer-interrupt pending bits are constant zero.
 - **Dispatch is software's problem**: all 32 lines share the one external-interrupt trap cause; the handler reads `0xFC0` to find the source. (Which device drives which line is system wiring — L7/03's map, not this spec.)
 
@@ -32,7 +33,7 @@ Discrepancies between anchors and RTL are *results*; choices the anchors leave o
 ## Obligations
 
 1. The state + step formalisation above, as a `⊕`-extension of the Sail import.
-2. The plugin-first draft, the RTL diff, and the discrepancy log (each entry an S3-fidelity data point).
+2. The plugin-first draft, the RTL diff, and the discrepancy log (each entry an S3-fidelity data point). The structural half of the diff is done — [`irqmap.py`](../tools/irqmap.py) pins the CSR pair's read/write/trap behaviour and the funnel from the shipped RTL — the behavioural half (simulating the formalised residue against the RTL) remains.
 3. The firmware anchor corpus (shared with L5/05).
 4. The never-pending and register-reset-vector clauses, stated in the spec rather than assumed.
 

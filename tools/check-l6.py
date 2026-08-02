@@ -47,7 +47,8 @@ def _(ctx):
                   "ISA still hold on them - no instruction is a halt-and-catch-fire")
 L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin source, then diff against RTL behaviour",
        doc="src/L6-isa/01-irq-spec.md",
-       note="the plugin-first half is authoring; the DIFF is checker-shaped once a simulator harness exists")
+       note="the structural half is done (irqmap.py / L7 irq-map: mask R/W, pending read-only "
+            "live view, funnel); the behavioural diff needs the authored draft plus a simulator harness")
 L.todo("c-register", "populate the choice register C1-C7 with RTL-extracted values (misaligned behaviour, mtvec WARL fields, mtval details)",
        doc="src/L6-isa/02-underspecification.md",
        blocked_on="config-record extensions for the measurable rows (C2/C5/C6); the rest is recording discipline")

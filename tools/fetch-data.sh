@@ -86,6 +86,8 @@ fetch_mgmt() {
   get $MGMT litex/caravel.py                     data/mgmt/caravel.py
   get $MGMT verilog/dv/firmware/defs.h           data/mgmt/defs.h
   get $MGMT verilog/dv/firmware/csr-defs.h       data/mgmt/csr-defs.h
+  # the generated interrupt-assignment documentation (the docs side of irqmap.py)
+  get $MGMT docs/generated/interrupts.rst        data/mgmt/interrupts.rst
 }
 
 fetch_pdk() {

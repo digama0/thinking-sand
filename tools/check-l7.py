@@ -70,10 +70,40 @@ def _(ctx):
                      "interconnect timeout and reads 0xFFFFFFFF; (3) csr-defs.h's "
                      "CSR_DCACHE_INFO (0xCC0) is not decoded by the shipped core (0xBC0/0xFC0 "
                      "are) - reading it traps")
-L.todo("irq-map", "diff the IRQ wiring (mgmt_core.v mgmtsoc_interrupt bits + wrapper) against irq.rst",
-       doc="src/L7-system/03-memory-map-devices.md",
-       note="the RTL side is extractable now: mgmt_core.v assigns bit 0 = timer, 1 = uart, "
-            "2-7 = user_irq 0-5 into the external-interrupt array; the docs side needs the RST fetch")
+@L.check("irq-map", "the interrupt path end to end: chip wiring -> sync -> event blocks -> array -> CSRs, vs docs",
+         doc="src/L7-system/03-memory-map-devices.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    for f in ("mgmt/mgmt_core.v", "mgmt/mgmt_core_wrapper.v", "mgmt/interrupts.rst",
+              "mgmt/VexRiscv_MinDebugCache.v", "caravel/rtl_caravel_core.v"):
+        if m := need(DATA / f):
+            return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    im = load("irqmap")
+    bits = im.array_bits()
+    rename = {"mgmtsoc_irq": "TIMER0", "uart_irq": "UART",
+              **{f"gpioin{k}_gpioin{k}_irq": f"USER_IRQ_{k}" for k in range(6)}}
+    rtl = {i: rename.get(s, s) for i, s in bits.items()}
+    doc = im.doc_table()
+    if rtl != doc:
+        return FAIL, f"array wiring vs docs diverged: rtl={rtl}, docs={doc}"
+    if im.sync_chains() != {n: n for n in range(6)}:
+        return FAIL, f"user_irq sync chains changed: {im.sync_chains()}"
+    if len(im.event_blocks()) != 8:
+        return FAIL, f"latched event blocks changed: {sorted(im.event_blocks())}"
+    if not all(im.outer_wiring().values()):
+        return FAIL, f"outer wiring changed: {im.outer_wiring()}"
+    csrs = im.core_csrs()
+    if not all(csrs.values()):
+        return FAIL, f"array CSR semantics changed: {csrs}"
+    return PASS, ("the generated interrupt docs agree with the RTL exactly: array bit 0 = "
+                  "timer0, 1 = uart, 2-7 = user_irq[0:5]; chip level feeds "
+                  "{irq_spi[2:0], user_irq[2:0]} (housekeeping high, user project low). "
+                  "Every external line is 2FF-synchronised then latched in a LiteX event "
+                  "block (pending & enable, W1C). In the core, mask 0xBC0 is R/W and "
+                  "pending 0xFC0 is READ-ONLY - a live view of mask & RegNext(lines), "
+                  "not a latch; a write to 0xFC0 traps. This settles L6/01's deferred "
+                  "level-vs-latched question: persistence lives in the SoC event blocks, "
+                  "not the core")
 L.todo("pad-defaults", "diff gpio_defaults_block values and DM_INIT/OENB_INIT against pinout docs",
        doc="src/L7-system/04-power-epochs.md",
        blocked_on="the defaults-block per-instance values (defines.v is fetched; per-pad overrides live in the config)")
