@@ -54,6 +54,8 @@ fetch_small_caravel() {
   get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.max.rpt data/caravel/sta.max.rpt
   get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.worst_slack.rpt data/caravel/sta.worst_slack.rpt
   get $CARAVEL signoff/caravel_core/openlane-signoff/42-rcx_sta.wns.rpt data/caravel/sta.wns.rpt
+  # the human-written memory-map documentation (the docs side of memmap.py)
+  get $CARAVEL docs/rst/memory_map.rst           data/caravel/memory_map.rst
 }
 
 fetch_big_caravel() {
@@ -79,6 +81,11 @@ fetch_mgmt() {
   # the GL netlist's plugin register names against the three shipped variants)
   get $MGMT verilog/rtl/mgmt_core.v              data/mgmt/mgmt_core.v
   get $MGMT verilog/rtl/VexRiscv_MinDebugCache.v data/mgmt/VexRiscv_MinDebugCache.v
+  # the other three descriptions of the memory map (memmap.py diffs all four):
+  # the LiteX generator source and the firmware's address headers
+  get $MGMT litex/caravel.py                     data/mgmt/caravel.py
+  get $MGMT verilog/dv/firmware/defs.h           data/mgmt/defs.h
+  get $MGMT verilog/dv/firmware/csr-defs.h       data/mgmt/csr-defs.h
 }
 
 fetch_pdk() {

@@ -6,7 +6,7 @@ A CPU core has no instructions for "print a character" or "read a pin." It has l
 
 The devices behind those addresses each need a formal model — a small transition system saying how register writes translate into behaviour. For the UART that means the **divisor register** (the programmable number that sets the baud rate by dividing the core clock) and the framing sequence: on a write to the data register, the TX wire emits start bit, eight data bits, stop bit, each lasting `divisor` clock cycles. **Interrupts** are the other direction of device communication: rather than the CPU polling devices in a loop, a device raises a dedicated wire when it wants attention, and the CPU suspends the program to run a handler. Six such wires reach this core; which physical event drives which wire is system wiring, not part of any portable spec, and lives here. And the 38 GPIO pads each carry a configuration block, loaded through a serial daisy-chain, that determines the pad's direction and function — configuration state that three different chapters' definitions index on.
 
-There is also a fact about *where this information lives* that a newcomer would not guess: nowhere checkable. The memory map's authoritative source is a **Python program**. Caravel's management SoC is built with LiteX, a framework in which hardware is described by Python code that *generates* Verilog — so the map exists as generator source, as generated RTL, as `#define`s in a header, and as human-written documentation, four artifacts with no tool checking their agreement. This is normal practice, not a Caravel quirk, and it is why this chapter's first deliverable is a diff, with any disagreement being a genuine finding about a shipped chip's documentation.
+There is also a fact about *where this information lives* that a newcomer would not guess: nowhere checkable. The memory map's authoritative source is a **Python program**. Caravel's management SoC is built with LiteX, a framework in which hardware is described by Python code that *generates* Verilog — so the map exists as generator source, as generated RTL, as `#define`s in firmware headers, and as human-written documentation, four artifacts with no tool upstream checking their agreement. This is normal practice, not a Caravel quirk — which is why this chapter's first deliverable is a diff of all four ([`memmap.py`](../tools/memmap.py)), and why that diff finds real disagreements in shipped artifacts ([findings](../findings.md)).
 
 ## Statement
 
@@ -18,7 +18,7 @@ Documentation-of-record and generator source, not machine-checked artifacts:
 
 | content | authoritative source | documented in |
 |---|---|---|
-| memory map | **generated** — `caravel_mgmt_soc_litex/litex/caravel.py` (LiteX source); realised in generated `mgmt_core.v`; fragments in `defines.v` (`USER_SPACE_ADDR 32'h3000_0000`, `MEM_WORDS 256`, 2 DFFRAM blocks) | `memory-mapped-io-summary.rst` |
+| memory map | **generated** — [`litex/caravel.py`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/litex/caravel.py) (LiteX source); realised in generated [`mgmt_core.v`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/rtl/mgmt_core.v); fragments in `defines.v` (`USER_SPACE_ADDR 32'h3000_0000`, `MEM_WORDS 256`) and the firmware's [`defs.h`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/dv/firmware/defs.h)/[`csr-defs.h`](https://github.com/efabless/caravel_mgmt_soc_litex/blob/503eda0790085712ffef7f4ad8934c7daed3237f/verilog/dv/firmware/csr-defs.h) | [`memory_map.rst`](https://github.com/efabless/caravel/blob/27cbe49c90ba5362ad52c9968dd98e035c30c74f/docs/rst/memory_map.rst) (the housekeeping table) |
 | IRQ map | `irq[5:0]` wiring in `mgmt_core_wrapper.v` | `irq.rst` |
 | pad frame | `chip_io.v`, `ef_io.list`; power-up defaults `DM_INIT 3'b110`, `OENB_INIT` in `defines.v` | `pinout.rst`, `gpio.rst` |
 | pad electrical behaviour | `sky130_fd_io` (PDK) — black-box IO macros | PDK io documentation |
@@ -27,13 +27,13 @@ Documentation-of-record and generator source, not machine-checked artifacts:
 | UART, timers | RTL | `counter-timers.rst` |
 | electrical envelope | — | `maximum-ratings.rst`, `external-clock.rst` — P6/Envelope material as prose |
 
-Two standing observations: the memory map's authoritative source is a **Python generator** — spec-by-generator, so read `caravel.py`, not the RST — and nothing checks the documentation against the RTL; the diff is this file's first experiment because drift is the expected finding.
+Two standing observations. First, the memory map's authoritative source is a **Python generator** — spec-by-generator, so read `caravel.py`, not the RST. Second, [`memmap.py`](../tools/memmap.py) extracts the shipped decode (seven windows from `mgmt_core.v`'s `slave_sel` comparisons, plus the 20 LiteX CSR banks inside the `csr` window) and diffs it against the other three artifacts — and drift is exactly what it finds ([findings](../findings.md)): the `hk` window is declared 3 MB but decoded as 4 MB (LiteX rounds decode windows to powers of two), four live `defs.h` pointers target unmapped space, and `csr-defs.h` names a machine CSR (`CSR_DCACHE_INFO`, 0xCC0) the shipped core does not decode. The unmapped-space semantics matter to [02](02-bus-contract.md)'s contract: an access to a hole does not trap — the shared interconnect **times out after 10⁶ cycles**, acks with `0xFFFF_FFFF`, and counts a `bus_errors` CSR — so a stray firmware pointer costs a ~100 ms stall at 10 MHz, and the address-decode model must say so.
 
 ## The models to write
 
-**Memory map**: an address-decode function `addr → (region, device, offset)`, extracted from RTL, diffed against docs, exported to [02](02-bus-contract.md)'s A5 and to L5's load/store lemmas.
+**Memory map**: an address-decode function `addr → (region, device, offset)` — the extraction and the four-way diff exist ([`memmap.py`](../tools/memmap.py)); what remains is casting the extracted table as the formal decode component, including the timeout behaviour on holes, exported to [02](02-bus-contract.md)'s A5 and to L5's load/store lemmas.
 
-**The IRQ map**: which physical event drives which of the 6 wired lines — the system half of interrupts, deliberately *not* in L6/01's portable spec. Includes the timer and the UART's line.
+**The IRQ map**: which physical event drives which line of L6/01's external-interrupt array — the system half of interrupts, deliberately *not* in the portable spec. The shipped wiring is measured (`mgmt_core.v`'s `mgmtsoc_interrupt`): bit 0 = timer, bit 1 = UART, bits 2–7 = `user_irq[0:5]`, bits 8–31 unused; the remaining work is the diff against the documentation's claims.
 
 **UART**: the observable channel — divisor register semantics, bit-cell generation against the core clock, the TX trace feeding [00](00-sys-and-obs.md)'s derivation stack; RX's synchroniser is L2/06's business, its byte semantics here.
 
@@ -43,9 +43,9 @@ Two standing observations: the memory map's authoritative source is a **Python g
 
 ## Obligations
 
-1. The RTL-vs-docs diff for map, IRQ wiring, and pad defaults — cheap, and any discrepancy is a finding about shipped documentation.
-2. The five models above as components of `Sys`'s composition ([00](00-sys-and-obs.md) obligation 3).
-3. Track the `caravel.py`-generated map against the *shipped* `mgmt_core.v` — the generator is authoritative for intent, the RTL for the artifact; a mismatch is a real result either way.
+1. The RTL-vs-docs diff for map, IRQ wiring, and pad defaults — the map's four-way diff runs in [`memmap.py`](../tools/memmap.py) (three discrepancies found and pinned); the IRQ-wiring and pad-defaults diffs remain ([`check-l7.py`](../tools/check-l7.py)).
+2. The five models above as components of `Sys`'s composition ([00](00-sys-and-obs.md) obligation 3) — for the map, that is the extracted seven-window table plus the 10⁶-cycle timeout semantics on holes, as a formal decode function.
+3. Track the `caravel.py`-generated map against the *shipped* `mgmt_core.v` — the generator is authoritative for intent, the RTL for the artifact; the one mismatch (the `hk` window's power-of-two rounding) is a real result of exactly this kind.
 
 ## Effort
 

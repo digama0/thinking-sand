@@ -20,17 +20,24 @@ The design's own toolchain pins are recorded separately, inside the fetched arti
 caravel/
   rtl_caravel_core.v       44 KB    RTL top level (instantiates mgmt_core_wrapper)
   gl_caravel_core.v        33 MB    gate-level netlist — the L0/09 and L3 subject
+  gl_housekeeping.v       3.8 MB    housekeeping macro's own gate netlist (synchroniser audit)
   caravel_core.def[.gz]   118 MB    placement + routing
   caravel.gds[.gz]        291 MB    full-chip layout
-  caravel.sdc              26 KB    112 false paths, 45 case analyses — the L2 subject
+  caravel.sdc              26 KB    the chip-level 8-mode SDC — the L2 subject
+  caravel_core.sdc        2.6 KB    the caravel_core run's own single-mode SDC (F1)
+  sta.{min,max,worst_slack,wns}.rpt per-corner STA reports from the shipped signoff (F1)
   signoff.rpt             413 B     the STA verdict; 3 of 9 corners fail hold (F1/F2)
   cmds.log                 33 KB    170 literal timestamped commands — the flow "spec"
   config.tcl               14 KB    synthesis configuration
+  memory_map.rst           11 KB    the housekeeping memory-map documentation (memmap.py)
   metrics.csv, warnings.log, OPENLANE_VERSION, PDK_SOURCES
 mgmt/
-  picorv32.v               95 KB    the chosen core: hand-written, 3,044 lines, 19 flagged
-                                    Verilog sites (L4). RV32IMC — there is no picorv64;
-                                    the other mgmt-core options are Ibex and VexRiscv.
+  mgmt_core.v             275 KB    the SHIPPED SoC fabric: LiteX/Migen output — bus decode,
+                                    CSR banks, peripherals, interconnect (L5/L7 subject)
+  VexRiscv_MinDebugCache.v 238 KB   the SHIPPED core: SpinalHDL output, pipelined RV32I (F7)
+  caravel.py               16 KB    the LiteX generator source — the memory map's intent side
+  defs.h, csr-defs.h       12 KB    the firmware's address headers — the map's software side
+  picorv32.v               95 KB    the comparison core: hand-written, 3,044 lines (L4 census)
   mgmt_core_wrapper.v, defines.v
 pdk/
   inv_1.gds, nand2_1.gds, dfxtp_1.gds          sample cell layouts
@@ -42,10 +49,17 @@ The fast corner exists only as the `_ccsnoise` variant at this SHA, and carries 
 
 ## Tools that consume this
 
+The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `tools/check-all.py`; rendered into the book as the [scoreboard](scoreboard.md)) drive the extractors:
+
 | tool | input | produces |
 |---|---|---|
-| `tools/netgraph.py` | `gl_caravel_core.v` | W1–W4 structural checks (L0/09). 7.5 s. |
-| `tools/gdsdump.py` | any `.gds` | record/layer/element census |
-| `tools/bbox.py` | any `.gds` | per-layer bounding boxes in µm |
+| `tools/netgraph.py` | `gl_caravel_core.v` | W1–W4 structural checks (L0/09) |
+| `tools/synccheck.py` | gate netlists | 2FF-synchroniser audit of async inputs (L2/06) |
+| `tools/clockcheck.py` | gate netlists | clock-network root/gate census (L2/05) |
+| `tools/sdc-audit.py` + `sdc-elaborate.tcl` | both SDCs | mode elaboration, exception classes (L2/04) |
+| `tools/config-record.py` | `VexRiscv_MinDebugCache.v`, `mgmt_core.v` | the configuration record (L5) |
+| `tools/partition.py` | `VexRiscv_MinDebugCache.v` | the encoding partition + UB set (L6/03) |
+| `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `memory_map.rst` | the four-way memory-map diff (L7/03) |
+| `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.
