@@ -101,7 +101,7 @@ L.todo("rho", "the register correspondence, by instrumented flow reproduction (F
        blocked_on="reproducing the pinned OpenLane run (docker + the pinned PDK; the project's highest-value experiment)")
 L.todo("deletions", "the licensed-deletion theorems as checks (PHYS/CLOCK/BUF-INV classes)",
        doc="src/L3-netlist-equivalence/02-licensed-deletions.md",
-       note="W4 discharges the PHYS class already; the CLOCK class needs L2's cleanliness check, BUF/INV needs the library lemma table.")
+       note="W4 discharges the PHYS class already; the CLOCK class's cleanliness precondition is now checked (L2/clock-core) — what remains is the collapse statement itself; BUF/INV needs the library lemma table.")
 L.todo("npn-library", "verify ABC's 4-input NPN rewrite library (one-time, 222 classes)",
        doc="src/L3-netlist-equivalence/04-equivalence-certificates.md",
        blocked_on="extracting the class library from the pinned ABC build")

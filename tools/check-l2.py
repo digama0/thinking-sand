@@ -136,9 +136,43 @@ L.todo("verified-sta", "re-derive the shipped timing verdict with sound interpol
 L.todo("monotonicity", "library-wide Liberty monotonicity census (sizes M4)",
        doc="src/L2-timing/03-corners.md",
        blocked_on="fetching the full SKY130 HD Liberty set at pinned SHAs (data/pdk has 3 sample corners of inv_1 only)")
-L.todo("clock-clean", "clock-network cleanliness: every flop's CLK reachable through clock cells only",
-       doc="src/L2-timing/05-clock.md",
-       note="netgraph-style reachability over gl_caravel_core.v; also censuses gating cells. Next cheapest L2 item.")
+@L.check("clock-core", "clock cleanliness (core): every sink resolves to a declared root; gating censused",
+         doc="src/L2-timing/05-clock.md")
+def _(ctx):
+    cc = load("clockcheck")
+    _, nsinks, ngates, by_root, _, _, _ = cc.survey(str(CORE))
+    roots = {d: len(m) for (k, d), m in by_root.items()}
+    macro_ok = (roots.get("caravel_clocking.core_clk") == 4727
+                and roots.get("housekeeping.serial_clock") == 530
+                and roots.get("housekeeping.serial_load") == 494)
+    stray = {d: n for d, n in roots.items()
+             if d not in ("caravel_clocking.core_clk", "housekeeping.serial_clock",
+                          "housekeeping.serial_load") and "ringosc" not in d}
+    if nsinks != 5774 or ngates != 0 or not macro_ok or stray:
+        return FAIL, f"census changed: sinks {nsinks}, gates {ngates}, roots {roots}"
+    return PASS, ("5,774 sinks -> 4 roots: the SDC's three declared clocks via macro pins "
+                  "(4,727 + 530 + 494) + 23 sinks inside pll.ringosc (exactly the X5 "
+                  "excision); 0 clock-gate cells; every path outside the excision is pure "
+                  "buffer/inverter — the licence for L3's clock-tree deletion")
+
+
+@L.check("clock-hk", "clock cleanliness (housekeeping): the csclk mux and the undeclared bit-bang clock",
+         doc="src/L2-timing/05-clock.md")
+def _(ctx):
+    cc = load("clockcheck")
+    _, nsinks, ngates, by_root, _, nets, pins_of = cc.survey(str(HK))
+    roots = {d: len(m) for (k, d), m in by_root.items()}
+    mux = next((d for d in roots if "a22o" in d), None)
+    kind, detail, _ = cc.classify_driver(nets, pins_of, "wbbd_sck")
+    if (nsinks != 771 or ngates != 0 or roots.get(mux) != 615
+            or roots.get("wb_clk_i") != 111 or roots.get("mgmt_gpio_in[4]") != 45
+            or kind != "flop-out"):
+        return FAIL, f"census changed: sinks {nsinks}, roots {roots}, wbbd_sck<-{kind} {detail}"
+    return FINDING, ("confirms the recorded census: 615 sinks on csclk = a22o mux(external "
+                     "SCK path, wbbd_sck); wbbd_sck is a FLOP OUTPUT (_7203_) — the "
+                     "firmware bit-bang SPI clock is a register-generated clock that no "
+                     "SDC mode declares, so the 615-flop domain is never timed from that "
+                     "source in any analysed mode (F4)")
 L.todo("f6-pll-range", "reachable PLL configurations vs the signoff clock period (F6)",
        doc="src/L2-timing/05-clock.md",
        blocked_on="the housekeeping register map for itrim/divider/source-mux reachable values")

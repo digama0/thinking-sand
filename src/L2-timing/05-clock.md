@@ -27,6 +27,8 @@ The clock network is 15,306 cells — buffers, inverters, and 9,910 `clkdlybuf4s
 
 **Cleanliness.** Every flop's clock pin is reachable from a clock source through clock-cell types only, with no data-dependent logic except declared gating. A mechanical reachability check on the netlist, and the licence for L3's deletion of the entire network into the sentence "all flops update together." If gating cells are present (`dlclk*`-family), each adds a conditional-arrival term and an enable-stability check — enumerate rather than assume absent.
 
+**Done** (`tools/clockcheck.py`; [Findings](../findings.md#clock-network-cleanliness-l205)): 5,774 sinks resolve to the SDC's three declared clocks plus 23 sinks inside the `pll.ringosc` excision; **zero gating cells**; every path outside the excision is pure buffer/inverter. The one wrinkle lives in housekeeping: its SPI domain's clock is a *mux* of the pad SCK path with `wbbd_sck`, a **flop output** — a register-generated clock no SDC mode declares (F4).
+
 **Arrival enclosure.** STA over the clock network's own arcs yields per-flop insertion delay intervals; `arr(f)` is that interval widened by jitter. Skew — the *difference* between two flops' arrivals — is what the hold inequality consumes, and CPPR ([03](03-corners.md)) exists precisely because launch and capture share a tree prefix whose variation cancels.
 
 **CTS is not logically neutral.** This deserves its own emphasis because the L1-era intuition "place-and-route preserves function" fails here: hold correctness *depends on skew*, and useful-skew methodology deliberately unbalances the tree to steal setup margin — making the clock tree an active participant in the correctness argument, not plumbing. The 9,910 delay buffers are the visible evidence: about 6% of all logic-bearing cells exist purely to shape `arr`.
@@ -52,7 +54,7 @@ Recovery/removal checks on asynchronous set/reset pins, and minimum-pulse-width 
 
 ## Obligations
 
-1. The cleanliness check as a tool run (netgraph-style; an afternoon), including the gating-cell census.
+1. ~~The cleanliness check as a tool run, including the gating-cell census~~ — **done** (`tools/clockcheck.py`; zero gating cells, roots as above).
 2. `arr` as a derived object: clock-network STA + jitter, with the CPPR-relevant tree structure preserved rather than flattened.
 3. The X5 contract statement — frequency interval + diffusion coefficient — as the formal boundary of the excision (the proof itself is M8's, in L0's machinery).
 4. External-vs-PLL clock selection: the mux implies two `arr` functions and two closure runs; check both were actually signed off.
