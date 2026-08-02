@@ -95,6 +95,8 @@ The book's sources live in [`src/`](src/overview.md) (the conventional mdBook la
 
 ## Where to start work
 
+**The current working phase is checkers, not proofs.** The near-term deliverables are correct programs that go over the shipped artifacts and validate what the designers (and our theorem statements) claim — each checker the executable form of a future proof obligation. Proof-kernel integration and the choice of proof language are deliberately deferred; nothing below requires them.
+
 Three cheap, high-information experiments. Each is weeks rather than years, and each tells you whether the layer above is tractable before you invest in it.
 
 1. **Reproduce the synthesis** (L3). Versions are pinned exactly. Reproduce the shipped netlist and you stop *inferring* what the tools did and start knowing — and the register-correspondence witness (F5) falls out for free. Failure to reproduce is itself a finding worth having early.
