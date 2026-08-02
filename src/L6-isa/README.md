@@ -4,11 +4,11 @@
 
 ## Background
 
-An ISA — instruction set architecture — is the contract between hardware and software: the instructions, their encodings, and their exact effects on architectural state. This layer fixes that contract as a mathematical object, because L5's refinement theorem is only as meaningful as the spec it refines against. The object has three components with three different levels of trust: the officially ratified formal model of RISC-V is *imported* ([00](00-sail-base.md)); the custom interrupt machinery picorv32 substitutes for the standard's — documented in its README's prose, formalised nowhere — must be *authored*, the most error-prone artifact in the project ([01](01-irq-spec.md)); and where the standard is deliberately loose, the choices this implementation embodies are *recorded* rather than silently assumed ([02](02-underspecification.md)). A totality sweep ([03](03-coverage.md)) then makes the spec answer for all 2³² instruction words, not just the meaningful ones.
+An ISA — instruction set architecture — is the contract between hardware and software: the instructions, their encodings, and their exact effects on architectural state. This layer fixes that contract as a mathematical object, because L5's refinement theorem is only as meaningful as the spec it refines against. The object has three components with three different levels of trust: RISC-V's official formal model is *imported* ([00](00-sail-base.md)); the custom interrupt machinery picorv32 substitutes for the standard's — documented in its README's prose, formalised nowhere — must be *authored*, the most error-prone artifact in the project ([01](01-irq-spec.md)); and where the standard is deliberately loose, the choices this implementation embodies are *recorded* rather than silently assumed ([02](02-underspecification.md)). A totality sweep ([03](03-coverage.md)) then makes the spec answer for all 2³² instruction words, not just the meaningful ones.
 
 ## Statement
 
-What L5's theorem is *stated against*: `Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices`, its three components carrying the three fidelity axioms — **S2** (the ratified import's small residue), **S3** (the authored IRQ spec, the sharpest surviving specification axiom), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: **move the core to the iCEBreaker and L6 survives byte-for-byte while L7 is replaced wholesale.**
+What L5's theorem is *stated against*: `Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices`, its three components carrying the three fidelity axioms — **S2** (the official model's small residue), **S3** (the authored IRQ spec, the sharpest surviving specification axiom), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: **move the core to the iCEBreaker and L6 survives byte-for-byte while L7 is replaced wholesale.**
 
 ## Subcomponents
 
@@ -25,11 +25,11 @@ What L5's theorem is *stated against*: `Sail-RV32I(config) ⊕ authored-IRQ ⊕ 
 
 ## Axioms introduced
 
-**S2** (Sail faithful — small: the model is ratified; residue is community-intent plus the pinned translation path), **S3** (the authored IRQ spec is what was intended — unfalsifiable, anchored), **S4** (the recorded choices are acceptable — legislative by nature). X4 lives in L7.
+**S2** (Sail faithful — small: the model is the standard's official golden model; residue is fidelity to the ratified manuals plus the pinned translation path), **S3** (the authored IRQ spec is what was intended — unfalsifiable, anchored), **S4** (the recorded choices are acceptable — legislative by nature). X4 lives in L7.
 
 ## The layer's shape
 
-Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (ratified model, structured encoding space), [03](03-coverage.md) turns the remaining width into independent SAT-shaped typing, and the *thinking* is deliberately concentrated into two small artifacts — [01](01-irq-spec.md)'s authored spec and [02](02-underspecification.md)'s choices — because those are the two places an error is invisible downstream. The honest end statement this layer serves: not "picorv32 is correct" but *the device refines **this** specification, modulo **these** axioms* — with unbounded proof capacity the axiom list is the achievement, which is why axioms.md precedes any proof.
+Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (official golden model, structured encoding space), [03](03-coverage.md) turns the remaining width into independent SAT-shaped typing, and the *thinking* is deliberately concentrated into two small artifacts — [01](01-irq-spec.md)'s authored spec and [02](02-underspecification.md)'s choices — because those are the two places an error is invisible downstream. The honest end statement this layer serves: not "picorv32 is correct" but *the device refines **this** specification, modulo **these** axioms* — with unbounded proof capacity the axiom list is the achievement, which is why axioms.md precedes any proof.
 
 **The ISA is rightly silent about power**: its reset section is the power-on hook (X ⊑ reset nondeterminism), prefix-closed small-step refinement is the power-off hook; everything else power-shaped is L7's epoch model. Resist adding power events here — the layering is doing its job.
 

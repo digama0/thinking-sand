@@ -19,7 +19,7 @@ Status key —
 
 | # | axiom | layer | status | notes |
 |---|---|---|---|---|
-| S2 | The Sail RISC-V model faithfully captures the standard | L6 | **A** (small) | Smaller than it looks: `sail-riscv` is the officially *ratified* model, so normatively the model is the standard. Residue: "ratification captured community intent," plus the Sail→prover translation's trust status (L6 open problem 4). Mitigate by running the official compliance suite against the imported model. |
+| S2 | The Sail RISC-V model faithfully captures the standard | L6 | **A** (small) | Smaller than it looks: `sail-riscv` is the standard's official *golden model* — adopted by RISC-V International, and new extensions must extend it for ratification. Residue: the model's fidelity to the ratified manuals, plus the Sail→prover translation's trust status (L6 open problem 4). Mitigate by running the official compliance suite against the imported model. |
 | S3 | The authored picorv32-IRQ specification is what was intended | L6 | **A** | **No standard exists to conform to** — picorv32's interrupt mechanism is custom (`getq`/`setq`/`retirq`/`maskirq`/`waitirq`, q-registers), documented only as README prose. The formal spec must be authored (README-first, then diffed against the RTL), and its fidelity is unfalsifiable. The sharpest surviving specification axiom. |
 | S4 | Where RISC-V is underspecified, our chosen refinement is acceptable | L6 | **A** | Interrupt timing ("eventually"), WARL field choices, some PMA behaviour. Conformance to an underspecified spec is not a statement. |
 
