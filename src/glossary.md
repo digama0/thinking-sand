@@ -91,13 +91,14 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **Verilator / Icarus** | independent open-source Verilog simulators — L4's differential-testing oracles |
 | **Sail** | the ISA-description language; its RISC-V model is the officially *ratified* one and exports to proof assistants |
 | **RVFI** | the riscv-formal interface: RTL ports announcing each instruction retirement — the designer's own commit-point map (L5/01) |
-| **PCPI** | picorv32's coprocessor port; multiply and divide live behind it as iterative units |
+| **VexRiscv / SpinalHDL / LiteX** | the shipped management core: VexRiscv is a plugin-composed pipelined RISC-V core written in SpinalHDL (a Scala-embedded HDL); LiteX is the Python SoC builder that generated the surrounding mgmt_core |
+| **PCPI** | picorv32's coprocessor port (comparison core); multiply and divide live behind it as iterative units |
 | **DFFRAM** | RAM compiled from standard-cell flip-flops rather than a foundry SRAM macro — which makes Caravel's memory *verifiable* by the same machinery as its logic (L3/02) |
 | **XIP** | execute-in-place: instructions fetched directly from SPI flash through a small controller, wait states and all — the source of the bus latency bound's worst case |
 | **SPI / UART** | the two serial interfaces here: SPI is clocked and master-driven (the flash); UART is asynchronous and baud-framed (the observable output channel) |
 | **GPIO** | general-purpose I/O — the 38 runtime-configurable user pads |
 | **CSR / WARL** | RISC-V's control-and-status registers; WARL fields ("write any values, read legal values") are where the standard deliberately leaves behaviour implementation-defined (S4) |
-| **q-registers** | picorv32's four custom registers holding interrupt state — no standard covers them, which is exactly S3 |
+| **q-registers** | picorv32's four custom interrupt registers (comparison core) — the original S3; the shipped VexRiscv core uses standard machine-mode CSRs instead |
 | **LRM** | the Verilog Language Reference Manual — the event-driven semantics this project deliberately does *not* formalise (L4/00) |
 | **Tcl** | the scripting language EDA tools embed; an SDC file is a Tcl *program*, which is why it must be elaborated before it can be analysed |
 
@@ -112,7 +113,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **CPPR** | common-path pessimism removal: launch and capture clocks share a tree prefix whose variation cannot differ between them — credit it once |
 | **OCV / derate** | on-chip variation (per-cell randomness) and the flat percentage margins that industrially stand in for its proper statistics |
 | **false path** | a graph path STA can see but logic can never activate; *declaring* one is an unchecked human claim — the subject of L2/04 |
-| **FSM / one-hot** | finite-state machine; one-hot encoding gives each state its own bit, exactly one set — picorv32's control is an 8-state one-hot FSM |
+| **FSM / one-hot** | finite-state machine; one-hot encoding gives each state its own bit, exactly one set — picorv32's control (the comparison core) is an 8-state one-hot FSM |
 | **tri-state** | a driver that can disconnect (high impedance) as well as drive 0/1 — the one legitimate way two drivers share a net |
 | **latch inference** | Verilog silently converting an incomplete combinational block into a state element — the classic way RTL grows unintended memory (L4/02) |
 | **blocking / non-blocking** | Verilog's `=` vs `<=`: immediate sequential update vs two-phase simultaneous commit; the distinction that makes clocked logic order-independent |

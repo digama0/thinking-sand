@@ -240,7 +240,7 @@ Fetching the per-path material at the pinned SHA (now in `fetch-data.sh checks`)
 
 ## The management core in the pinned netlist is VexRiscv
 
-Found while reading the hold report: its first path runs through `soc.core.VexRiscv.RegFilePlugin_regFile[7][12]`. Checked directly: the pinned `gl_caravel_core.v` contains **14,297** `VexRiscv`-prefixed identifiers and **zero** `picorv32` anywhere (the pinned `rtl_caravel_core.v` likewise). **The fabricated artifact this repository pins carries the VexRiscv/LiteX management core, not picorv32.** The picorv32 configuration exists in the ecosystem (`caravel_pico`), but it is not what this netlist is. Consequence: every netlist-level number in this file (5,774 flops, the clock census, the synchroniser audit's housekeeping half — housekeeping is core-independent) describes the VexRiscv build, while L4/L5's scoping targets picorv32. **A target decision is pending: re-pin the data to a picorv32 Caravel build, or state the divergence in the book's claim.** Filed as F7.
+Found while reading the hold report: its first path runs through `soc.core.VexRiscv.RegFilePlugin_regFile[7][12]`. Checked directly: the pinned `gl_caravel_core.v` contains **14,297** `VexRiscv`-prefixed identifiers and **zero** `picorv32` anywhere (the pinned `rtl_caravel_core.v` likewise). **The fabricated artifact this repository pins carries the VexRiscv/LiteX management core, not picorv32.** The picorv32 configuration exists in the ecosystem (`caravel_pico`), but it is not what this netlist is. Filed as F7 — and **resolved (2026-08-02): the target follows the silicon.** The shipped core is identified as **VexRiscv `MinDebugCache`** by plugin-set matching: the GL's register prefixes are {Branch, Csr, DBusSimple, Debug, HazardSimple, IBusCached, LightShifter, RegFile}Plugin — a subset of `MinDebugCache`'s (whose remaining plugins are stateless and leave no registers), while `LiteDebug`'s stateful `MulDivIterativePlugin` is absent, ruling it out. So: pipelined RV32I, instruction cache, simple data bus, machine-mode CSRs, hazard interlocks, iterative shifter, debug unit — **no hardware multiply/divide**. The shipped RTL pair (`mgmt_core.v` LiteX output + `VexRiscv_MinDebugCache.v` SpinalHDL output) is now pinned in `fetch-data.sh`; its construct census (same method as picorv32's): VexRiscv — 0 delays/casex/force-class, **7** `'bx` don't-cares, 186 `always @*`, 1 casez, 0 initial, 13 posedge blocks (0 with blocking); mgmt_core — all zeros except 355 `always @*` and 7 posedge blocks (2 with blocking). Machine-emitted narrowness, as the book predicted: fewer dark corners, vastly more blocks, no IR spec behind either generator.
 
 ## Management-core options
 
@@ -252,7 +252,8 @@ ibex_all.v                376,548   hand-written (lowRISC)
 VexRiscv_LiteDebug.v      282,421   SpinalHDL output
 mgmt_core.v               274,957   LiteX/Migen output
 VexRiscv_MinDebug.v       219,377   SpinalHDL output
-picorv32.v                 94,517   hand-written Verilog  ← chosen
+picorv32.v                 94,517   hand-written Verilog  ← the comparison core
+VexRiscv_MinDebugCache.v  237,621   SpinalHDL output      ← SHIPPED (F7)
 ```
 
 ## Synthesis configuration

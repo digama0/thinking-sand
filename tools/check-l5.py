@@ -9,15 +9,33 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklib import Layer
+from checklib import Layer, PASS, FAIL, DATA, need
 
 L = Layer("L5", "microarchitecture: RTL refines the ISA")
 
-L.todo("config-record", "extract the shipped picorv32 parameterisation (the configuration record)",
+@L.check("core-variant", "the shipped core is VexRiscv MinDebugCache, identified from its own registers",
+         doc="src/L5-microarchitecture/00-microarchitecture.md")
+def _(ctx):
+    import re
+    gl = DATA / "caravel/gl_caravel_core.v"
+    vex = DATA / "mgmt/VexRiscv_MinDebugCache.v"
+    if m := need(gl, vex):
+        return FAIL, f"missing {m}"
+    plugins = set(re.findall(r"([A-Za-z]+Plugin)", gl.read_text(errors="replace")))
+    expect = {"BranchPlugin", "CsrPlugin", "DBusSimplePlugin", "DebugPlugin",
+              "HazardSimplePlugin", "IBusCachedPlugin", "LightShifterPlugin", "RegFilePlugin"}
+    vexp = set(re.findall(r"([A-Za-z]+Plugin)", vex.read_text(errors="replace")))
+    if plugins != expect or not plugins <= vexp or "MulDivIterativePlugin" in plugins:
+        return FAIL, f"plugin census changed: GL={sorted(plugins)}"
+    return PASS, ("GL plugin registers = {Branch, Csr, DBusSimple, Debug, HazardSimple, "
+                  "IBusCached, LightShifter, RegFile} ⊆ MinDebugCache's set, and the "
+                  "stateful MulDivIterativePlugin (LiteDebug's marker) is absent: "
+                  "pipelined RV32I + I-cache + machine-mode CSRs + debug, no hardware M")
+
+
+L.todo("config-record", "extract the shipped configuration record (LiteX CSR map, cache geometry, VexRiscv plugin parameters)",
        doc="src/L5-microarchitecture/00-microarchitecture.md",
-       blocked_on="fetching the management-SoC integration that instantiates picorv32 with parameters "
-                  "(mgmt_core_wrapper.v instantiates an opaque mgmt_core; the binding site is in the "
-                  "generated mgmt SoC source, which needs pinning like the rest of the data)")
+       note="the shipped RTL pair is now pinned (mgmt_core.v + VexRiscv_MinDebugCache.v); the record is read out of them — checker-shaped, next in line for this layer")
 L.todo("fsm-graph", "extract the 8-state FSM graph and its per-instruction path bounds",
        doc="src/L5-microarchitecture/01-refinement.md",
        blocked_on="a Verilog front end for picorv32.v (shared with L4's parser needs)")

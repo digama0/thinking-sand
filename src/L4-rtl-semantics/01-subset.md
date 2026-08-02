@@ -30,9 +30,9 @@ This is the same manoeuvre as L1/00 (GDS: forbid pathtype 1, self-intersection, 
 
 The discipline that follows: **write the semantics for exactly what appears.** Every construct in the subset gets its meaning from [00](00-elaborated-object.md)'s simple semantics; every construct outside it is rejected; there is no third category of "handled approximately."
 
-## Why this beats the alternatives that were considered
+## The trade, and how it actually fell
 
-The generated cores (VexRiscv/SpinalHDL, the LiteX wrapper) are ~550 KB of machine-emitted Verilog — *narrower* in construct usage but hostile to invariant authoring, and their generators have no written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). Hand-written picorv32 costs a bounded census of care and buys a source a human can state an invariant over. That trade was the target-selection decision, and this census is its receipt.
+The generated cores (VexRiscv/SpinalHDL, the LiteX wrapper) are ~550 KB of machine-emitted Verilog — *narrower* in construct usage but hostile to invariant authoring, and their generators have no written-down IR semantics to appeal to (FIRRTL is the counterexample, unavailable here — [04](04-adequacy.md)). Hand-written picorv32 costs a bounded census of care and buys a source a human can state an invariant over. That was the original target-selection argument — **and the target went the other way** (F7): the shipped silicon carries the VexRiscv build, and realism outranks simplicity. The measured consolation: the generated sources are exactly as narrow as predicted (census above and in Findings — the shipped pair has *fewer* dark-corner constructs than picorv32, at 25× the block count), so this chapter's semantics shrinks in per-construct difficulty while its adequacy story ([04](04-adequacy.md)) grows in importance. picorv32's census is retained as the comparison baseline.
 
 ## Obligations
 

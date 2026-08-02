@@ -21,12 +21,8 @@ def strip_comments(txt):
     return re.sub(r"//[^\n]*", "", txt)
 
 
-@L.check("subset", "the subset census re-derived from picorv32.v",
-         doc="src/L4-rtl-semantics/01-subset.md")
-def _(ctx):
-    if m := need(PICO):
-        return FAIL, f"missing {m} (run tools/fetch-data.sh mgmt)"
-    txt = strip_comments(PICO.read_text(errors="replace"))
+def census(path):
+    txt = strip_comments(path.read_text(errors="replace"))
     counts = {
         "# delays": len(re.findall(r"#\s*\d", txt)),
         "x literals": len(re.findall(r"'[bdh][0-9_]*[xX]", txt)),
@@ -37,24 +33,63 @@ def _(ctx):
         "casez": len(re.findall(r"\bcasez\b", txt)),
         "initial": len(re.findall(r"\binitial\b", txt)),
     }
-    # posedge blocks containing blocking '=' (excluding <=, ==, >=, !=, ===)
+    # posedge blocks containing blocking '=' (for-headers removed; <=/==/>=/!= masked)
     blocking_blocks = 0
     posedge_blocks = re.split(r"always\s*@\s*\(\s*posedge", txt)[1:]
     for chunk in posedge_blocks:
         body = re.split(r"\balways\b|\bendmodule\b", chunk)[0]
-        if re.search(r"(?<![<>=!])=(?!=)", re.sub(r"<=|>=|==+|!=+", "", body)):
+        b = re.sub(r"for\s*\([^)]*\)", "for(...)", body)
+        if re.search(r"(?<![<>=!])=(?!=)", re.sub(r"<=|>=|==+|!=+", "@", b)):
             blocking_blocks += 1
     counts["posedge blocks w/ blocking ="] = blocking_blocks
     counts["posedge blocks"] = len(posedge_blocks)
+    return counts
 
-    # The measured truth (this check CORRECTED the original findings table, which
-    # claimed 0 X literals and 2-of-25 blocking blocks — see findings.md).
-    expect = {"# delays": 0, "x literals": 25, "casex": 0, "force/release/deassign": 0,
-              "fork/join/UDP/event": 0, "always @*": 15, "casez": 1, "initial": 1,
-              "posedge blocks w/ blocking =": 5, "posedge blocks": 24}
+
+def check_census(path, expect):
+    if m := need(path):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh mgmt)"
+    counts = census(path)
     diffs = {k: (counts[k], expect[k]) for k in expect if counts[k] != expect[k]}
     if diffs:
         return FAIL, f"census disagrees with the recorded table (got, recorded): {diffs}"
+    return None
+
+
+@L.check("subset-shipped", "the construct census of the SHIPPED core pair (F7 target)",
+         doc="src/L4-rtl-semantics/01-subset.md")
+def _(ctx):
+    vex = DATA / "mgmt/VexRiscv_MinDebugCache.v"
+    lit = DATA / "mgmt/mgmt_core.v"
+    r = check_census(vex, {"# delays": 0, "x literals": 7, "casex": 0,
+                           "force/release/deassign": 0, "fork/join/UDP/event": 0,
+                           "always @*": 186, "casez": 1, "initial": 0,
+                           "posedge blocks w/ blocking =": 0, "posedge blocks": 13})
+    if r:
+        return r
+    r = check_census(lit, {"# delays": 0, "x literals": 0, "casex": 0,
+                           "force/release/deassign": 0, "fork/join/UDP/event": 0,
+                           "always @*": 355, "casez": 0, "initial": 0,
+                           "posedge blocks w/ blocking =": 2, "posedge blocks": 7})
+    if r:
+        return r
+    return PASS, ("machine-emitted narrowness confirmed: VexRiscv - 7 'bx don't-cares, "
+                  "186 always@*, 1 casez, 13 posedge blocks (0 blocking); mgmt_core "
+                  "(LiteX) - clean except 355 always@* and 2 blocking blocks. No "
+                  "delays/casex/force-class anywhere; 25x picorv32's block count")
+
+
+@L.check("subset", "the construct census of picorv32.v (the comparison core)",
+         doc="src/L4-rtl-semantics/01-subset.md")
+def _(ctx):
+    # The measured truth (this check CORRECTED the original findings table, which
+    # claimed 0 X literals and 2-of-25 blocking blocks — see findings.md).
+    r = check_census(PICO, {"# delays": 0, "x literals": 25, "casex": 0,
+                            "force/release/deassign": 0, "fork/join/UDP/event": 0,
+                            "always @*": 15, "casez": 1, "initial": 1,
+                            "posedge blocks w/ blocking =": 5, "posedge blocks": 24})
+    if r:
+        return r
     return PASS, ("matches findings: 0 delays/casex/force-class, 25 'bx don't-cares, "
                   "15 always@*, 1 casez, 1 initial, 5 of 24 posedge blocks use blocking =")
 

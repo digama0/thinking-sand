@@ -14,6 +14,8 @@ One promise in the assume half is quietly the most important: not *that* request
 
 Author the contract at the core's memory port — the formerly orphaned artifact L5 consumes. It is the *interface half of `Sys`*: what the fabric promises the core. Authored here, **assumed** by L5's refinement, **discharged** against the SoC RTL as part of B2.
 
+> **Retarget note (2026-08-02, F7).** The clauses below are stated over picorv32's native valid/ready handshake. The shipped VexRiscv/LiteX core speaks **Wishbone** (and the core's own iBus/dBus behind a bridge); the contract's *shape* — assume/guarantee split, the latency bound `B`, the XIP worst case — carries over unchanged, but the alphabet must be restated over the Wishbone signals when this layer is re-derived.
+
 ## The contract
 
 Over picorv32's native valid/ready handshake (with the look-ahead variant's consistency handled on the core side — L5/04's `LA` lemma):

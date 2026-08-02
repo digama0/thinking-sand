@@ -74,6 +74,11 @@ fetch_mgmt() {
   get $MGMT verilog/rtl/picorv32.v          data/mgmt/picorv32.v
   get $MGMT verilog/rtl/mgmt_core_wrapper.v data/mgmt/mgmt_core_wrapper.v
   get $MGMT verilog/rtl/defines.v           data/mgmt/defines.v
+  # the SHIPPED management core (F7 resolution 2026-08-02): LiteX-generated SoC
+  # around VexRiscv in its MinDebugCache configuration (identified by matching
+  # the GL netlist's plugin register names against the three shipped variants)
+  get $MGMT verilog/rtl/mgmt_core.v              data/mgmt/mgmt_core.v
+  get $MGMT verilog/rtl/VexRiscv_MinDebugCache.v data/mgmt/VexRiscv_MinDebugCache.v
 }
 
 fetch_pdk() {

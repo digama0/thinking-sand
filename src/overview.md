@@ -24,7 +24,7 @@ Three features of this statement are deliberate and worth defending.
 
 **It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](bibliography.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
 
-**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's, and part of *that* exists only as informal documentation — [picorv32](https://github.com/YosysHQ/picorv32)'s interrupt mechanism is custom, described in its README but formalised nowhere, so S3 must be authored rather than imported ([L6](L6-isa/README.md)).
+**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's — which for the shipped VexRiscv core must include the machine-mode privileged subset (CSRs, traps, interrupts) alongside the base ISA — and parts of the surrounding SoC's behaviour exist only as generated code and informal documentation, so the residual device/CSR semantics must be authored rather than imported ([L6](L6-isa/README.md), [L7](L7-system/README.md)).
 
 **`⊑` is trace refinement up to stuttering, not equality.** The implementation takes many cycles per architectural step; L5's obligation is a stuttering simulation with a measure function, not a cycle-accurate correspondence.
 
@@ -38,7 +38,7 @@ The named objects at the seams. Every layer README opens with which of these it 
 | `Contracts(N)` | netlist `N` with each cell carrying its timed assume-guarantee contract (interval Liberty arc + regime classes + noise margin) and each net its RC enclosure | [L0/03–05](L0-device-physics/03-cell-enclosures.md) + [L1/03](L1-geometry/03-capacitance-enclosures.md) |
 | `Mealy(N)` | the discrete machine induced by the cells' Boolean functions — a *Mealy machine* is a clocked finite-state machine over bitvectors, outputs computed from state and current input | *derived* — formerly axiom S1; falls out of L0/05's (A) + M5 |
 | `⟦RTL⟧` | word-level transition system of the source text | [L4](L4-rtl-semantics/README.md) (definition) |
-| `ISA` | `Sail-RV32I(config) ⊕ authored-IRQ ⊕ S4-choices` | [L6](L6-isa/README.md) (definition) |
+| `ISA` | `Sail-RV32(config, incl. machine-mode subset) ⊕ S4-choices ⊕ residual authored semantics` | [L6](L6-isa/README.md) (definition) |
 | `Sys(F)`, `obs` | pad-trace semantics of the system spec; the physical observation map | [L7](L7-system/README.md) (definition) |
 
 One identification is used silently everywhere and stated only here: **`N` is a single shared object.** The netlist that L1's LVS certifies the geometry against, the netlist L2's STA runs on, and the left-hand side of L3's equivalence are all `⟦gl_caravel_core.v⟧` under one parse — X1's obligation, one parser, three consumers.
@@ -67,7 +67,7 @@ Five layers are **theorems**, three are **definitions** — marked, because a de
 | **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 6–9 mo |
 | **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | the measured construct census | 3–6 mo |
 | **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 1–2 yr |
-| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity · **S3** the authored IRQ spec · **S4** underspecification choices | 6–9 mo |
+| **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity (now incl. the machine-mode subset) · **S3** residual authored semantics · **S4** underspecification choices | 6–9 mo |
 | **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~6 mo |
 
 **The effort accounting.** Figures are for one competent person and are the **sums of the subcomponent estimates**. The original per-layer figures — seeded before the decomposition at "a few years each" — ran roughly 2× higher; scoping the pieces is precisely what revised them, and the sums reflect the better understanding, so they replaced the anchors. One cross-cutting cost is priced separately because no layer owns it: **shared infrastructure** — the hybrid proof framework itself, bitvector automation, symbolic simulation, and the LRAT/PAC checker integrations — **1–2 person-years**, consumed by every theorem layer. Naive sequential total: **8–15 person-years**, before the FPGA alternative (which deletes L1's 2–4).
@@ -84,7 +84,7 @@ device d ∈ Envelope
   ⊨ L3   Mealy(N) ≈ρ ⟦RTL⟧                           [W1–W4 ✓, CEC, ρ = F5]
   ≔ L4   ⟦RTL⟧                                       [measured census]
   ⊨ L5   ⟦RTL⟧ ⊑ ISA                                 [the invariant]
-  ≔ L6   ISA  = Sail-RV32I ⊕ picorv32-IRQ            [S2, S3, S4]
+  ≔ L6   ISA  = Sail-RV32 ⊕ machine-mode subset       [S2, S3, S4]
   ≔ L7   Sys(F) = ISA ⊕ memory map ⊕ devices         [X4, bus contract]
   ────────────────────────────────────────────────────────
        obs(d,F,E) ⊑ Sys(F)   with probability ≥ 1 − ε(T)
