@@ -1,6 +1,6 @@
 # Data provenance — the fetched design artifacts
 
-**Not committed.** The repo-root `data/` directory is gitignored: ~490 MB, all reproducible from upstream. Regenerate with `tools/fetch-data.sh [all|small|caravel|mgmt|pdk]`.
+**Not committed.** The repo-root `data/` directory is gitignored: ~490 MB, all reproducible from upstream. Regenerate with `tools/fetch-data.sh [all|small|caravel|checks|mgmt|pdk]`.
 
 ## Provenance — pinned, deliberately
 

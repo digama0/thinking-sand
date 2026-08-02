@@ -147,6 +147,6 @@ Instances so far: min-width and min-spacing are the hypotheses of L1's topology-
 
 **Unestablished for the shipped design** (F1–F5): three of nine corners fail `in2reg` hold; one passes only modulo `max_tran`/`max_cap`, meaning parts of the design sit outside the Liberty characterisation range where STA is *vacuous* rather than merely inaccurate; 159 SDC exceptions are unverified; register correspondence through synthesis is unknown. **The hypotheses of the bridge theorem are not currently established for this design as shipped.**
 
-See [findings.md](findings.md) for the measured data behind all of it.
+See [findings.md](findings.md) for the measured data behind all of it — and the [scoreboard](scoreboard.md) for the live checker verdicts of the commit this book was built from: every obligation as PASS, FINDING, TODO (with its blocker named), or EXTERN.
 
 The chapters descend the tower from here: [L7](L7-system/README.md) first — the claim — down to [L0](L0-device-physics/README.md), where it runs out of turtles.

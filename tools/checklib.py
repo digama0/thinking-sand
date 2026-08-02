@@ -67,12 +67,10 @@ class Layer:
     def extern(self, id, title, doc, note):
         self.items.append((id, title, doc, EXTERN, note))
 
-    def main(self, argv=None):
-        argv = argv if argv is not None else sys.argv[1:]
+    def run(self, argv):
+        """Execute (or just list) every obligation; return (rows, counts, rc)."""
         list_only = "--list" in argv
-        print(f"=== {self.name} — {self.title} ===")
-        counts = {}
-        rc = 0
+        rows, counts, rc = [], {}, 0
         for id, title, doc, kind, x in self.items:
             if kind in (TODO, EXTERN):
                 status, msg = kind, x
@@ -88,15 +86,32 @@ class Layer:
             counts[status] = counts.get(status, 0) + 1
             if status == FAIL:
                 rc = 1
+            rows.append((status, id, title, doc, str(msg)))
+        return rows, counts, rc
+
+    def main(self, argv=None):
+        argv = argv if argv is not None else sys.argv[1:]
+        rows, counts, rc = self.run(argv)
+        summary = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items()))
+        if "--md" in argv:
+            print(f"## {self.name} — {self.title}\n")
+            print("| | obligation | detail |")
+            print("|---|---|---|")
+            for status, id, title, doc, msg in rows:
+                link = doc.removeprefix("src/")
+                cell = msg.replace("|", "\\|").replace("\n", " — ")
+                print(f"| **{status}** | [`{self.name}/{id}`]({link}) — {title} | {cell} |")
+            print(f"\n*{len(rows)} obligations — {summary}*\n")
+            return rc
+        print(f"=== {self.name} — {self.title} ===")
+        for status, id, title, doc, msg in rows:
             tag = _paint(f"{status:7}", _COLORS.get(status, "0"))
             print(f"[{tag}] {self.name}/{id:<12} {title}")
             print(f"          doc: {doc}")
             if msg:
-                for line in str(msg).splitlines():
+                for line in msg.splitlines():
                     print(f"          {line}")
-        total = len(self.items)
-        summary = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items()))
-        print(f"--- {self.name}: {total} obligations  {summary}")
+        print(f"--- {self.name}: {len(rows)} obligations  {summary}")
         return rc
 
 

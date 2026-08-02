@@ -59,7 +59,7 @@ Everything runs from the repository root with no dependencies beyond Python 3, `
 ### Fetch the design artifacts — [`tools/fetch-data.sh`](tools/fetch-data.sh)
 
 ```sh
-tools/fetch-data.sh [all|small|caravel|mgmt|pdk]
+tools/fetch-data.sh [all|small|caravel|checks|mgmt|pdk]
 ```
 
 ~490 MB into `data/`, which is gitignored. **Refs are pinned commit SHAs, not branches** — Findings quotes exact byte counts, instance counts and Liberty table values from these files, so a floating ref would silently invalidate the documents. `small` skips the two large binaries (~1 MB total) and is enough for most of the analysis.
@@ -72,9 +72,10 @@ If you deliberately move to newer upstream: bump the SHA in [the script](tools/f
 tools/check-all.py           # every layer, L7 down to L0
 tools/check-l2.py            # one layer
 tools/check-all.py --list    # the obligation census without running anything
+tools/check-all.py --md      # the scoreboard as a book page
 ```
 
-**The executable table of contents of each layer's obligations.** Every obligation the book states appears in its layer's checker exactly once: as a running check (`PASS`), a check confirming a recorded adverse finding (`FINDING` — expected, e.g. the failing signoff corners), a documented stub (`TODO`, with what it is blocked on named), or an axiom-register entry no program can reach (`EXTERN`). `FAIL` means the shipped data contradicts something recorded — the checkers are also regression tests on Findings itself, and have already corrected it twice (the L4 construct census, the macro count). This is the working surface of the current phase: checkers, not proofs.
+**The executable table of contents of each layer's obligations.** Every obligation the book states appears in its layer's checker exactly once: as a running check (`PASS`), a check confirming a recorded adverse finding (`FINDING` — expected, e.g. the failing signoff corners), a documented stub (`TODO`, with what it is blocked on named), or an axiom-register entry no program can reach (`EXTERN`). `FAIL` means the shipped data contradicts something recorded — the checkers are also regression tests on Findings itself, and have already corrected it twice (the L4 construct census, the macro count). This is the working surface of the current phase: checkers, not proofs. **The rendered book embeds the live verdicts**: CI fetches the pinned data (`tools/fetch-data.sh checks`, ~40 MB — the checkers' inputs, no GDS/DEF), runs the suite, and `build-book.sh` writes `tools/check-all.py --md` into the book's [Scoreboard appendix](src/SUMMARY.md), so the published page reports the same commit it was built from.
 
 ### Structural checks on the netlist — [`tools/netgraph.py`](tools/netgraph.py)
 

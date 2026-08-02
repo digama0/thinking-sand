@@ -70,6 +70,7 @@
 [Appendix: Glossary](glossary.md)
 [Appendix: Axioms — the register](axioms.md)
 [Appendix: Findings — measured data](findings.md)
+[Appendix: Scoreboard — checker results](scoreboard.md)
 [Appendix: Reading list](reading-list.md)
 [Appendix: Bibliography](bibliography.md)
 [Appendix: Data provenance](data-provenance.md)

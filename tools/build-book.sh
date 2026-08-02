@@ -12,6 +12,13 @@ cd "$(dirname "$0")/.."
 
 command -v mdbook >/dev/null || { echo "mdbook not found (cargo install mdbook)" >&2; exit 1; }
 
+# Regenerate the scoreboard appendix from this working tree: the published book
+# carries the checker verdicts of the same commit that built it. A FAIL in a
+# checker must be visible in the page, not block the book -- hence || true.
+# (Without data/ the page honestly shows the checks failing on missing files;
+# run tools/fetch-data.sh checks first.)
+python3 tools/check-all.py --md > src/scoreboard.md || true
+
 python3 - <<'PY'
 import pathlib, re
 present = {str(p.relative_to('src')) for p in pathlib.Path('src').rglob('*.md')}

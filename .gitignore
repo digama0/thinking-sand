@@ -12,3 +12,4 @@ out/
 
 # mdBook output (tools/build-book.sh)
 book/
+src/scoreboard.md

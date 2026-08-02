@@ -80,13 +80,22 @@ fetch_pdk() {
   get $PDK cells/inv/sky130_fd_sc_hd__inv_1__ff_n40C_1v95_ccsnoise.lib.json data/pdk/inv_1__ff_n40C_1v95_ccsnoise.lib.json
 }
 
+fetch_checks() {
+  # exactly what the layer scoreboards (check-l*.py) consume: the text artifacts,
+  # the two gate netlists, and the mgmt RTL — no GDS/DEF (~40 MB instead of ~490)
+  fetch_small_caravel
+  fetch_mgmt
+  get $CARAVEL verilog/gl/caravel_core.v data/caravel/gl_caravel_core.v
+}
+
 case "${1:-all}" in
   small)   fetch_small_caravel; fetch_mgmt; fetch_pdk ;;
   caravel) fetch_small_caravel; fetch_big_caravel ;;
+  checks)  fetch_checks ;;
   mgmt)    fetch_mgmt ;;
   pdk)     fetch_pdk ;;
   all)     fetch_small_caravel; fetch_big_caravel; fetch_mgmt; fetch_pdk ;;
-  *) echo "usage: $0 [all|small|caravel|mgmt|pdk]" >&2; exit 2 ;;
+  *) echo "usage: $0 [all|small|caravel|checks|mgmt|pdk]" >&2; exit 2 ;;
 esac
 
 echo
