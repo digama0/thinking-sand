@@ -13,12 +13,13 @@ from checklib import Layer, PASS, FAIL, FINDING
 
 L = Layer("L7", "the system specification")
 
-@L.check("memmap", "the memory map four ways: shipped decode vs generator vs firmware headers vs docs",
+@L.check("memmap", "the memory map six ways: decode vs generator vs generated headers vs linker vs hand-written headers vs docs",
          doc="src/L7-system/03-memory-map-devices.md")
 def _(ctx):
     from checklib import load, DATA, need
     for f in ("mgmt/mgmt_core.v", "mgmt/caravel.py", "mgmt/defs.h",
-              "mgmt/csr-defs.h", "mgmt/defines.v", "caravel/memory_map.rst"):
+              "mgmt/csr-defs.h", "mgmt/defines.v", "caravel/memory_map.rst",
+              "mgmt/generated/mem.h", "mgmt/generated/regions.ld"):
         if m := need(DATA / f):
             return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
     mm = load("memmap")
@@ -53,6 +54,16 @@ def _(ctx):
        consts["USER_SPACE_ADDR"] != win["mprj"][0] or \
        vc["USER_SPACE_ADDR"] != win["mprj"][0] or vc["MEM_WORDS"] * 4 != win["dff"][1]:
         return FAIL, "an address constant in defs.h/defines.v disagrees with the decode"
+    # the software-visible map: the generated mem.h and the linker script the
+    # firmware is actually linked against
+    mh, ld = mm.mem_h_regions(), mm.regions_ld()
+    if mh != ld:
+        return FAIL, f"mem.h and regions.ld disagree: {mh} vs {ld}"
+    if set(mh) != set(win):
+        return FAIL, f"software map names differ from the decode: {sorted(mh)} vs {sorted(win)}"
+    sw_diffs = {n: (mh[n], win[n]) for n in win if mh[n] != win[n]}
+    if sw_diffs != {"hk": ((0x26000000, 0x300000), (0x26000000, 0x400000))}:
+        return FAIL, f"software-vs-decode region diffs changed: {sw_diffs}"
     doc = mm.doc_addrs()
     if len(doc) != 112 or any(mm.locate(a, win) != "hk" for a in doc):
         return FAIL, f"housekeeping doc table changed: {len(doc)} addresses"
@@ -60,11 +71,14 @@ def _(ctx):
     undecoded = sorted(n for n, a in hdr.items() if f"{a:x}" not in vex)
     if undecoded != ["CSR_DCACHE_INFO"]:
         return FAIL, f"csr-defs.h vs decoded machine CSRs changed: {undecoded}"
-    return FINDING, ("all 7 window bases agree across RTL, generator, firmware headers and "
-                     "defines.v; reset vector = flash base; the 20 CSR banks enumerated; all "
+    return FINDING, ("all 7 window bases agree across RTL, generator, the generated mem.h "
+                     "and linker script, the hand-written headers and defines.v; reset "
+                     "vector = flash base; the 20 CSR banks enumerated; all "
                      "112 documented housekeeping addresses inside the hk window. Three real "
                      "diffs, pinned: (1) hk is declared 3 MB but the shipped decode rounds to "
-                     "4 MB - 0x26300000..0x263FFFFF also selects housekeeping; (2) four live "
+                     "4 MB - 0x26300000..0x263FFFFF also selects housekeeping, and NO "
+                     "software-visible description mentions it: mem.h and the regions.ld the "
+                     "firmware links against both say 3 MB; (2) four live "
                      "defs.h pointers (reg_rw_block0/1, reg_ro_block0, reg_la_sample) target "
                      "unmapped space, where an access stalls the bus for the 10^6-cycle "
                      "interconnect timeout and reads 0xFFFFFFFF; (3) csr-defs.h's "

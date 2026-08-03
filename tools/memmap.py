@@ -108,6 +108,29 @@ def gen_map():
 
 
 CSR_H = ROOT / "data/mgmt/generated/csr.h"
+MEM_H = ROOT / "data/mgmt/generated/mem.h"
+REGIONS_LD = ROOT / "data/mgmt/generated/regions.ld"
+
+
+def mem_h_regions(path=None):
+    """The generated mem.h: region -> (base, size), as C sees the map."""
+    txt = (path or MEM_H).read_text(errors="replace")
+    base = {n.lower(): int(v, 16) for n, v in re.findall(
+        r"#define (\w+)_BASE (0x[0-9a-fA-F]+)L", txt)}
+    size = {n.lower(): int(v, 16) for n, v in re.findall(
+        r"#define (\w+)_SIZE (0x[0-9a-fA-F]+)", txt)}
+    return {n: (base[n], size[n]) for n in base if n in size}
+
+
+def regions_ld(path=None):
+    """The generated linker script: region -> (origin, length).
+
+    The firmware's own linker script does `INCLUDE ../generated/regions.ld`,
+    so this is the map the shipped software is actually LINKED against.
+    """
+    txt = (path or REGIONS_LD).read_text(errors="replace")
+    return {n: (int(o, 16), int(l, 16)) for n, o, l in re.findall(
+        r"(\w+)\s*:\s*ORIGIN = (0x[0-9a-fA-F]+), LENGTH = (0x[0-9a-fA-F]+)", txt)}
 
 
 def csr_header(path=None):
