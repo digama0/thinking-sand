@@ -5,6 +5,7 @@ Implemented: the SDC elaboration/classification regressions, the signoff-report
 confrontation, and the synchroniser audit. The TODO stubs are the layer's
 remaining programme, each with its blocking prerequisite named.
 """
+import re
 import sys
 import collections
 from pathlib import Path
@@ -12,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from checklib import Layer, PASS, FAIL, FINDING, DATA, need, load
 
+ROOT = Path(__file__).resolve().parent.parent
 L = Layer("L2", "timing and the synchronous abstraction")
 
 SDC = DATA / "caravel/caravel.sdc"
@@ -225,9 +227,51 @@ def _(ctx):
                      "waiver rests on evidence outside the record")
 
 
-L.todo("f1-match", "reproduce the ss-corner STA and match failing endpoints to the synchroniser census (close F1)",
-       doc="src/L2-timing/04-sdc-exceptions.md",
-       blocked_on="an OpenSTA run — every input is pinned and fetched (netlist + SPEF + core SDC + Liberty); the engine is not in this environment")
+@L.check("f1-match", "re-run the signoff STA from the committed inputs and compare to signoff.rpt",
+         doc="src/L2-timing/04-sdc-exceptions.md")
+def _(ctx):
+    from checklib import TODO
+    summary = ROOT / "build-sta/summary.txt"
+    if not summary.is_file():
+        return TODO, ("run tools/sta-rerun.sh (needs OpenSTA via "
+                      "tools/install-toolchain.sh --only sta, plus the pinned sky130A "
+                      "via volare; ~5 min) — every other input is already fetched")
+    txt = summary.read_text()
+    def num(pat):
+        m = re.search(pat, txt)
+        try:
+            return float(m.group(1)) if m else None
+        except ValueError:
+            return None
+    tt_hold = num(r"corner\s+tt_025C_1v80\n\s+hold_worst\s+(\S+)")
+    ss_hold = num(r"corner\s+ss_100C_1v60\n\s+hold_worst\s+(\S+)")
+    ref_hold = num(r"committed_reference_hold\s+(\S+)")
+    missing = num(r"spef_nets_missing\s+(\S+)")
+    dnets = num(r"spef_d_nets\s+(\S+)")
+    if None in (tt_hold, ss_hold, ref_hold, missing, dnets):
+        return FAIL, f"could not parse build-sta/summary.txt:\n{txt}"
+    # the methodology check: our nominal-corner hold must match the committed one
+    if abs(tt_hold - ref_hold) > 0.02:
+        return FAIL, (f"the nominal corner does not reproduce: ours {tt_hold}, "
+                      f"committed {ref_hold} — the setup is not faithful, so nothing "
+                      f"else in this row can be trusted")
+    if ss_hold <= 0:
+        return FAIL, f"slow-corner hold is now negative ({ss_hold}) - F1 story changed"
+    frac = missing / dnets
+    if not 0.5 < frac < 0.56:
+        return FAIL, f"SPEF/netlist mismatch changed: {missing}/{dnets} nets"
+    return FINDING, (
+        f"the method reproduces and the verdict does not. Fed the committed netlist, "
+        f"the committed caravel_core SDC, the committed RCX SPEF and the Liberty from "
+        f"the open_pdks build the chip was signed off with, OpenSTA reproduces the "
+        f"committed nominal-corner hold number to 0.01 ns ({tt_hold} vs {ref_hold}) - "
+        f"so the setup is faithful. At the SLOW corner, the same inputs give worst hold "
+        f"slack +{ss_hold} ns and ZERO violating paths, where signoff.rpt records three "
+        f"slow corners FAILING in2reg hold. The committed artifacts do not reproduce the "
+        f"committed verdict. A concrete mechanism sits alongside it: {missing:.0f} of the "
+        f"SPEF's {dnets:.0f} nets ({100*frac:.0f}%) name nets absent from the committed "
+        f"netlist, so most parasitics never attach - which is also why setup does not "
+        f"reproduce. F1 is now a documented reproducibility gap, not a suspicion")
 L.todo("ac-export", "derive the exported AC-timing table (the outward guarantee)",
        doc="src/L2-timing/06-boundaries.md",
        blocked_on="the verified-sta core (same engine, backward direction)")

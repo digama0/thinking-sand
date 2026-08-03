@@ -236,7 +236,19 @@ Fetching the per-path material at the pinned SHA (now in `fetch-data.sh checks`)
 
 **The failing corners' path evidence was never committed.** The shipped `42-rcx_sta.min.rpt` is the *final nom run*: every reported hold path is MET (worst slack **+0.58**; setup **+4.52**). The s-corner `in2reg` failures exist in the repo only as `signoff.rpt`'s one-line verdicts — the multi-corner STA logs the run produced (`37/39/41-rcx_mcsta.*`) are not in the tree. So the acceptance of three failing corners rests on evidence outside the shipped record.
 
-**F1's shape, final.** The failing `in2reg` hold paths are, under the core SDC, real constrained paths from async pads treated as synchronous — not paths excused by exceptions (the 112 mprj false paths live only in the chip-level file). Closing F1 = reproducing the ss-corner STA from entirely-pinned inputs (shipped netlist + shipped SPEF + shipped SDC + pinned Liberty) and matching the failing endpoints against the synchroniser-audit census; blocked only on an OpenSTA run.
+**F1's shape.** The failing `in2reg` hold paths are, under the core SDC, real constrained paths from async pads treated as synchronous — not paths excused by exceptions (the 112 mprj false paths live only in the chip-level file).
+
+**F1 closed: the method reproduces, the verdict does not** (`tools/sta-rerun.sh`, `tools/sta-rerun.tcl`; pinned by `check-l2.py`). The STA was re-run from entirely committed inputs — the shipped gate netlist, the `caravel_core` SDC, the RCX-extracted SPEF, the macro Liberty that `config.tcl`'s `EXTRA_LIBS` names, and `sky130_fd_sc_hd` from **the open_pdks build the chip was signed off with** (`12df12e2`, the SHA recorded in `PDK_SOURCES`, fetched prebuilt by `volare`).
+
+*The setup is faithful*: at the nominal corner our run reproduces the committed hold number to **0.01 ns** — worst hold slack **+0.59** against the committed **+0.58**. That agreement is what makes the next sentence mean something.
+
+*The verdict does not reproduce.* At the slow corner — `ss_100C_1v60`, one of the three `signoff.rpt` records as **failing** `in2reg` hold — the same inputs give worst hold slack **+1.29 ns and zero violating paths**. Hold *improves* at the slow corner, which is the expected direction when both data and clock paths slow together. **The committed artifacts do not reproduce the committed verdict.**
+
+A concrete mechanism sits beside it, and it is the more damaging finding: **22,193 of the SPEF's 41,542 nets (53%) name nets that do not exist in the committed netlist** — the majority antenna-diode nets, consistent with the instance-renaming step `cmds.log` records between extraction and netlist write-out. Over half the parasitics never attach. That is also why *setup* does not reproduce (ours +12.42 against the committed +4.52): with most wire RC missing, paths are optimistically fast.
+
+So F1 is no longer a suspicion about waived corners; it is a **documented reproducibility gap in a shipped signoff package**. The three failing corners' verdicts cannot be re-derived from what was committed, and the parasitic annotation that any faithful re-derivation would need is itself only half-applicable to the netlist shipped alongside it. Note the direction of the residual risk: this does **not** show the chip is fine — it shows the evidence for either conclusion is absent. Closing F1 properly now needs the *inputs the signoff actually used*, which are not in the repository.
+
+(One preparation step is worth recording because it is licensed by an earlier result rather than by convenience: OpenSTA's Verilog reader rejects instance *arrays*, of which this netlist has exactly three — `decap_12`, `fill_4`, `fill_8`. Dropping them is timing-neutral precisely because L3's **W4** check proved physical cells carry no signal pins.)
 
 ## The management core in the pinned netlist is VexRiscv
 

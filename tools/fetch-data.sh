@@ -112,6 +112,18 @@ fetch_mgmt() {
   done
 }
 
+fetch_sta() {
+  echo "STA inputs (F1 rerun: macro Liberty + RCX parasitics — ~72 MB)"
+  # exactly the EXTRA_LIBS list in openlane/caravel_core/config.tcl
+  for f in housekeeping gpio_defaults_block gpio_logic_high mprj_io_buffer \
+           user_project_wrapper caravel_clocking; do
+    get $CARAVEL lib/$f.lib data/caravel/lib/$f.lib
+  done
+  get $MGMT signoff/RAM128/primetime/lib/ff/RAM128.nom.lib data/caravel/lib/RAM128.nom.lib
+  # the RCX extraction the shipped signoff used
+  get $CARAVEL spef/multicorner/caravel_core.nom.spef data/caravel/spef/caravel_core.nom.spef
+}
+
 fetch_opcodes() {
   echo "riscv-opcodes (official encoding tables — validates partition.py's SPEC)"
   for f in rv_i rv32_i rv_zifencei rv_zicsr rv_system rv_s; do
@@ -145,9 +157,10 @@ case "${1:-all}" in
   caravel) fetch_small_caravel; fetch_big_caravel ;;
   checks)  fetch_checks ;;
   mgmt)    fetch_mgmt ;;
+  sta)     fetch_small_caravel; fetch_sta; get $CARAVEL verilog/gl/caravel_core.v data/caravel/gl_caravel_core.v ;;
   pdk)     fetch_pdk ;;
   all)     fetch_small_caravel; fetch_big_caravel; fetch_mgmt; fetch_opcodes; fetch_pdk ;;
-  *) echo "usage: $0 [all|small|caravel|checks|mgmt|pdk]" >&2; exit 2 ;;
+  *) echo "usage: $0 [all|small|caravel|checks|mgmt|sta|pdk]" >&2; exit 2 ;;
 esac
 
 echo

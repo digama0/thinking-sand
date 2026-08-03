@@ -1,6 +1,6 @@
 # Data provenance — the fetched design artifacts
 
-**Not committed.** The repo-root `data/` directory is gitignored: ~490 MB, all reproducible from upstream. Regenerate with `tools/fetch-data.sh [all|small|caravel|checks|mgmt|pdk]`.
+**Not committed.** The repo-root `data/` directory is gitignored: ~490 MB, all reproducible from upstream. Regenerate with `tools/fetch-data.sh [all|small|caravel|checks|mgmt|sta|pdk]`.
 
 ## Provenance — pinned, deliberately
 
@@ -10,6 +10,8 @@
 | `efabless/caravel_mgmt_soc_litex` | `503eda0790085712ffef7f4ad8934c7daed3237f` | 2024-01-03 |
 | `google/skywater-pdk-libs-sky130_fd_sc_hd` | `ac7fb61f06e6470b94e8afdf7c25268f62fbd7b1` | 2020-11-10 |
 | `riscv/riscv-opcodes` | `62a06d2b4a228a9b157ed9149bd99dd3912a5ba8` | 2026-07-30 |
+
+The **PDK the chip was signed off with** is pinned too, and is not fetched by `fetch-data.sh` because it is a build rather than a file: `open_pdks` `12df12e2e74145e31c5a13de02f9a1e176b56e67` (the SHA in `data/caravel/PDK_SOURCES`). [`volare`](https://github.com/efabless/volare) distributes that exact build prebuilt — `volare enable --pdk sky130 --pdk-root <dir> 12df12e2e74145e31c5a13de02f9a1e176b56e67` — which is what makes the F1 STA rerun a rerun rather than an approximation.
 
 Refs are commit SHAs, not branches. `findings.md` quotes exact byte counts, instance counts, and Liberty table values from these files, and `L0/09` quotes structural-check results. A floating ref would silently invalidate all of it. **If you move to newer upstream: bump the SHA in `tools/fetch-data.sh`, re-run, and re-derive Findings — never one without the other.**
 
@@ -34,6 +36,8 @@ caravel/
   user_defines.v, gpio_control_block.v, defines.v
                                     the pad power-up defaults + their loader (pads.py)
   housekeeping.v           56 KB    the housekeeping macro's RTL (soc-census; csclk domain)
+  lib/                    2.4 MB    the macro Liberty config.tcl's EXTRA_LIBS names (F1 rerun)
+  spef/caravel_core.nom.spef 69 MB  the RCX parasitics the shipped signoff used (F1 rerun)
   metrics.csv, warnings.log, OPENLANE_VERSION, PDK_SOURCES
 mgmt/
   mgmt_core.v             275 KB    the SHIPPED SoC fabric: LiteX/Migen output — bus decode,
@@ -80,6 +84,8 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |
 | `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
 | `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 13 SoC facts, re-derived and diffed (L4/04) |
+| `tools/rtlcheck.py` | the RTL set | latch/acyclicity/undriven checks via yosys (L4/02) |
+| `tools/sta-rerun.sh` + `sta-rerun.tcl` | netlist, SDC, SPEF, Liberty, sky130A | the F1 signoff-STA rerun (L2/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.
