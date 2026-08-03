@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklib import Layer, PASS, FAIL, DATA, need
+from checklib import Layer, PASS, FAIL, DATA, need, load
 
 L = Layer("L5", "microarchitecture: RTL refines the ISA")
 
@@ -95,6 +95,35 @@ L.todo("decode-sweep", "decode equivalence of the generated decoder vs the Sail 
 L.todo("ic3-calibrate", "IC3 calibration on invariant clauses 1/2/4 (sizes the layer's real cost)",
        doc="src/L5-microarchitecture/02-invariant.md",
        blocked_on="a model-checking harness over the elaborated core (proof-adjacent; deferred by phase)")
+@L.check("retire-gap", "the measure's B-dependence, measured: gap_max is affine in the bus bound",
+         doc="src/L5-microarchitecture/01-refinement.md")
+def _(ctx):
+    from checklib import TODO
+    root = Path(__file__).resolve().parent.parent
+    sweep = root / "build-sim/sweep.txt"
+    if not sweep.is_file():
+        return TODO, "run tools/run-sim.sh --sweep (needs iverilog and a built image)"
+    rows = [tuple(map(int, l.split())) for l in sweep.read_text().split("\n") if l.strip()]
+    if len(rows) < 3:
+        return FAIL, f"sweep has too few points: {rows}"
+    slopes = {(rows[i + 1][1] - rows[i][1]) / (rows[i + 1][0] - rows[i][0])
+              for i in range(len(rows) - 1)}
+    if len(slopes) != 1:
+        return FAIL, f"gap_max is not affine in B: points {rows}, slopes {slopes}"
+    slope = slopes.pop()
+    cr = load("config-record")
+    line_words = cr.record()["icache"]["line_bytes"] // 4
+    if slope != line_words:
+        return FAIL, (f"slope {slope} != the measured cache line length {line_words} words "
+                      f"— the miss model and the geometry disagree")
+    return PASS, (f"L5/01 claims the I-cache-miss stutter is f(B), the bus latency bound. "
+                  f"Measured over B = {', '.join(str(r[0]) for r in rows)}: the worst "
+                  f"retirement gap is exactly affine, gap_max = {rows[0][1]} + {slope:.0f}B, "
+                  f"and the SLOPE equals the {line_words}-word cache line measured "
+                  f"independently in the configuration record - each word of the burst "
+                  f"refill pays the bus latency once. The measure's shape and the cache "
+                  f"geometry corroborate each other from different directions")
+
 @L.check("bus-guarantee", "the Wishbone guarantee clauses, checked on a real execution trace",
          doc="src/L5-microarchitecture/04-buses-debug.md")
 def _(ctx):

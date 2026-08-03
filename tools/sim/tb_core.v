@@ -145,6 +145,30 @@ module tb_core;
       end else d_busy <= 0;
    end
 
+   // ---- retirement gaps (L5/01's measure `m`) ------------------------------
+   // `m` bounds cycles-to-next-retirement. The commit point is the writeBack
+   // stage (L5/00), and `writeBack_arbitration_isFiring` pulses exactly when an
+   // instruction leaves it — every instruction, not just register writers, so
+   // stores and jumps are counted too. We
+   // record the OBSERVED gap distribution — a lower bound on the true worst case
+   // (this is one execution), which is exactly what a measured bound can claim.
+   integer retired = 0, gap = 0, gap_max = 0, gap_sum = 0;
+   integer gap_hist [0:63];
+   integer gi;
+   initial for (gi = 0; gi < 64; gi = gi + 1) gap_hist[gi] = 0;
+
+   always @(posedge clk) if (!reset) begin
+      if (core.writeBack_arbitration_isFiring) begin
+         retired = retired + 1;
+         if (retired > 1) begin
+            gap_sum = gap_sum + gap;
+            if (gap > gap_max) gap_max = gap;
+            gap_hist[(gap > 63) ? 63 : gap] = gap_hist[(gap > 63) ? 63 : gap] + 1;
+         end
+         gap = 0;
+      end else if (retired > 0) gap = gap + 1;
+   end
+
    // ---- run ----------------------------------------------------------------
    initial begin
       repeat (8) @(posedge clk);
@@ -152,6 +176,9 @@ module tb_core;
       while (cycles < MAX_CYCLES) @(posedge clk);
       $display("SUMMARY cycles=%0d ibus_txn=%0d dbus_txn=%0d dbus_writes=%0d violations=%0d",
                cycles, i_txn, d_txn, d_wr, viol);
+      $display("RETIRE retired=%0d gap_max=%0d", retired, gap_max);
+      for (gi = 0; gi < 64; gi = gi + 1)
+         if (gap_hist[gi] != 0) $display("GAP %0d %0d", gi, gap_hist[gi]);
       $finish;
    end
 endmodule

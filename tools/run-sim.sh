@@ -14,7 +14,8 @@
 # Usage: tools/run-sim.sh [--negative]     (needs iverilog + a built image)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-NEG=0; [ "${1:-}" = "--negative" ] && NEG=1
+NEG=0; SWEEP=0
+case "${1:-}" in --negative) NEG=1 ;; --sweep) SWEEP=1 ;; esac
 OUT=build-sim
 CORE=data/mgmt/VexRiscv_MinDebugCache.v
 IMG=build-fw/fw.bin
@@ -32,6 +33,29 @@ d += b"\x00" * ((-len(d)) % 4)
 pathlib.Path(sys.argv[2]).write_text(
     "\n".join("%08x" % struct.unpack("<I", d[i:i+4])[0] for i in range(0, len(d), 4)) + "\n")
 PY
+
+if [ "$SWEEP" = 1 ]; then
+  # L5/01 claims the I-cache-miss stutter is f(B), the bus latency bound. Vary
+  # the memory's wait states and watch the worst retirement gap: if the claim is
+  # right the relation is affine, and its SLOPE should be the cache line length
+  # in words (each word of the burst refill pays the latency once).
+  echo "== sweeping bus latency B against the worst retirement gap"
+  : > "$OUT/sweep.txt"
+  for lat in 0 2 8 16; do
+    iverilog -g2012 -P tb_core.MEM_LAT=$lat -o "$OUT/sweep.vvp" tools/sim/tb_core.v "$CORE"
+    g=$( cd "$OUT" && vvp sweep.vvp 2>/dev/null | grep -oP '(?<=gap_max=)\d+' )
+    echo "$lat $g" >> "$OUT/sweep.txt"
+    echo "   B=$lat  gap_max=$g"
+  done
+  python3 - "$OUT/sweep.txt" <<'PY2'
+import sys, pathlib
+rows = [tuple(map(int, l.split())) for l in
+        pathlib.Path(sys.argv[1]).read_text().split("\n") if l.strip()]
+slopes = {(rows[i+1][1]-rows[i][1])/(rows[i+1][0]-rows[i][0]) for i in range(len(rows)-1)}
+print(f"   affine: {len(slopes)==1}, slope {slopes}, intercept {rows[0][1]}")
+PY2
+  exit 0
+fi
 
 if [ "$NEG" = 1 ]; then
   echo "== NEGATIVE control: memory latency past the G3 bound (violations EXPECTED)"
