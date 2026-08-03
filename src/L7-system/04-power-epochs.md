@@ -20,7 +20,7 @@ The top-level statement covers one powered epoch: POR-released reset through `T`
 - **The POR contract** (`simple_por`, X4-class): reset asserted from power-good to supply-stable, released synchronously with a running clock, once.
 - **Per-epoch X-elimination**, refined by the spec: reset drives definite only what `Sys(F)` claims definite (pc, FSM, reset-defined state); elsewhere implementation-X is *matched* by the ISA's reset nondeterminism (L4/03's three-way split). The proof quantifies from all-X ⊇ arbitrary garbage, so brown-out recovery and SEU-recovery reset share this one obligation.
 - **The boot-window promise**: `gpio_defaults_block` ×38 gives pads defined behaviour before any software runs — `obs` during boot is spec'd by hardware defaults, not demonic.
-- **F-immutability or F-evolution**: epochs are independent iff software cannot reach flash write commands (checkable against the XIP controller); otherwise `Sys` becomes a transition system over flash states *and* torn writes need a persistency model — a problem class that vanishes if the immutability check passes. Flash **retention** across the gap is a new X4 item.
+- **F-immutability or F-evolution** — checked, and the answer is *writable* ([`check-l7.py`](../tools/check-l7.py)): beside the read-only XIP map, CSR bank 3 exposes the LiteSPI **master** path — software clocks arbitrary bytes onto the flash SPI bus with a CSR-controlled chip select, ungated, write-enable and erase sequences included. Hardware does not deliver immutability; the epoch-independence theorem must carry it as an **explicit hypothesis on the firmware** ("the software never drives the master path with write commands" — a checkable property of a concrete `F`), or accept `Sys` as a transition system over flash states with a persistency model for torn writes. The flash part's own `WP#` pin and block-protect bits are board/X4 territory. Flash **retention** across the gap is a new X4 item either way.
 - ε sums over *powered* time; aging (electromigration, NBTI, thermal cycling) scopes P4/P5 to the die's rated lifetime — the honest horizon of the whole theorem.
 
 **Partial cycling is live on this chip**: the user-domain rails switch mid-epoch, which is why `mgmt_protect` exists — X containment at the power-domain boundary. A B2 theorem survives user-domain cycling iff that containment is proved. (Third census macro family to receive its formal job here, after the defaults blocks and the POR.)
@@ -48,7 +48,7 @@ The apparent regress (the detector is powered by the failing supply) terminates 
 ## Obligations
 
 1. The epoch-composition theorem over [00](00-sys-and-obs.md)'s alphabet: per-epoch refinement + the boundary requirements ⟹ the lifetime claim.
-2. The F-immutability check against the XIP controller (gates a whole problem class).
+2. The F-immutability hypothesis, now that the check says *writable*: state it as a firmware property and give the UB-free-image-style checker that verifies it for a concrete `F`.
 3. The supervisor's two inequalities, computed from datasheet + decap numbers; the monotone-safe property as a CAP target.
 4. The `mgmt_protect` containment lemma for partial cycling (B2).
 

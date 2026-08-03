@@ -149,11 +149,35 @@ L.todo("b-config", "tabulate B(config): worst-case bus latency per XIP configura
        note="the XIP path on the shipped SoC is LiteSPI inside the fetched mgmt_core.v "
             "(litespimmap + phy, W25Q128JV read 0x03 at 1x) - the remaining work is the "
             "latency analysis of the litespi FSM plus the flash part's timing")
-L.todo("f-immutable", "the flash-immutability check: can software reach flash write commands?",
-       doc="src/L7-system/04-power-epochs.md",
-       note="the fetched mgmt_core.v exposes a LiteSPI MASTER path (CSR bank 3: master_cs/"
-            "phyconfig/rxtx) beside the read-only XIP map - software plausibly CAN issue "
-            "arbitrary SPI commands incl. writes; the check is tracing that path and any gates")
+@L.check("f-immutable", "the flash-immutability check: can software reach flash write commands?",
+         doc="src/L7-system/04-power-epochs.md")
+def _(ctx):
+    from checklib import DATA, need
+    if m := need(DATA / "mgmt/mgmt_core.v"):
+        return FAIL, f"missing {m} (run tools/fetch-data.sh mgmt)"
+    txt = (DATA / "mgmt/mgmt_core.v").read_text(errors="replace")
+    import re
+    path = [
+        # CSR-written bytes enter the master TX FIFO...
+        "assign mgmtsoc_master_tx_fifo_sink_valid = mgmtsoc_master_rxtx_re;",
+        "assign mgmtsoc_master_tx_fifo_sink_payload_data = mgmtsoc_master_rxtx_r;",
+        # ...the crossbar arbitrates {master, mmap} and grants master its own CS...
+        "assign litespi_request = {mgmtsoc_port_master_request, mgmtsoc_port_mmap_request};",
+        "mgmtsoc_crossbar_cs = mgmtsoc_master_cs;",
+    ]
+    if not all(p in txt for p in path):
+        return FAIL, "the LiteSPI master path changed - re-trace before concluding anything"
+    if re.search(r"wrprot|write_protect|flash_lock", txt, re.I):
+        return FAIL, "a write-protect signal appeared - the ungated-path conclusion is stale"
+    return FINDING, ("software CAN reach flash write commands: CSR bank 3's LiteSPI "
+                     "master path (master_cs / master_phyconfig / master_rxtx) clocks "
+                     "arbitrary bytes onto the flash SPI bus with a CSR-controlled chip "
+                     "select, ungated - WREN/page-program/erase sequences included. "
+                     "Flash immutability is therefore a SOFTWARE-DISCIPLINE assumption, "
+                     "not a hardware property: L7/04's epoch independence needs it as an "
+                     "explicit hypothesis on the firmware (or Sys becomes a transition "
+                     "system over flash states with a persistency model). The flash "
+                     "part's own WP# pin and block-protect bits are X4/board territory")
 L.todo("holdup-ineq", "the supervisor/hold-up inequalities with datasheet + decap numbers",
        doc="src/L7-system/04-power-epochs.md",
        blocked_on="L5/wcet-table for t_epilogue, the decap census (done: 125k) times per-cell C from the PDK, and a chosen supervisor part")
