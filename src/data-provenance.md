@@ -74,12 +74,28 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/sdc-audit.py` + `sdc-elaborate.tcl` | both SDCs | mode elaboration, exception classes (L2/04) |
 | `tools/config-record.py` | `VexRiscv_MinDebugCache.v`, `mgmt_core.v` | the configuration record (L5) |
 | `tools/partition.py` | `VexRiscv_MinDebugCache.v`, `opcodes/*` | the encoding partition + UB set, spec side validated (L6/03) |
-| `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `generated/csr.h`, `memory_map.rst` | the five-way memory-map diff (L7/03) |
+| `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `generated/csr.h`, `memory_map.rst` | the six-way memory-map diff (L7/03) |
 | `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
 | `tools/pads.py` | `rtl_caravel_core.v`, `user_defines.v`, `gpio_control_block.v` | the 38 pad power-up defaults, decoded (L7/04) |
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |
 | `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
-| `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 12 SoC facts, re-derived and diffed (L4/04) |
+| `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 13 SoC facts, re-derived and diffed (L4/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.
+
+## The analysis toolchain — pinned for the same reason
+
+The tools above need only Python and `tclsh`. The obligations still stubbed need real EDA tools, and [`tools/install-toolchain.sh`](https://github.com/digama0/thinking-sand/blob/master/tools/install-toolchain.sh) installs them — **version-pinned and sha256-verified**, on the same principle as the data: a number in Findings produced by a floating tool is a number nobody can reproduce. `--list` maps each group to the scoreboard rows it unblocks.
+
+| group | tools | pinned at | needs root |
+|---|---|---|---|
+| `cad` | yosys, verilator, iverilog, SymbiYosys, z3/bitwuzla/yices | OSS CAD Suite `2026-08-02` | no |
+| `riscv` | `riscv-none-elf-gcc` and binutils | xPack `15.2.0-1` | no |
+| `sbt` | sbt, for SpinalHDL/VexRiscv regeneration | `1.12.14` (the 1.x line — SpinalHDL is an sbt 1 project) | no |
+| `mdbook` | mdbook, to render this book | `v0.5.4` | no |
+| `sta` | OpenSTA + CUDD 3.0.0 | OpenSTA `3f4b337e`, CUDD 3.0.0 | **yes** (apt) |
+
+Four of the five groups are upstream prebuilt tarballs unpacked into a prefix — no root, nothing touched outside it. Only OpenSTA is built from source, and the recipe mirrors [its own `Dockerfile.ubuntu24.04`](https://github.com/parallaxsw/OpenSTA/blob/master/Dockerfile.ubuntu24.04) exactly rather than improvising a dependency list. A checksum mismatch aborts the install and deletes the download; re-running is idempotent.
+
+Installing a tool does not discharge an obligation — it removes the precondition. The scoreboard rows stay `TODO` until a checker actually uses the tool.

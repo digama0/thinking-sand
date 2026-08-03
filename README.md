@@ -54,7 +54,17 @@ Effort figures are for one competent person and are the sums of the per-subcompo
 
 ## Tooling
 
-Everything runs from the repository root with no dependencies beyond Python 3, `curl`, and (for the reflow tool) `python-markdown`.
+The extractors and scoreboards run from the repository root with no dependencies beyond Python 3, `tclsh`, `curl`, and (for the reflow tool) `python-markdown`. The obligations still stubbed need real EDA tools; [`tools/install-toolchain.sh`](tools/install-toolchain.sh) installs those.
+
+### Install the EDA toolchain — [`tools/install-toolchain.sh`](tools/install-toolchain.sh)
+
+```sh
+tools/install-toolchain.sh --list        # what each tool unblocks, and why
+tools/install-toolchain.sh --no-root     # everything except OpenSTA
+tools/install-toolchain.sh --only sta    # just OpenSTA (apt + source build)
+```
+
+Installs yosys/verilator/iverilog/SymbiYosys (OSS CAD Suite), `riscv-none-elf-gcc`, `sbt`, `mdbook` and OpenSTA into `~/.local/thinking-sand` (override with `--prefix`), then `source <prefix>/env.sh`. **Versions are pinned and sha256-verified** for the same reason the data SHAs are: a Findings number produced by a floating tool is a number nobody can reproduce. Four of the five groups are upstream prebuilt tarballs and need no root; only OpenSTA is built from source, mirroring its own `Dockerfile.ubuntu24.04`. Installing a tool removes a precondition — it does not discharge an obligation, and the scoreboard rows stay `TODO` until a checker uses it.
 
 ### Fetch the design artifacts — [`tools/fetch-data.sh`](tools/fetch-data.sh)
 
