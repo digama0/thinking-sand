@@ -38,12 +38,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # (label, [files to read in order]) — some need their `define` file first
-UNITS = [
-    ("VexRiscv_MinDebugCache", ["data/mgmt/VexRiscv_MinDebugCache.v"]),
+def _units():
+    """The target core first; fall back to the shipped 2021 file if the target
+    has not been regenerated (tools/regenerate-core.sh)."""
+    core = ROOT / "data/mgmt/VexRiscv_target.v"
+    name, path = (("VexRiscv (target)", "data/mgmt/VexRiscv_target.v") if core.is_file()
+                  else ("VexRiscv_MinDebugCache", "data/mgmt/VexRiscv_MinDebugCache.v"))
+    return [(name, [path])] + _REST
+
+
+_REST = [
     ("mgmt_core", ["data/mgmt/mgmt_core.v"]),
     ("housekeeping", ["data/caravel/defines.v", "data/caravel/housekeeping.v"]),
     ("gpio_control_block", ["data/caravel/gpio_control_block.v"]),
 ]
+
+UNITS = _units()
 
 LATCH_TYPES = ("$dlatch", "$adlatch", "$dlatchsr", "$sr")
 

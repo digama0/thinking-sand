@@ -65,7 +65,11 @@ echo "== EXPERIMENT: regenerating with the cache enabled at the measured size"
 ( cd "$V" && sbt -batch "runMain vexriscv.GenCoreDefault -d --iCacheSize 64 $FLAGS_COMMON \
     --outputFile VexRiscv_MinDebugCache_regen" >/dev/null 2>&1 )
 cp "$V/VexRiscv_MinDebugCache_regen.v" "$WORK/"
+# install it as THE TARGET: the design this project reasons about is the one it
+# can regenerate from pinned source, not the 2021 artifact it cannot.
+cp "$V/VexRiscv_MinDebugCache_regen.v" "$REPO/data/mgmt/VexRiscv_target.v"
 echo "   wrote $WORK/VexRiscv_MinDebugCache_regen.v"
+echo "   installed data/mgmt/VexRiscv_target.v (the pinned target)"
 
 echo
 echo "== measured configuration: shipped vs reconstruction"

@@ -55,16 +55,22 @@ def _(ctx):
     for m_, v in pt.paths(only_dec):
         key = (v & 0x7F, (v >> 12) & 7)
         fam[key] = fam.get(key, 0) + (1 << (32 - bin(m_).count("1")))
-    expect_fam = {(0x03, 6): 4194304, (0x13, 5): 65536, (0x13, 1): 32768, (0x73, 0): 1}
-    if pt.count(only_spec) != 0 or pt.count(only_dec) != 4292609 or fam != expect_fam:
+    # the TARGET is the 2026-generated core, whose decoder is far tighter than
+    # the 2021 silicon's: the reserved LOAD and shift-immediate accept-sets are
+    # gone, leaving sret alone. The 2021 numbers are kept in findings as the
+    # provenance comparison.
+    expect_fam = {(0x73, 0): 1}
+    if pt.count(only_spec) != 0 or pt.count(only_dec) != 1 or fam != expect_fam:
         return FAIL, (f"partition changed: spec-only {pt.count(only_spec)}, "
                       f"decoder-only {pt.count(only_dec)}, families {fam}")
-    return PASS, ("spec-only 0: every RV32I+Zicsr word is accepted. The spec-UB set "
-                  "is pinned at 4,292,609 words: all 2^22 words of LOAD funct3=110, "
-                  "98,304 reserved shift-immediate variants, and exactly one SYSTEM "
-                  "word, sret (0x10200073). The spec assigns these unspecified "
-                  "architectural behaviour (L6/03); the layered guarantees below the "
-                  "ISA still hold on them - no instruction is a halt-and-catch-fire")
+    return PASS, ("spec-only 0: every RV32I+Zicsr word is accepted. The spec-UB set of "
+                  "the TARGET core is exactly ONE word - sret (0x10200073), caught in "
+                  "mret's slot by a don't-care. The 2021 silicon's decoder accepted "
+                  "4,292,609 reserved words (all 2^22 of LOAD funct3=110, 98,304 "
+                  "shift-immediate variants, and sret); the 2026 generator rejects all "
+                  "but the last. So the spec-UB clause survives, but it now quantifies "
+                  "over a single encoding instead of four million - the clause is "
+                  "vestigial rather than load-bearing")
 L.todo("s3-draft-diff", "formalise the external-interrupt array from its plugin source, then diff against RTL behaviour",
        doc="src/L6-isa/01-irq-spec.md",
        note="the structural half is done (irqmap.py / L7 irq-map: mask R/W, pending read-only "

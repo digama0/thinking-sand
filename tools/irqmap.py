@@ -29,10 +29,18 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _core_v(root):
+    """The TARGET core: the regenerated one when present, else the shipped 2021
+    artifact. See tools/checklib.py:core_v — one source of truth, two readers."""
+    t = root / "data/mgmt/VexRiscv_target.v"
+    return t if t.is_file() else root / "data/mgmt/VexRiscv_MinDebugCache.v"
+
 MGMT_CORE = ROOT / "data/mgmt/mgmt_core.v"
 WRAPPER = ROOT / "data/mgmt/mgmt_core_wrapper.v"
 CHIP = ROOT / "data/caravel/rtl_caravel_core.v"
-VEX = ROOT / "data/mgmt/VexRiscv_MinDebugCache.v"
+VEX = _core_v(ROOT)
 DOC = ROOT / "data/mgmt/interrupts.rst"
 
 
@@ -117,8 +125,11 @@ def core_csrs():
     # the funnel: externalInterrupt = ((mask & RegNext(lines)) != 0)
     live_view = re.search(
         r"assign (\w+) = \((\w+) & externalInterruptArray_regNext\);", txt)
+    # the generator emits this two ways across versions — `!= 32'h0` and the
+    # reduction-OR `(|_zz)` — which denote the same predicate
     funnel = live_view and bool(re.search(
-        rf"assign externalInterrupt = \({live_view.group(1)} != 32'h0\);", txt))
+        rf"assign externalInterrupt = \({live_view.group(1)} != 32'h0\);|"
+        rf"assign externalInterrupt = \(\|{live_view.group(1)}\);", txt))
     delayed = bool(re.search(
         r"externalInterruptArray_regNext <= externalInterruptArray;", txt))
     return {"mask_rw": mask_rw, "pending_read_only": pend_ro and not pend_written,

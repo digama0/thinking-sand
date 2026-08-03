@@ -310,6 +310,21 @@ SYNTH_READ_BLACKBOX_LIB 1
 
 Assessment: ABC restructures combinational logic (CEC's home turf, registers intact); resizer sizing/buffering is logically neutral; CTS adds the clock tree post-synthesis; fill/tap/decap/diode are inserted in P&R. **The open risk is Yosys `opt_dff`/`opt_merge` removing or merging flops**, which breaks 1:1 register correspondence — and Yosys emits no SVF-equivalent guidance.
 
+## The target is the regenerated core
+
+**Decision.** The design this project reasons about is the **2026-regenerated core** (`data/mgmt/VexRiscv_target.v`, produced by [`regenerate-core.sh`](https://github.com/digama0/thinking-sand/blob/master/tools/regenerate-core.sh) from a pinned generator and the recovered invocation), not the 2021 artifact committed in the silicon repository. The reason is the one this chapter keeps running into: the 2021 file cannot be reproduced from anything public, and a target that cannot be regenerated cannot be re-derived when an input moves. The 2021 file stays fetched as the provenance comparison.
+
+**What the retarget costs, measured.** Almost nothing, because the two cores are **configuration-identical**: the same nine decoded CSRs, the same 64 B / 2-line / 32 B / 28-bit-tag / single-way I-cache, the same interlock hazards, no M/A/C, WFI present. Re-running the whole suite against the target produced exactly three failures, and all three were the checkers doing their job:
+
+- **The encoding partition changed, and hugely in our favour.** The 2021 decoder accepted **4,292,609** reserved words; the 2026 decoder accepts **one** — `sret`, still caught in `mret`'s slot by the same don't-care. The reserved LOAD (`funct3=110`) and shift-immediate accept-sets are gone. The spec-UB clause survives but is now **vestigial rather than load-bearing**: it quantifies over a single encoding instead of four million.
+- **Two "changes" were cosmetic** and revealed brittle checkers, not moved facts: the interrupt funnel is emitted as a reduction-OR `(|x)` where 2021 emitted `x != 32'h0` (same predicate), and a generated line label renumbered inside a signal name the check had hardcoded. Both checks now match the predicate rather than the spelling.
+
+**A correction the retarget surfaced.** Comparing the two cores' `mtvec` handling showed something true of *both*, which the earlier C5 row got wrong: **`mtvec` is write-only.** Its access legality is gated on `CSR_WRITE_OPCODE`, so a pure read (`csrr mtvec`) is an illegal access and traps. The earlier claim that its mode field "reads back as written" was therefore not merely incomplete but unobservable-in-principle. The 2026 generator additionally drops the mode-field write entirely, which changes nothing architecturally *because* the register cannot be read.
+
+**One dangling pair, unfixed in five years.** The two undriven instruction-cache inputs are present in the 2026 core exactly as in the 2021 one.
+
+**What the retarget does NOT move: everything below L4.** The GDS, the gate netlist, the SPEF and the STA reports are artifacts of the *fabricated 2021 chip*. Retargeting the RTL does not retarget those, so L3's netlist-versus-RTL equivalence now names two different designs, and closing it honestly requires either re-running synthesis and place-and-route on the target — the "generate silicon from the 2026 plans" path, of which only the synthesis half is reachable with the installed tools — or keeping L0–L3 explicitly scoped to the fabricated instance. This is recorded as an open scoping question rather than resolved by fiat, because the answer changes what the tower's bottom four layers are *about*.
+
 ## Replicating the generator
 
 The management SoC's RTL is LiteX output, and the repository carries the generator (`litex/caravel.py`), its driver (`litex/Makefile`) and its dependency list — so the generation step can be *re-run* rather than trusted. It was (`tools/regenerate-mgmt-core.sh`, which builds a pinned virtualenv and drives the same two commands the shipped Makefile does). Three results, in increasing order of interest.

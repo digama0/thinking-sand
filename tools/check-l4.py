@@ -209,10 +209,12 @@ def _(ctx):
     looped = {k: v["sccs"] for k, v in rows.items() if v["sccs"]}
     if latched or looped:
         return FAIL, f"latches {latched}, combinational loops {looped}"
+    # exactly one unit is a closed hierarchy — the core, whichever file is the
+    # target — because the others instantiate macros we do not have
     closed = [k for k, v in rows.items() if v["closed"]]
-    if closed != ["VexRiscv_MinDebugCache"]:
+    if len(closed) != 1 or "VexRiscv" not in closed[0]:
         return FAIL, f"which units are closed hierarchies changed: {closed}"
-    dangling = rows["VexRiscv_MinDebugCache"]["undriven"]
+    dangling = rows[closed[0]]["undriven"]
     if len(dangling) != 2 or not all(
             "isRemoved" in w or "bypassTranslation" in w for w in dangling):
         return FAIL, f"the dangling-wire set changed: {dangling}"

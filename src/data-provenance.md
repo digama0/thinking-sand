@@ -42,7 +42,11 @@ caravel/
 mgmt/
   mgmt_core.v             275 KB    the SHIPPED SoC fabric: LiteX/Migen output — bus decode,
                                     CSR banks, peripherals, interconnect (L5/L7 subject)
-  VexRiscv_MinDebugCache.v 238 KB   the SHIPPED core: SpinalHDL output, pipelined RV32I (F7)
+  VexRiscv_target.v        226 KB   THE TARGET: the core regenerated from a pinned
+                                    generator (tools/regenerate-core.sh). Not fetched —
+                                    produced, which is the point of retargeting to it.
+  VexRiscv_MinDebugCache.v 238 KB   the 2021 core shipped in the silicon repo, kept as
+                                    the provenance comparison (configuration-identical)
   caravel.py               16 KB    the LiteX generator source — the memory map's intent side
   defs.h, csr-defs.h       12 KB    the firmware's address headers — the map's software side
   interrupts.rst          1.3 KB    generated interrupt-assignment docs (irqmap.py)

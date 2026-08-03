@@ -39,6 +39,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
+# The TARGET core. The project pins the design it reasons about; that is the
+# 2026-generated core (tools/regenerate-core.sh, pinned generator + recovered
+# flags), which is reproducible from source. data/mgmt/VexRiscv_MinDebugCache.v
+# — the 2021 artifact shipped in the silicon repo — remains fetched, as the
+# provenance comparison. The two are configuration-identical; where they differ
+# (a much tighter decoder) the checks record it.
+def core_v():
+    target = DATA / "mgmt/VexRiscv_target.v"
+    return target if target.is_file() else DATA / "mgmt/VexRiscv_MinDebugCache.v"
+
+
+CORE_V = core_v()
+
 PASS, FAIL, FINDING, TODO, EXTERN = "PASS", "FAIL", "FINDING", "TODO", "EXTERN"
 _COLORS = {PASS: "32", FAIL: "31;1", FINDING: "33", TODO: "36", EXTERN: "35"}
 

@@ -17,7 +17,9 @@ cd "$(dirname "$0")/.."
 NEG=0; SWEEP=0
 case "${1:-}" in --negative) NEG=1 ;; --sweep) SWEEP=1 ;; esac
 OUT=build-sim
-CORE=data/mgmt/VexRiscv_MinDebugCache.v
+# the TARGET core (see tools/checklib.py:core_v)
+CORE=data/mgmt/VexRiscv_target.v
+[ -s "$CORE" ] || CORE=data/mgmt/VexRiscv_MinDebugCache.v
 IMG=build-fw/fw.bin
 
 command -v iverilog >/dev/null || {

@@ -25,7 +25,15 @@ from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VEX = ROOT / "data/mgmt/VexRiscv_MinDebugCache.v"
+
+
+def _core_v(root):
+    """The TARGET core: the regenerated one when present, else the shipped 2021
+    artifact. See tools/checklib.py:core_v — one source of truth, two readers."""
+    t = root / "data/mgmt/VexRiscv_target.v"
+    return t if t.is_file() else root / "data/mgmt/VexRiscv_MinDebugCache.v"
+
+VEX = _core_v(ROOT)
 
 # --- the spec side: RV32I + Zicsr + privileged bits, per the config record ---
 # (mask, match, name); masks/matches per the RISC-V unprivileged & privileged

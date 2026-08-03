@@ -15,7 +15,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VEX = ROOT / "data/mgmt/VexRiscv_MinDebugCache.v"
+
+
+def _core_v(root):
+    """The TARGET core: the regenerated one when present, else the shipped 2021
+    artifact. See tools/checklib.py:core_v — one source of truth, two readers."""
+    t = root / "data/mgmt/VexRiscv_target.v"
+    return t if t.is_file() else root / "data/mgmt/VexRiscv_MinDebugCache.v"
+
+VEX = _core_v(ROOT)
 LITEX = ROOT / "data/mgmt/mgmt_core.v"
 
 # machine-mode CSR names for the addresses we may find
@@ -37,9 +45,16 @@ def record():
     r["atomics"] = bool(re.search(r"\bAMO|LRSC|lrsc", vex))
     r["wfi"] = "32'h10500073" in vex
 
-    # CSR address set, from the generated decode's 12-bit literals
-    csrs = sorted({int(h, 16) for h in re.findall(r"12'h([0-9a-fA-F]+)", vex)} - {0})
-    r["csrs"] = csrs
+    # CSR address set. Take ONLY addresses that are decoded into a per-register
+    # select — `execute_CsrPlugin_csr_N <= (decode_INSTRUCTION[31:20] == 12'hXXX)`.
+    # Grepping every 12-bit literal instead (the first version of this) also
+    # picks up the counter-permission MASKS (`csrAddress & 12'hf60 == 12'hb00`)
+    # and the PMP range checks, reporting them as implemented registers. That
+    # happened to be harmless on the 2021 core, which has no counter logic, and
+    # wrong the moment a newer generator adds some.
+    r["csrs"] = sorted({int(h, 16) for h in re.findall(
+        r"execute_CsrPlugin_csr_\d+ <= \(decode_INSTRUCTION\[31 : 20\] == 12'h([0-9a-f]+)\)",
+        vex)})
 
     # I-cache geometry from the memory array declarations
     m = re.search(r"reg \[(\d+):0\] banks_0 \[0:(\d+)\]", vex)
@@ -100,9 +115,16 @@ def choices():
     # trap redirect is unconditionally {base,00} — vectored mode is not
     # implemented, the mode bits are inert storage; and mtvec has NO reset value
     c["C5_mtvec"] = {
-        "base_mode_writable": bool(re.search(
-            r"CsrPlugin_mtvec_base <= CsrPlugin_csrMapping_writeDataSignal\[31 : 2\];\s*\n\s*"
-            r"CsrPlugin_mtvec_mode <= CsrPlugin_csrMapping_writeDataSignal\[1 : 0\];", vex)),
+        "base_writable": bool(re.search(
+            r"CsrPlugin_mtvec_base <= CsrPlugin_csrMapping_writeDataSignal\[31 : 2\];", vex)),
+        # mtvec is WRITE-ONLY in both cores: its legality is gated on
+        # CSR_WRITE_OPCODE, so a pure read (csrr mtvec) is an illegal access
+        # and traps. The mode field is therefore unobservable either way —
+        # 2021 stored it, the 2026 generator drops the write entirely.
+        "write_only": bool(re.search(
+            r"if\(execute_CsrPlugin_csr_773\) begin\s*\n\s*"
+            r"if\(execute_CSR_WRITE_OPCODE\) begin\s*\n\s*"
+            r"execute_CsrPlugin_illegalAccess = 1'b0;", vex)),
         "redirect_ignores_mode":
             "CsrPlugin_jumpInterface_payload = {CsrPlugin_xtvec_base,2'b00};" in vex
             and not re.search(r"xtvec_mode\s*==", vex),
@@ -146,8 +168,9 @@ def choices():
         "ibus_err_tied_0": "assign iBus_rsp_payload_error = 1'b0;" in vex,
         "dbus_err_tied_0": "assign dBus_rsp_error = 1'b0;" in vex,
         "mmu_path_tied_off": "assign IBusCachedPlugin_mmuBus_rsp_isPaging = 1'b0;" in vex,
+        # the label is generator line-numbering, so match the predicate only
         "store_error_ignored_anyway": bool(re.search(
-            r"assign when_DBusSimplePlugin_l486 = \(\(dBus_rsp_ready && dBus_rsp_error\) "
+            r"assign when_DBusSimplePlugin_l\d+ = \(\(dBus_rsp_ready && dBus_rsp_error\) "
             r"&& \(! memory_MEMORY_STORE\)\);", vex)),
     }
     c["branch_misaligned_cause_0"] = \
