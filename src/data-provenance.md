@@ -46,8 +46,9 @@ mgmt/
   caravel.py               16 KB    the LiteX generator source — the memory map's intent side
   defs.h, csr-defs.h       12 KB    the firmware's address headers — the map's software side
   interrupts.rst          1.3 KB    generated interrupt-assignment docs (irqmap.py)
-  firmware/                18 KB    crt0_vex.S, isr.c, irq_vex.h + friends — the
-                                    interrupt-facing anchor corpus (fwanchors.py)
+  firmware/                20 KB    crt0_vex.S, isr.c, irq_vex.h + friends — the
+                                    interrupt-facing anchor corpus (fwanchors.py); plus
+                                    sections.lds, the linker script the DV flow uses
   litex/                   50 KB    the LiteX generator tree (caravel.py, the platform
                                     and Makefile) — re-run by regenerate-mgmt-core.sh
   generated/               54 KB    csr.h, mem.h, soc.h — the firmware's generated
@@ -85,6 +86,8 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
 | `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 13 SoC facts, re-derived and diffed (L4/04) |
 | `tools/rtlcheck.py` | the RTL set | latch/acyclicity/undriven checks via yosys (L4/02) |
+| `tools/build-firmware.sh` | `firmware/*` (crt0 + sections.lds) | a real flash image at the XIP base |
+| `tools/imagecheck.py` | a flash image + the partition | UB-freedom of `F` (L6/03) |
 | `tools/sta-rerun.sh` + `sta-rerun.tcl` | netlist, SDC, SPEF, Liberty, sky130A | the F1 signoff-STA rerun (L2/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 

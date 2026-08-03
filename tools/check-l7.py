@@ -13,13 +13,14 @@ from checklib import Layer, PASS, FAIL, FINDING
 
 L = Layer("L7", "the system specification")
 
-@L.check("memmap", "the memory map six ways: decode vs generator vs generated headers vs linker vs hand-written headers vs docs",
+@L.check("memmap", "the memory map seven ways: decode vs generator vs generated headers vs linker vs hand-written headers vs docs",
          doc="src/L7-system/03-memory-map-devices.md")
 def _(ctx):
     from checklib import load, DATA, need
     for f in ("mgmt/mgmt_core.v", "mgmt/caravel.py", "mgmt/defs.h",
               "mgmt/csr-defs.h", "mgmt/defines.v", "caravel/memory_map.rst",
-              "mgmt/generated/mem.h", "mgmt/generated/regions.ld"):
+              "mgmt/generated/mem.h", "mgmt/generated/regions.ld",
+              "mgmt/firmware/sections.lds"):
         if m := need(DATA / f):
             return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
     mm = load("memmap")
@@ -64,6 +65,12 @@ def _(ctx):
     sw_diffs = {n: (mh[n], win[n]) for n in win if mh[n] != win[n]}
     if sw_diffs != {"hk": ((0x26000000, 0x300000), (0x26000000, 0x400000))}:
         return FAIL, f"software-vs-decode region diffs changed: {sw_diffs}"
+    # the seventh description: the hand-maintained linker script the DV flow uses
+    lds = mm.sections_lds_regions()
+    lds_diffs = {n: (lds[n], win[n]) for n in lds if n in win and lds[n] != win[n]}
+    if lds_diffs != {"mprj": ((0x30000000, 0x100000), (0x30000000, 0x10000000)),
+                     "hk": ((0x26000000, 0x100000), (0x26000000, 0x400000))}:
+        return FAIL, f"sections.lds vs decode diffs changed: {lds_diffs}"
     doc = mm.doc_addrs()
     if len(doc) != 112 or any(mm.locate(a, win) != "hk" for a in doc):
         return FAIL, f"housekeeping doc table changed: {len(doc)} addresses"
@@ -83,7 +90,11 @@ def _(ctx):
                      "unmapped space, where an access stalls the bus for the 10^6-cycle "
                      "interconnect timeout and reads 0xFFFFFFFF; (3) csr-defs.h's "
                      "CSR_DCACHE_INFO (0xCC0) is not decoded by the shipped core (0xBC0/0xFC0 "
-                     "are) - reading it traps")
+                     "are) - reading it traps; (4) the linker script the DV flow actually "
+                     "builds with, sections.lds, HARDCODES its own copy of the map (its "
+                     "include of the generated regions.ld is commented out) and understates "
+                     "TWO windows: mprj as 1 MB where the hardware decodes 256 MB, and hk "
+                     "as 1 MB where the hardware decodes 4 MB")
 @L.check("csr-header", "the generated csr.h vs the RTL bank decode, and the firmware's symbolic pointers",
          doc="src/L7-system/03-memory-map-devices.md")
 def _(ctx):

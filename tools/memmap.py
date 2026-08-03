@@ -122,6 +122,24 @@ def mem_h_regions(path=None):
     return {n: (base[n], size[n]) for n in base if n in size}
 
 
+SECTIONS_LDS = ROOT / "data/mgmt/firmware/sections.lds"
+
+
+def sections_lds_regions(path=None):
+    """The linker script the DV flow actually builds with: region -> (base, size).
+
+    `verilog/dv/make/cpu.makefile` selects `sections.lds` (the vexriscv-specific
+    `sections_vexriscv.lds` is commented out there). Unlike the generated
+    regions.ld, this one HARDCODES its own copy of the memory map — its
+    `INCLUDE ../../generated/regions.ld` line is commented out — so it is a
+    seventh, hand-maintained description of the address space, free to drift.
+    """
+    txt = (path or SECTIONS_LDS).read_text(errors="replace")
+    body = txt[txt.index("MEMORY {"):]
+    return {n: (int(o, 16), int(l, 16)) for n, o, l in re.findall(
+        r"(\w+)\s*:\s*ORIGIN = (0x[0-9a-fA-F]+), LENGTH = (0x[0-9a-fA-F]+)", body)}
+
+
 def regions_ld(path=None):
     """The generated linker script: region -> (origin, length).
 

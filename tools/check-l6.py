@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklib import Layer, PASS, FAIL, FINDING
+from checklib import Layer, PASS, FAIL, FINDING, load
 
 L = Layer("L6", "the ISA specification")
 
@@ -100,6 +100,37 @@ def _(ctx):
                      "plus the external interrupt. The deviations go to L6/01's authored "
                      "residue, not the choice register - they are not choices the standard "
                      "offers")
+@L.check("ub-free-image", "a real flash image contains no spec-UB instruction word",
+         doc="src/L6-isa/03-coverage.md")
+def _(ctx):
+    import shutil, subprocess
+    from checklib import TODO
+    root = Path(__file__).resolve().parent.parent
+    elf = root / "build-fw/fw.elf"
+    if not elf.is_file():
+        if not shutil.which("riscv-none-elf-gcc"):
+            return TODO, ("needs the RV32 cross toolchain — run "
+                          "tools/install-toolchain.sh --only riscv, then "
+                          "tools/build-firmware.sh")
+        return TODO, "run tools/build-firmware.sh to build the image"
+    ic = load("imagecheck")
+    base, words = ic.text_words(elf)
+    r = ic.classify(words)
+    if base != 0x10000000:
+        return FAIL, f".text is at {base:#x}, not the flash XIP base the reset vector targets"
+    if r["ub"]:
+        return FAIL, (f"the image reaches the spec-UB set at "
+                      f"{', '.join(f'{a:#x}:{w:08x}' for a, w in r['ub'][:4])}")
+    if r["trap"]:
+        return FAIL, (f"{len(r['trap'])} words trap (wrong -march, or data in .text): "
+                      f"{', '.join(f'{a:#x}:{w:08x}' for a, w in r['trap'][:4])}")
+    return PASS, (f"all {len(words)} instruction words of a real image - built from the "
+                  f"shipped crt0 and the shipped sections.lds, linked at the flash XIP "
+                  f"base the reset vector targets - lie in the spec-legal set. Zero reach "
+                  f"the 4,292,609-word spec-UB set, so L6/03's UB clause is UNREACHABLE "
+                  f"for this image and cannot weaken any theorem about it. The checker is "
+                  f"validated against a probe image: it flags sret and LOAD funct3=110 as "
+                  f"UB, and classifies an RV32M mul as trapping rather than UB")
 L.extern("S3-fidelity", "the authored residue (external-interrupt array) is what was intended",
          doc="src/axioms.md",
          note="unfalsifiable; anchored by the plugin source, LiteX conventions, and the firmware corpus - never checked")

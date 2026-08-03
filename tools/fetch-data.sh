@@ -101,7 +101,8 @@ fetch_mgmt() {
     get $MGMT verilog/dv/generated/$f data/mgmt/generated/$f
   done
   # the interrupt-facing firmware (fwanchors.py: the L6/01 anchor corpus)
-  for f in crt0_vex.S isr.c irq_vex.h irq.h simple_system_common.c simple_system_common.h caravel.h; do
+  for f in crt0_vex.S isr.c irq_vex.h irq.h simple_system_common.c simple_system_common.h \
+           caravel.h sections.lds; do
     get $MGMT verilog/dv/firmware/$f data/mgmt/firmware/$f
   done
   # the LiteX generator tree itself — re-run by tools/regenerate-mgmt-core.sh so the
