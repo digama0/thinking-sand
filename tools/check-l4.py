@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from checklib import Layer, PASS, FAIL, DATA, need
+from checklib import Layer, PASS, FAIL, FINDING, DATA, need, load
 
 L = Layer("L4", "RTL semantics")
 PICO = DATA / "mgmt/picorv32.v"
@@ -148,12 +148,43 @@ def _(ctx):
                   "generator - the bus decode, CSR banks, interconnect timeout, interrupt "
                   "wiring, synchronisers, event blocks, flash master path, reset vector and "
                   "construct census are properties of the design, not of one build")
-L.todo("latch-complete", "the 15 always@* blocks assign every output on every path",
-       doc="src/L4-rtl-semantics/02-comb-blocks.md",
-       blocked_on="a real Verilog parser (regexes cannot do per-path analysis; consider slang/verible as the untrusted front end)")
-L.todo("rtl-scc", "RTL-level combinational acyclicity (the conservative syntactic check)",
-       doc="src/L4-rtl-semantics/02-comb-blocks.md",
-       blocked_on="the same parser as latch-complete")
+@L.check("latch-complete", "no combinational block infers a latch, and the RTL is acyclic",
+         doc="src/L4-rtl-semantics/02-comb-blocks.md")
+def _(ctx):
+    import shutil, subprocess
+    from checklib import TODO
+    if not shutil.which("yosys"):
+        return TODO, ("needs yosys as the Verilog front end — run "
+                      "tools/install-toolchain.sh --only cad")
+    rc = load("rtlcheck")
+    rows = {label: rc.run(label, files) for label, files in rc.UNITS}
+    err = {k: v["error"] for k, v in rows.items() if "error" in v}
+    if err:
+        return FAIL, f"yosys could not elaborate: {err}"
+    latched = {k: v["latches"] for k, v in rows.items() if v["latches"]}
+    looped = {k: v["sccs"] for k, v in rows.items() if v["sccs"]}
+    if latched or looped:
+        return FAIL, f"latches {latched}, combinational loops {looped}"
+    closed = [k for k, v in rows.items() if v["closed"]]
+    if closed != ["VexRiscv_MinDebugCache"]:
+        return FAIL, f"which units are closed hierarchies changed: {closed}"
+    dangling = rows["VexRiscv_MinDebugCache"]["undriven"]
+    if len(dangling) != 2 or not all(
+            "isRemoved" in w or "bypassTranslation" in w for w in dangling):
+        return FAIL, f"the dangling-wire set changed: {dangling}"
+    return FINDING, ("elaborated by yosys — an INDEPENDENT implementation of Verilog, "
+                     "which is the point (L4/04). Across the shipped core, the SoC, "
+                     "housekeeping and the GPIO control block: ZERO inferred latches, so "
+                     "every combinational block assigns its outputs on every path, and "
+                     "ZERO combinational loops. Both L4/02 questions answered. The "
+                     "finding: the shipped core is a CLOSED hierarchy yet contains TWO "
+                     "undriven wires, both fed as inputs to the instruction cache - "
+                     "io_cpu_fetch_isRemoved (never read inside the cache) and "
+                     "io_cpu_fetch_mmuRsp_bypassTranslation (latched into a register "
+                     "nothing reads). Both are therefore X-inert, but they are real "
+                     "dangling signals in shipped RTL. The other units' undriven wires "
+                     "are macro-boundary artifacts - the RTL-level echo of the gate-level "
+                     "W2 result")
 L.todo("blocking-rewrite", "normal-form rewrite of the 2 blocking-assignment blocks, checked equivalent",
        doc="src/L4-rtl-semantics/02-comb-blocks.md",
        blocked_on="the elaborated semantics existing to check equivalence against")
