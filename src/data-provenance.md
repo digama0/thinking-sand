@@ -44,6 +44,8 @@ mgmt/
   interrupts.rst          1.3 KB    generated interrupt-assignment docs (irqmap.py)
   firmware/                18 KB    crt0_vex.S, isr.c, irq_vex.h + friends — the
                                     interrupt-facing anchor corpus (fwanchors.py)
+  litex/                   50 KB    the LiteX generator tree (caravel.py, the platform
+                                    and Makefile) — re-run by regenerate-mgmt-core.sh
   picorv32.v               95 KB    the comparison core: hand-written, 3,044 lines (L4 census)
   mgmt_core_wrapper.v, defines.v
 opcodes/
@@ -74,6 +76,8 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
 | `tools/pads.py` | `rtl_caravel_core.v`, `user_defines.v`, `gpio_control_block.v` | the 38 pad power-up defaults, decoded (L7/04) |
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |
+| `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
+| `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 12 SoC facts, re-derived and diffed (L4/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
 `netgraph.py` exits non-zero on an unrecognised pin name rather than guessing a direction, so re-running it against a different library is a deliberate act.

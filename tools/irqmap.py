@@ -44,28 +44,48 @@ def array_bits():
 
 
 def sync_chains():
-    """mgmt_core.v: user_irq[N] -> 2FF MultiReg -> gpioinK; returns {N: K}."""
+    """mgmt_core.v: user_irq[N] -> 2FF MultiReg -> gpioinK; returns {N: K}.
+
+    Keyed on the STRUCTURE (x <= user_irq[n]; y <= x; gpioinK_in_status = y),
+    not on LiteX's MultiReg instance naming, which differs between generator
+    versions (multiregimpl131_regs0/regs1 vs multiregimpl1310/1311) while
+    denoting the same two flip-flops. See tools/replicate.py.
+    """
     txt = MGMT_CORE.read_text(errors="replace")
-    stage0 = {m: int(n) for m, n in re.findall(
-        r"(multiregimpl\d+)_regs0 <= user_irq\[(\d+)\];", txt)}
-    two_ff = set(re.findall(r"(multiregimpl\d+)_regs1 <= \1_regs0;", txt))
-    sink = {m: int(k) for k, m in re.findall(
-        r"assign gpioin(\d+)_in_status = (multiregimpl\d+)_regs1;", txt)}
-    assert all(m in two_ff for m in stage0), "a user_irq line is not 2FF-synchronised"
-    return {n: sink[m] for m, n in stage0.items()}
+    stage0 = {reg: int(n) for reg, n in re.findall(
+        r"(\w+)\s*<=\s*user_irq\[(\d+)\];", txt)}
+    stage1 = {}                                   # second FF: y <= x
+    for y, x in re.findall(r"(\w+)\s*<=\s*(\w+);", txt):
+        if x in stage0:
+            stage1[x] = y
+    sink = {reg: int(k) for k, reg in re.findall(
+        r"assign gpioin(\d+)_in_status = (\w+);", txt)}
+    out = {}
+    for x, n in stage0.items():
+        y = stage1.get(x)
+        if y is None:
+            raise AssertionError(f"user_irq[{n}] has no second synchroniser flop")
+        if y in sink:
+            out[n] = sink[y]
+    return out
 
 
 def event_blocks():
-    """mgmt_core.v: every array source is (latched pending & enable)."""
+    """mgmt_core.v: every array source is (latched pending & enable).
+
+    Structure-keyed: `irq = (<something>status & <something>storage)`, since
+    the LiteX EventManager's signal prefixes move between versions
+    (gpioin0_pending_status vs mgmtsoc_gpioin0_status).
+    """
     txt = MGMT_CORE.read_text(errors="replace")
     latched = set()
     for k in range(6):
         if re.search(rf"assign gpioin{k}_gpioin{k}_irq = "
-                     rf"\(gpioin{k}_pending_status & gpioin{k}_enable_storage\);", txt):
+                     rf"\(\w*status\w* & \w*storage\w*\);", txt):
             latched.add(f"gpioin{k}")
-    if re.search(r"assign mgmtsoc_irq = \(mgmtsoc_pending_status & mgmtsoc_enable_storage\);", txt):
+    if re.search(r"assign mgmtsoc_irq = \(\w*status\w* & \w*storage\w*\);", txt):
         latched.add("timer0")
-    if re.search(r"assign uart_irq = \(\(uart_pending_status\[0\] & uart_enable_storage\[0\]\)", txt):
+    if re.search(r"assign uart_irq = \(\(\w*status\w*\[0\] & \w*storage\w*\[0\]\)", txt):
         latched.add("uart")
     return latched
 

@@ -99,6 +99,12 @@ fetch_mgmt() {
   for f in crt0_vex.S isr.c irq_vex.h irq.h simple_system_common.c simple_system_common.h caravel.h; do
     get $MGMT verilog/dv/firmware/$f data/mgmt/firmware/$f
   done
+  # the LiteX generator tree itself — re-run by tools/regenerate-mgmt-core.sh so the
+  # extracted facts can be checked against an independently produced mgmt_core.v
+  for f in caravel.py caravel_platform.py caravel_ram.py caravel_gpio.py generic.py \
+           generic_sdr.py modify_verilog.py debug_reset.v requirements.txt Makefile; do
+    get $MGMT litex/$f data/mgmt/litex/$f
+  done
 }
 
 fetch_opcodes() {
