@@ -46,6 +46,8 @@ mgmt/
                                     interrupt-facing anchor corpus (fwanchors.py)
   litex/                   50 KB    the LiteX generator tree (caravel.py, the platform
                                     and Makefile) — re-run by regenerate-mgmt-core.sh
+  generated/               54 KB    csr.h, mem.h, soc.h — the firmware's generated
+                                    headers; the only semantic naming of the CSR banks
   picorv32.v               95 KB    the comparison core: hand-written, 3,044 lines (L4 census)
   mgmt_core_wrapper.v, defines.v
 opcodes/
@@ -72,7 +74,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/sdc-audit.py` + `sdc-elaborate.tcl` | both SDCs | mode elaboration, exception classes (L2/04) |
 | `tools/config-record.py` | `VexRiscv_MinDebugCache.v`, `mgmt_core.v` | the configuration record (L5) |
 | `tools/partition.py` | `VexRiscv_MinDebugCache.v`, `opcodes/*` | the encoding partition + UB set, spec side validated (L6/03) |
-| `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `memory_map.rst` | the four-way memory-map diff (L7/03) |
+| `tools/memmap.py` | `mgmt_core.v`, `caravel.py`, `defs.h`, `generated/csr.h`, `memory_map.rst` | the five-way memory-map diff (L7/03) |
 | `tools/irqmap.py` | `mgmt_core.v`, wrapper, chip RTL, `interrupts.rst` | the end-to-end interrupt-path diff (L7/03) |
 | `tools/pads.py` | `rtl_caravel_core.v`, `user_defines.v`, `gpio_control_block.v` | the 38 pad power-up defaults, decoded (L7/04) |
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |

@@ -95,6 +95,11 @@ fetch_mgmt() {
   get $MGMT verilog/dv/firmware/csr-defs.h       data/mgmt/csr-defs.h
   # the generated interrupt-assignment documentation (the docs side of irqmap.py)
   get $MGMT docs/generated/interrupts.rst        data/mgmt/interrupts.rst
+  # the firmware's generated CSR/memory headers — the only artifact that names the
+  # CSR banks semantically (memmap.py cross-checks them against the RTL decode)
+  for f in csr.h mem.h soc.h; do
+    get $MGMT verilog/dv/generated/$f data/mgmt/generated/$f
+  done
   # the interrupt-facing firmware (fwanchors.py: the L6/01 anchor corpus)
   for f in crt0_vex.S isr.c irq_vex.h irq.h simple_system_common.c simple_system_common.h caravel.h; do
     get $MGMT verilog/dv/firmware/$f data/mgmt/firmware/$f

@@ -70,6 +70,47 @@ def _(ctx):
                      "interconnect timeout and reads 0xFFFFFFFF; (3) csr-defs.h's "
                      "CSR_DCACHE_INFO (0xCC0) is not decoded by the shipped core (0xBC0/0xFC0 "
                      "are) - reading it traps")
+@L.check("csr-header", "the generated csr.h vs the RTL bank decode, and the firmware's symbolic pointers",
+         doc="src/L7-system/03-memory-map-devices.md")
+def _(ctx):
+    from checklib import load, DATA, need
+    for f in ("mgmt/generated/csr.h", "mgmt/mgmt_core.v", "mgmt/defs.h"):
+        if m := need(DATA / f):
+            return FAIL, f"missing {m} (run tools/fetch-data.sh checks)"
+    mm = load("memmap")
+    win, banks = mm.rtl_windows(), mm.rtl_csr_banks()
+    hdr = mm.csr_header()
+    outside = {n: o for n, o in hdr.items() if not 0 <= o < win["csr"][1]}
+    if outside:
+        return FAIL, f"csr.h symbols outside the decoded CSR window: {outside}"
+    nobank = {n: hex(o) for n, o in hdr.items() if o // mm.CSR_PAGE not in banks}
+    if nobank:
+        return FAIL, f"csr.h symbols in undecoded banks: {nobank}"
+    names = mm.header_bank_names()
+    expect = {0: ["CTRL"], 1: ["DEBUG"], 2: ["DEBUG"], 3: ["FLASH"], 4: ["FLASH"],
+              5: ["GPIO"], 6: ["LA"], 7: ["MPRJ"], 8: ["SPI"], 9: ["SPI"],
+              10: ["TIMER0"], 11: ["UART"], 12: ["UART"],
+              **{b: ["USER"] for b in range(13, 20)}}
+    if names != expect:
+        return FAIL, f"the header's bank naming changed: {names}"
+    res, unres = mm.fw_symbolic_pointers()
+    stray = {n: hex(o) for n, o in res.items() if o // mm.CSR_PAGE not in banks}
+    if stray:
+        return FAIL, f"firmware pointers resolve outside the decoded banks: {stray}"
+    if len(res) != 49 or sorted(n for n, _ in unres) != ["reg_debug_data", "reg_debug_txfull"]:
+        return FAIL, f"firmware symbolic-pointer set changed: {len(res)} resolved, unresolved {unres}"
+    return FINDING, ("the generated csr.h is the only artifact that names the CSR banks "
+                     "semantically, and it agrees with the RTL decode 20-for-20 - "
+                     "disambiguating banks the Verilog leaves generic (bank 10's "
+                     "mgmtsoc_en/load/value IS timer0; banks 13-18 ARE the user_irq event "
+                     "blocks, confirming the interrupt map from a third direction). All 84 "
+                     "header symbols land in decoded banks, as do all 49 of defs.h's "
+                     "symbolic pointers. The finding: TWO defs.h macros - reg_debug_data "
+                     "and reg_debug_txfull - are defined in terms of CSR_DEBUG_RXTX_ADDR / "
+                     "CSR_DEBUG_TXFULL_ADDR, which the generated header never defines (the "
+                     "debug UART is a Wishbone bridge, not a CSR-mapped UART), so any "
+                     "firmware touching them fails to compile")
+
 @L.check("irq-map", "the interrupt path end to end: chip wiring -> sync -> event blocks -> array -> CSRs, vs docs",
          doc="src/L7-system/03-memory-map-devices.md")
 def _(ctx):

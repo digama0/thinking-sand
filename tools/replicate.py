@@ -63,6 +63,13 @@ def facts(path):
     cen = c4.census(path)
     f["census"] = {k: cen[k] for k in
                    ("# delays", "casex", "initial", "x literals", "force/release/deassign")}
+    # the same build emits the firmware's CSR header; when a regenerated one sits
+    # beside the regenerated RTL, compare the bank naming too
+    hdr = (path.parent.parent / "software/include/generated/csr.h"
+           if path.name.startswith("mgmt_core") and (
+               path.parent.parent / "software/include/generated/csr.h").is_file()
+           else mm.CSR_H)
+    f["csr_bank_names"] = mm.header_bank_names(hdr)
     return f
 
 
