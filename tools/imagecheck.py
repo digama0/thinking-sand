@@ -47,8 +47,10 @@ def text_words(path):
     base = 0
     if data[:4] == b"\x7fELF":
         if not shutil.which("riscv-none-elf-objcopy"):
-            raise SystemExit("ELF input needs riscv-none-elf-objcopy "
-                             "(tools/install-toolchain.sh --only riscv)")
+            # a normal exception, not SystemExit: this module is imported by
+            # tools/check-l6.py, where exiting would kill the whole layer
+            raise RuntimeError("ELF input needs riscv-none-elf-objcopy "
+                               "(tools/install-toolchain.sh --only riscv)")
         # take only the executable allocated sections
         out = subprocess.run(["riscv-none-elf-readelf", "-S", str(path)],
                              capture_output=True, text=True).stdout

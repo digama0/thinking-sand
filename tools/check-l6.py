@@ -107,7 +107,7 @@ def _(ctx):
     from checklib import TODO
     root = Path(__file__).resolve().parent.parent
     elf = root / "build-fw/fw.elf"
-    if not elf.is_file():
+    if not elf.is_file() or not shutil.which("riscv-none-elf-objcopy"):
         if not shutil.which("riscv-none-elf-gcc"):
             return TODO, ("needs the RV32 cross toolchain — run "
                           "tools/install-toolchain.sh --only riscv, then "
