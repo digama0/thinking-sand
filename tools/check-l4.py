@@ -43,6 +43,9 @@ def census(path):
             blocking_blocks += 1
     counts["posedge blocks w/ blocking ="] = blocking_blocks
     counts["posedge blocks"] = len(posedge_blocks)
+    # falling-edge-clocked blocks (leading negedge in the sensitivity list;
+    # a negedge RESET as the second term does not count)
+    counts["negedge-clocked blocks"] = len(re.findall(r"always\s*@\s*\(\s*negedge", txt))
     return counts
 
 
@@ -94,9 +97,36 @@ def _(ctx):
                   "15 always@*, 1 casez, 1 initial, 5 of 24 posedge blocks use blocking =")
 
 
-L.todo("soc-census", "the same census over the SoC-level RTL (core-only today)",
-       doc="src/L4-rtl-semantics/01-subset.md",
-       blocked_on="fetching the SoC RTL set (rtl_caravel_core.v is here; housekeeping/wrapper RTL needs pinning)")
+@L.check("soc-census", "the construct census over the SoC-level RTL",
+         doc="src/L4-rtl-semantics/01-subset.md")
+def _(ctx):
+    zeros = {k: 0 for k in ("# delays", "x literals", "casex", "force/release/deassign",
+                            "fork/join/UDP/event", "always @*", "casez", "initial",
+                            "posedge blocks w/ blocking =", "posedge blocks",
+                            "negedge-clocked blocks")}
+    r = check_census(DATA / "caravel/rtl_caravel_core.v", zeros)
+    if r:
+        return r
+    r = check_census(DATA / "mgmt/mgmt_core_wrapper.v", zeros)
+    if r:
+        return r
+    r = check_census(DATA / "caravel/housekeeping.v",
+                     {**zeros, "posedge blocks": 3, "posedge blocks w/ blocking =": 2})
+    if r:
+        return r
+    r = check_census(DATA / "caravel/gpio_control_block.v",
+                     {**zeros, "posedge blocks": 2, "posedge blocks w/ blocking =": 1,
+                      "negedge-clocked blocks": 1})
+    if r:
+        return r
+    return PASS, ("the SoC-side RTL is nearly construct-free: caravel_core and the "
+                  "wrapper are pure structural wiring (zero always blocks); "
+                  "housekeeping's 615 GL flops come from just 3 wide clocked blocks "
+                  "(two containing blocking assigns - the normal-form rewrite "
+                  "obligation extends to them; one clocked on csclk, the SPI domain "
+                  "from the L2 finding); the gpio control block adds the one genuinely "
+                  "new subset construct - a FALLING-edge-clocked serial-shift block. "
+                  "No delays/casex/x-literals/initial anywhere in the SoC set")
 L.todo("latch-complete", "the 15 always@* blocks assign every output on every path",
        doc="src/L4-rtl-semantics/02-comb-blocks.md",
        blocked_on="a real Verilog parser (regexes cannot do per-path analysis; consider slang/verible as the untrusted front end)")

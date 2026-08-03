@@ -61,6 +61,8 @@ fetch_small_caravel() {
   get $CARAVEL verilog/rtl/user_defines.v        data/caravel/user_defines.v
   get $CARAVEL verilog/rtl/gpio_control_block.v  data/caravel/gpio_control_block.v
   get $CARAVEL verilog/rtl/defines.v             data/caravel/defines.v
+  # the housekeeping macro's RTL (soc-census; the csclk SPI domain of the L2 finding)
+  get $CARAVEL verilog/rtl/housekeeping.v        data/caravel/housekeeping.v
 }
 
 fetch_big_caravel() {

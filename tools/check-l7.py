@@ -144,12 +144,16 @@ def _(ctx):
                      "are referenced by no pad RTL - the defaults blocks are the whole "
                      "story; and caravel defines.v's comment says pads default to USER "
                      "input when they are in fact MANAGEMENT input")
-L.todo("b-config", "tabulate B(config): worst-case bus latency per XIP mode-bit setting",
+L.todo("b-config", "tabulate B(config): worst-case bus latency per XIP configuration",
        doc="src/L7-system/02-bus-contract.md",
-       blocked_on="the housekeeping/spimemio RTL for the wait-state generator (fetch decision)")
+       note="the XIP path on the shipped SoC is LiteSPI inside the fetched mgmt_core.v "
+            "(litespimmap + phy, W25Q128JV read 0x03 at 1x) - the remaining work is the "
+            "latency analysis of the litespi FSM plus the flash part's timing")
 L.todo("f-immutable", "the flash-immutability check: can software reach flash write commands?",
        doc="src/L7-system/04-power-epochs.md",
-       blocked_on="the same spimemio/housekeeping RTL")
+       note="the fetched mgmt_core.v exposes a LiteSPI MASTER path (CSR bank 3: master_cs/"
+            "phyconfig/rxtx) beside the read-only XIP map - software plausibly CAN issue "
+            "arbitrary SPI commands incl. writes; the check is tracing that path and any gates")
 L.todo("holdup-ineq", "the supervisor/hold-up inequalities with datasheet + decap numbers",
        doc="src/L7-system/04-power-epochs.md",
        blocked_on="L5/wcet-table for t_epilogue, the decap census (done: 125k) times per-cell C from the PDK, and a chosen supervisor part")

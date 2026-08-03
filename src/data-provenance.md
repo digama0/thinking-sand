@@ -33,6 +33,7 @@ caravel/
   memory_map.rst           11 KB    the housekeeping memory-map documentation (memmap.py)
   user_defines.v, gpio_control_block.v, defines.v
                                     the pad power-up defaults + their loader (pads.py)
+  housekeeping.v           56 KB    the housekeeping macro's RTL (soc-census; csclk domain)
   metrics.csv, warnings.log, OPENLANE_VERSION, PDK_SOURCES
 mgmt/
   mgmt_core.v             275 KB    the SHIPPED SoC fabric: LiteX/Migen output — bus decode,

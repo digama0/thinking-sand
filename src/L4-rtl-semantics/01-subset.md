@@ -22,7 +22,7 @@ A semantics for **the synthesisable subset this design actually uses** — not f
 | `casez` | 1 | wildcard patterns: `?`/`z` bits in the *case item* are don't-cares — one site, one convention to fix |
 | `initial` | 1 | power-up value → [03](03-x-and-reset.md) |
 
-(Census over `picorv32.v`, 3,044 lines; the surrounding SoC RTL needs the same sweep, which is mechanical.)
+(Census over `picorv32.v`, 3,044 lines. The same sweep over the surrounding SoC RTL — `caravel_core.v`, the wrapper, `housekeeping.v`, the GPIO control block — runs in [`check-l4.py`](../tools/check-l4.py): the first two are pure structural wiring with *zero* always blocks, housekeeping is three wide clocked blocks, and the control block adds the set's one new construct, a falling-edge-clocked serial-shift block.)
 
 ## The admissible-subset move, third instance
 
@@ -36,7 +36,7 @@ The target sources are machine-emitted — [SpinalHDL](https://github.com/Spinal
 
 ## Obligations
 
-1. Run the same census over the SoC-level RTL (`caravel_core.v` RTL, housekeeping, wrapper) — the census covers the picorv32 file only.
+1. The SoC-level census runs and is pinned ([`check-l4.py`](../tools/check-l4.py)); the falling-edge-clocked block it found joins the subset's construct list.
 2. Freeze the subset grammar as the front end's acceptance language; wire the census into it as a regression (a construct appearing after an upstream bump must fail loudly).
 3. The `casez` convention: one site, fix the don't-care semantics explicitly.
 
