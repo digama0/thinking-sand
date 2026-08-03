@@ -84,6 +84,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/pads.py` | `rtl_caravel_core.v`, `user_defines.v`, `gpio_control_block.v` | the 38 pad power-up defaults, decoded (L7/04) |
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |
 | `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
+| `tools/regenerate-core.sh` | the SpinalHDL generator (sbt) | the CORE regenerated; the shipped variant's invocation recovered (L4/04) |
 | `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 13 SoC facts, re-derived and diffed (L4/04) |
 | `tools/rtlcheck.py` | the RTL set | latch/acyclicity/undriven checks via yosys (L4/02) |
 | `tools/build-firmware.sh` | `firmware/*` (crt0 + sections.lds) | a real flash image at the XIP base |

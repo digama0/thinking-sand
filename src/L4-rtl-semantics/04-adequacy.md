@@ -34,7 +34,7 @@ Unavailable here, but for a subtler reason than "no generator." The shipped desi
 
 1. The differential harness (elaborate, run, compare — days).
 2. Wire semantics-mismatch triage into L3's CEC failure reporting, so a non-proving cone distinguishes "synthesis did something" from "our semantics disagrees with Yosys."
-3. Extend generator re-execution to the *core* half — SpinalHDL needs a JVM build of VexRiscv at the matching commit, and the substituted cached variant makes the target explicit rather than implied.
+3. ~~Extend generator re-execution to the core half~~ — **done** ([`regenerate-core.sh`](../tools/regenerate-core.sh)): the documented `MinDebug` invocation regenerates byte-identically (control), and the shipped variant's *undocumented* invocation is recovered as the same flags with `--iCacheSize 64`, matching every measured configuration fact. What remains is byte-exactness, which needs the era generator and a Java 8 runtime.
 4. (Deferred) scheduler independence for the subset.
 
 ## Effort

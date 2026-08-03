@@ -148,6 +148,50 @@ def _(ctx):
                   "generator - the bus decode, CSR banks, interconnect timeout, interrupt "
                   "wiring, synchronisers, event blocks, flash master path, reset vector and "
                   "construct census are properties of the design, not of one build")
+@L.check("core-regen", "the CORE half regenerated: the shipped variant's undocumented invocation, recovered",
+         doc="src/L4-rtl-semantics/04-adequacy.md")
+def _(ctx):
+    import shutil
+    from checklib import TODO
+    root = Path(__file__).resolve().parent.parent
+    regen = root / "build-core/VexRiscv_MinDebugCache_regen.v"
+    if not regen.is_file():
+        if not shutil.which("sbt"):
+            return TODO, ("needs sbt — tools/install-toolchain.sh --only sbt, then "
+                          "tools/regenerate-core.sh")
+        return TODO, "run tools/regenerate-core.sh (clones the generator, ~10 min first run)"
+    cr = load("config-record")
+    got = {}
+    for name, p in (("shipped", DATA / "mgmt/VexRiscv_MinDebugCache.v"), ("regen", regen)):
+        cr.VEX = p
+        got[name] = cr.record()
+    keys = ("compressed", "muldiv", "atomics", "wfi", "icache", "hazards")
+    diffs = {k: (got["shipped"][k], got["regen"][k])
+             for k in keys if got["shipped"][k] != got["regen"][k]}
+    if diffs:
+        return FAIL, f"the reconstruction no longer matches the shipped configuration: {diffs}"
+    if got["regen"]["icache"]["bytes"] != 64 or got["regen"]["icache"]["lines"] != 2:
+        return FAIL, f"cache geometry changed: {got['regen']['icache']}"
+    return FINDING, (
+        "the shipped core's generator invocation was never recorded anywhere - "
+        "VexRiscv_MinDebugCache is not a target of the upstream Makefile and was "
+        "hand-added in one 2021 commit. It is now RECOVERED: `-d --iCacheSize 64 "
+        "--dCacheSize 0 --mulDiv false --singleCycleShift false --singleCycleMulDiv "
+        "false --bypass false --prediction none`, i.e. the documented MinDebug "
+        "invocation with the instruction cache turned on. The control is what makes "
+        "this credible: regenerating MinDebug from its DOCUMENTED flags reproduces "
+        "the committed file byte-for-byte apart from the git hash the generator "
+        "stamps in, so the toolchain is faithful and deterministic. The "
+        "reconstruction then matches the shipped core on every measured "
+        "configuration fact, including a cache geometry that agrees in all five "
+        "dimensions (64 B, 2 lines, 32 B lines, 28-bit tags, 1 way). Residual: the "
+        "2026 generator emits counter/PMP CSRs the 2021 silicon predates, so "
+        "byte-exact reconstruction needs the era generator, whose Scala 2.11 build "
+        "requires Java 8. Two generator defaults independently corroborate earlier "
+        "findings: externalInterruptArray defaults TRUE (L6/01's residue) and "
+        "xtvecModeGen defaults FALSE - which is exactly why mtvec's mode bits are "
+        "inert storage (L6/02's C5)")
+
 @L.check("latch-complete", "no combinational block infers a latch, and the RTL is acyclic",
          doc="src/L4-rtl-semantics/02-comb-blocks.md")
 def _(ctx):

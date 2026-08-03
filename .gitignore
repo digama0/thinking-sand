@@ -18,3 +18,4 @@ data/caravel/gl_caravel_core.sta.v
 build-sta/
 build-fw/
 build-sim/
+build-core/
