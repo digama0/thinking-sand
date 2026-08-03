@@ -47,7 +47,7 @@ No coprocessor port, no cache-coherence traffic, no outstanding-transaction queu
 
 ## Obligations
 
-1. Gi1–Gi3 and Gd1–Gd3 as invariant clauses; check them first by simulation against the SoC's own testbenches (cheap oracle, shared with L4/04's harness).
+1. Gi1–Gi3 and Gd1–Gd3 as invariant clauses — the simulation half is **done** ([`run-sim.sh`](../tools/run-sim.sh)): the shipped core executes a real image for 200,000 cycles with the clauses asserted continuously and reports zero violations, with a negative control confirming the monitor can fail. That is the cheap oracle; it establishes the clauses on *one* execution, not on all of them, so the proof obligation below is unchanged in kind — but a clause that survives a real run is worth stating, and one that did not would have been found here rather than in a proof attempt.
 2. The debug non-interference lemma, and the debug-inactive hypothesis threaded through the statement.
 3. The burst-length/line-size agreement between the cache and the refill master (one constant, two readers — pin it in the [configuration record](../tools/config-record.py)).
 

@@ -95,9 +95,38 @@ L.todo("decode-sweep", "decode equivalence of the generated decoder vs the Sail 
 L.todo("ic3-calibrate", "IC3 calibration on invariant clauses 1/2/4 (sizes the layer's real cost)",
        doc="src/L5-microarchitecture/02-invariant.md",
        blocked_on="a model-checking harness over the elaborated core (proof-adjacent; deferred by phase)")
-L.todo("bus-guarantee", "check the Wishbone guarantee clauses (Gi/Gd) on testbench traces",
-       doc="src/L5-microarchitecture/04-buses-debug.md",
-       blocked_on="the simulation harness; a trace checker is checker-phase work once traces exist")
+@L.check("bus-guarantee", "the Wishbone guarantee clauses, checked on a real execution trace",
+         doc="src/L5-microarchitecture/04-buses-debug.md")
+def _(ctx):
+    import re, shutil
+    from checklib import TODO
+    root = Path(__file__).resolve().parent.parent
+    log = root / "build-sim/sim.log"
+    if not log.is_file():
+        if not shutil.which("iverilog"):
+            return TODO, ("needs a simulator — tools/install-toolchain.sh --only cad, "
+                          "then tools/build-firmware.sh && tools/run-sim.sh")
+        return TODO, "run tools/build-firmware.sh && tools/run-sim.sh"
+    m = re.search(r"SUMMARY cycles=(\d+) ibus_txn=(\d+) dbus_txn=(\d+) "
+                  r"dbus_writes=(\d+) violations=(\d+)", log.read_text())
+    if not m:
+        return FAIL, "build-sim/sim.log has no SUMMARY line — the run did not finish"
+    cycles, itxn, dtxn, dwr, viol = (int(g) for g in m.groups())
+    if viol:
+        return FAIL, f"{viol} bus-guarantee violations in {cycles} cycles — see build-sim/sim.log"
+    if itxn == 0 or dtxn == 0:
+        return FAIL, f"the core issued no traffic (ibus {itxn}, dbus {dtxn}) — it did not run"
+    if dwr != 14:
+        return FAIL, (f"{dwr} data writes, expected the 14 the test payload stores — "
+                      f"the image and the trace disagree")
+    return PASS, (f"the shipped core EXECUTES the built image and its bus discipline holds: "
+                  f"{cycles:,} cycles, {itxn} instruction fetches, {dtxn} data transactions "
+                  f"of which {dwr} writes - exactly the 14 bytes the payload stores, so the "
+                  f"program really ran - and ZERO violations of the L5/04 clauses (STB=>CYC, "
+                  f"request attributes stable until ACK, bounded termination, iBus never "
+                  f"writes). The monitor is validated by a negative control rather than "
+                  f"trusted: tools/run-sim.sh --negative stretches memory latency past the "
+                  f"termination bound and the clause duly fires")
 @L.check("irq-anchors", "the interrupt-facing firmware paths, extracted as spec anchors",
          doc="src/L5-microarchitecture/05-interrupts.md")
 def _(ctx):

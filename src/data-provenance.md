@@ -88,6 +88,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/rtlcheck.py` | the RTL set | latch/acyclicity/undriven checks via yosys (L4/02) |
 | `tools/build-firmware.sh` | `firmware/*` (crt0 + sections.lds) | a real flash image at the XIP base |
 | `tools/imagecheck.py` | a flash image + the partition | UB-freedom of `F` (L6/03) |
+| `tools/run-sim.sh` + `sim/tb_core.v` | the core + a built image | executes the core; Wishbone clauses on the trace (L5/04) |
 | `tools/sta-rerun.sh` + `sta-rerun.tcl` | netlist, SDC, SPEF, Liberty, sky130A | the F1 signoff-STA rerun (L2/04) |
 | `tools/gdsdump.py`, `tools/bbox.py` | any `.gds` | record/layer census, per-layer bounding boxes |
 
