@@ -20,3 +20,4 @@ build-fw/
 build-sim/
 build-core/
 flow/*/runs/
+flow/*/VexRiscv_target.v
