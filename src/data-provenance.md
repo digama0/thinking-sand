@@ -89,6 +89,7 @@ The per-layer scoreboards `tools/check-l0.py` … `check-l7.py` (run all via `to
 | `tools/fwanchors.py` | `firmware/*` | the interrupt-facing firmware anchor corpus (L5/05, L6/01) |
 | `tools/regenerate-mgmt-core.sh` | `litex/*` (the generator) | an independently regenerated `mgmt_core.v` |
 | `tools/regenerate-core.sh` | the SpinalHDL generator (sbt) | the CORE regenerated; the shipped variant's invocation recovered (L4/04) |
+| `tools/run-flow.sh` + `flowreport.py` | the target core + librelane | the full RTL-to-GDS pipeline: GDS, nine-corner signoff, DRC/LVS (L3) |
 | `tools/replicate.py` | shipped + regenerated `mgmt_core.v` | the 13 SoC facts, re-derived and diffed (L4/04) |
 | `tools/rtlcheck.py` | the RTL set | latch/acyclicity/undriven checks via yosys (L4/02) |
 | `tools/build-firmware.sh` | `firmware/*` (crt0 + sections.lds) | a real flash image at the XIP base |
@@ -110,6 +111,7 @@ The tools above need only Python and `tclsh`. The obligations still stubbed need
 | `sbt` | sbt, for SpinalHDL/VexRiscv regeneration | `1.12.14` (the 1.x line — SpinalHDL is an sbt 1 project) | no |
 | `mdbook` | mdbook, to render this book | `v0.5.4` | no |
 | `sta` | OpenSTA + CUDD 3.0.0 | OpenSTA `3f4b337e`, CUDD 3.0.0 | **yes** (apt) |
+| `flow` | librelane: OpenROAD, yosys, magic, netgen, klayout — the whole pipeline | `3.0.6` (AppImage, sha256-pinned) | no (needs `bwrap`) |
 
 Four of the five groups are upstream prebuilt tarballs unpacked into a prefix — no root, nothing touched outside it. Only OpenSTA is built from source, and the recipe mirrors [its own `Dockerfile.ubuntu24.04`](https://github.com/parallaxsw/OpenSTA/blob/master/Dockerfile.ubuntu24.04) exactly rather than improvising a dependency list. A checksum mismatch aborts the install and deletes the download; re-running is idempotent.
 

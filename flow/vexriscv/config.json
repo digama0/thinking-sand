@@ -1,0 +1,17 @@
+{
+  "DESIGN_NAME": "VexRiscv",
+  "VERILOG_FILES": [
+    "dir::VexRiscv_target.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 25,
+  "FP_CORE_UTIL": 40,
+  "PL_TARGET_DENSITY_PCT": 45,
+  "SYNTH_STRATEGY": "DELAY 1",
+  "SYNTH_MAX_FANOUT": 12,
+  "RUN_LINTER": false,
+  "pdk::sky130A": {
+    "MAX_TRANSITION_CONSTRAINT": 1.5
+  },
+  "ERROR_ON_SYNTH_CHECKS": false
+}

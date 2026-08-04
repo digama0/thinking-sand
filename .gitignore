@@ -19,3 +19,4 @@ build-sta/
 build-fw/
 build-sim/
 build-core/
+flow/*/runs/

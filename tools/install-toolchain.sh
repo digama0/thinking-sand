@@ -18,7 +18,8 @@
 #   tools/install-toolchain.sh --prefix DIR    # default ~/.local/thinking-sand
 #
 # Groups: cad (yosys/verilator/iverilog/sby/SMT), riscv (gcc), sta (OpenSTA),
-#         sbt (SpinalHDL builds), mdbook (the book).
+#         sbt (SpinalHDL builds), mdbook (the book), flow (librelane: the whole
+#         RTL-to-GDS pipeline — OpenROAD, magic, netgen, klayout).
 #
 # Afterwards: source <prefix>/env.sh   (or add <prefix>/bin to PATH)
 set -euo pipefail
@@ -54,6 +55,16 @@ SBT_FILE=sbt-$SBT_VER.tgz
 SBT_URL=https://github.com/sbt/sbt/releases/download/v$SBT_VER/$SBT_FILE
 SBT_SHA=cd17daae220ff264faa4251334522444518584f0eb2ee82da01523a9b9002b7e
 
+# librelane — the OpenLane 2 successor, shipped as ONE self-contained AppImage
+# carrying the entire RTL-to-GDS flow (OpenROAD, yosys, magic, netgen, klayout)
+# in an embedded nix store. This is what makes the full pipeline runnable here:
+# no root, no docker. It needs bubblewrap to bind the store at /nix, because the
+# AppImage's own FUSE self-mount is unavailable in most sandboxes.
+LIBRELANE_VER=3.0.6
+LIBRELANE_FILE=librelane-devshell-x86_64.AppImage
+LIBRELANE_URL=https://github.com/librelane/librelane/releases/download/$LIBRELANE_VER/$LIBRELANE_FILE
+LIBRELANE_SHA=bb408899f16bc303c625ca2ab5a69c7852b9cbde99a06a827e032fbb3d00fe22
+
 # OpenSTA + CUDD, both exactly as upstream's Dockerfile.ubuntu24.04 does it
 STA_SHA1=3f4b337e30afccf8075118860daf2e4fea8a5c18          # 2026-07-31
 CUDD_URL=https://raw.githubusercontent.com/davidkebo/cudd/main/cudd_versions/cudd-3.0.0.tar.gz
@@ -70,7 +81,7 @@ while [ $# -gt 0 ]; do
     *) echo "unknown option: $1 (try --help)" >&2; exit 2 ;;
   esac
 done
-[ ${#SELECTED[@]} -gt 0 ] || SELECTED=(cad riscv sta sbt mdbook)
+[ ${#SELECTED[@]} -gt 0 ] || SELECTED=(cad riscv sta sbt mdbook flow)
 want() { for g in "${SELECTED[@]}"; do [ "$g" = "$1" ] && return 0; done; return 1; }
 
 OPT="$PREFIX/opt"; BIN="$PREFIX/bin"; DL="$PREFIX/download"
@@ -104,6 +115,11 @@ sbt     sbt (SpinalHDL/VexRiscv builds)          L4/04 obligation 3 — regenera
                                                    the RTL, the half tools/replicate.py cannot
                                                    reach today (the SoC half is already covered)
 mdbook  mdbook                                   tools/build-book.sh renders the book locally
+flow    librelane = OpenROAD + yosys + magic +   L3/rho-reproduction and the whole "generate
+        netgen + klayout, one AppImage           silicon from the plans" path: synthesis, place
+                                                 and route, extraction, and a signoff STA on a
+                                                 netlist WE produced rather than one we fetched
+                                                 (~1.4 GB download; needs bubblewrap)
 EOF
   exit 0
 fi
@@ -216,6 +232,36 @@ if want sta; then
   fi
 fi
 
+# ---- flow: the full RTL-to-GDS pipeline -------------------------------------
+if want flow; then
+  say "librelane $LIBRELANE_VER — the whole flow (OpenROAD, magic, netgen, klayout)"
+  APP="$OPT/librelane/$LIBRELANE_FILE"
+  if [ -x "$OPT/librelane/squashfs-root/entrypoint" ] \
+     || [ -L "$OPT/librelane/squashfs-root/entrypoint" ]; then
+    skip "$OPT/librelane/squashfs-root"
+  else
+    mkdir -p "$OPT/librelane"
+    get "$LIBRELANE_URL" "$LIBRELANE_SHA" "$LIBRELANE_FILE"
+    cp "$DL/$LIBRELANE_FILE" "$APP"; chmod +x "$APP"
+    echo "   unpack  (~5 GB nix store; takes a few minutes)"
+    ( cd "$OPT/librelane" && ./"$LIBRELANE_FILE" --appimage-extract >/dev/null )
+  fi
+  if ! command -v bwrap >/dev/null 2>&1; then
+    echo "   !! bubblewrap (bwrap) not found — the flow needs it to bind the nix"
+    echo "      store at /nix. apt install bubblewrap, or run the AppImage where"
+    echo "      FUSE is available."
+  fi
+  # a launcher that binds the embedded store and drops into the devshell
+  cat > "$BIN/librelane-shell" <<EOF
+#!/usr/bin/env bash
+# run a command inside the librelane devshell (OpenROAD, yosys, magic, ...)
+exec bwrap --dev-bind / / --bind "$OPT/librelane/squashfs-root/nix" /nix -- \\
+     "$OPT/librelane/squashfs-root/entrypoint" "\$@"
+EOF
+  chmod +x "$BIN/librelane-shell"
+  echo "   wrote $BIN/librelane-shell (e.g. librelane-shell openroad -version)"
+fi
+
 # ---- environment ------------------------------------------------------------
 cat > "$PREFIX/env.sh" <<EOF
 # source this (or add \$PREFIX/bin to PATH) to use the pinned toolchain
@@ -229,7 +275,7 @@ EOF
 say "installed under $PREFIX"
 printf '   bash/zsh:  source %s/env.sh\n' "$PREFIX"
 printf '   fish:      source %s/env.fish\n\n' "$PREFIX"
-for t in yosys verilator iverilog sby riscv-none-elf-gcc sta sbt mdbook; do
+for t in yosys verilator iverilog sby riscv-none-elf-gcc sta sbt mdbook librelane-shell; do
   if [ -x "$BIN/$t" ]; then printf '   \033[32m%-22s\033[0m %s\n' "$t" "ok"
   else printf '   %-22s %s\n' "$t" "not installed"; fi
 done

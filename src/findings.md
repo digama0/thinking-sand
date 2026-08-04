@@ -310,6 +310,26 @@ SYNTH_READ_BLACKBOX_LIB 1
 
 Assessment: ABC restructures combinational logic (CEC's home turf, registers intact); resizer sizing/buffering is logically neutral; CTS adds the clock tree post-synthesis; fill/tap/decap/diode are inserted in P&R. **The open risk is Yosys `opt_dff`/`opt_merge` removing or merging flops**, which breaks 1:1 register correspondence — and Yosys emits no SVF-equivalent guidance.
 
+## We ran the pipeline
+
+The whole point of retargeting to a core we can regenerate is that the rest of the flow becomes runnable too. It is: [`run-flow.sh`](https://github.com/digama0/thinking-sand/blob/master/tools/run-flow.sh) takes the target core through synthesis, floorplan, placement, clock-tree synthesis, routing, extraction, multi-corner STA, DRC and LVS, and produces **a GDS and a nine-corner signoff table we generated rather than fetched**. The engine is [librelane](https://github.com/librelane/librelane) 3.0.6 — the OpenLane 2 successor — shipped as a single self-contained AppImage carrying OpenROAD, yosys, magic, netgen and klayout, run under bubblewrap. `tools/install-toolchain.sh --only flow` installs it.
+
+**The result, at the same level of detail as the shipped `signoff.rpt`:**
+
+| | hold worst | setup worst | ours | 2021 |
+|---|---|---|---|---|
+| f-nom / f-min / f-max | +0.10 | +12.0 … +12.8 | PASS | Passed |
+| t-nom / t-min / t-max | +0.30 | +7.2 … +8.8 | PASS | Passed |
+| **s-nom / s-min / s-max** | **+0.81** | **−5.7 … −8.6** | **FAIL** | **FAILED (in2reg hold)** |
+
+Physical verification is entirely clean: magic DRC 0, klayout DRC 0, routing DRC 0, LVS 0. The design is 20,604 standard cells and 2,623 flops in 369,021 µm² at 56% utilisation.
+
+**The same three corners fail — for the opposite reason.** The 2021 signoff failed *hold* at the three slow corners with setup comfortable (+4.52). This run fixes hold at **every** corner (worst +0.100 ns, hold TNS exactly 0) by inserting **2,409 hold buffers**, and pays for it in setup (−8.56 ns at ss). Same design, opposite trade: the modern flow prioritises hold where the 2021 one left it failing. That is the honest shape of "replicate the results even if the precise details have changed" — the numbers do not match and were never going to, but they are now *commensurable*, produced by a flow we control, and the difference has an identifiable cause rather than being a mystery.
+
+Caveats worth keeping attached to those numbers: the floorplan parameters (40% target utilisation) are ours, not the shipped run's; this is the core alone rather than `caravel_core` with its SoC and macros; and the PDK is librelane's own sky130A rather than the 2020 `open_pdks` build the chip used — that build predates configuration variables librelane 3.x requires, so pinning the 2026 core means pinning a 2026-compatible PDK with it.
+
+**The flow's own checker found a generator regression.** Synthesis refused to proceed on four undriven signals. Two are the long-standing instruction-cache inputs, present in the 2021 core too. The other two are **new**: `CsrPlugin_mtvec_mode[1:0]`, which the 2021 core *drives* and the 2026 core does not — the generator now declares and reads that register without ever writing it. It is inert (the signal it feeds, `xtvec_mode`, is itself never read, and `mtvec` is write-only anyway), so the config disables the checker and the fact is recorded rather than the design being quietly patched. It also exposed a gap in our own [`rtlcheck.py`](https://github.com/digama0/thinking-sand/blob/master/tools/rtlcheck.py), which reports undriven *wires* and so missed an undriven *register*.
+
 ## The target is the regenerated core
 
 **Decision.** The design this project reasons about is the **2026-regenerated core** (`data/mgmt/VexRiscv_target.v`, produced by [`regenerate-core.sh`](https://github.com/digama0/thinking-sand/blob/master/tools/regenerate-core.sh) from a pinned generator and the recovered invocation), not the 2021 artifact committed in the silicon repository. The reason is the one this chapter keeps running into: the 2021 file cannot be reproduced from anything public, and a target that cannot be regenerated cannot be re-derived when an input moves. The 2021 file stays fetched as the provenance comparison.
