@@ -22,3 +22,5 @@ build-core/
 flow/*/runs/
 flow/*/VexRiscv_target.v
 flow/caravel_core/src/
+flow/rocket-tiny/src/
+flow/rocket-tiny/macros/

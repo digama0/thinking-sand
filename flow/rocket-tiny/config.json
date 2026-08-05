@@ -1,0 +1,511 @@
+{
+  "DESIGN_NAME": "ChipTop",
+  "VERILOG_FILES": [
+    "dir::src/AMOALU.sv",
+    "dir::src/Arbiter2_Valid_PTWReq.sv",
+    "dir::src/Arbiter3_LLWB.sv",
+    "dir::src/AsyncQueue.sv",
+    "dir::src/AsyncQueueSink_DebugInternalBundle.sv",
+    "dir::src/AsyncQueueSink_Phit.sv",
+    "dir::src/AsyncQueueSink_Phit_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncQueueSink_TLBundleA_a9d32s1k1z2u.sv",
+    "dir::src/AsyncQueueSink_TLBundleD_a9d32s1k1z2u.sv",
+    "dir::src/AsyncQueueSource_DebugInternalBundle.sv",
+    "dir::src/AsyncQueueSource_Phit.sv",
+    "dir::src/AsyncQueueSource_Phit_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncQueueSource_TLBundleA_a9d32s1k1z2u.sv",
+    "dir::src/AsyncQueueSource_TLBundleD_a9d32s1k1z2u.sv",
+    "dir::src/AsyncQueue_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncResetRegVec_w1_i0.sv",
+    "dir::src/AsyncResetRegVec_w1_i1.sv",
+    "dir::src/AsyncResetRegVec_w2_i0.sv",
+    "dir::src/AsyncResetSynchronizerPrimitiveShiftReg_d3_i0.sv",
+    "dir::src/AsyncResetSynchronizerPrimitiveShiftReg_d3_i0_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w1_d3_i0.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w1_d3_i0_1.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w1_d3_i0_1_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w1_d3_i0_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w4_d3_i0.sv",
+    "dir::src/AsyncResetSynchronizerShiftReg_w4_d3_i0_TestHarness_UNIQUIFIED.sv",
+    "dir::src/AsyncValidSync.sv",
+    "dir::src/AsyncValidSync_TestHarness_UNIQUIFIED.sv",
+    "dir::src/BreakpointUnit.sv",
+    "dir::src/BundleBridgeNexus_UInt1_2.sv",
+    "dir::src/CLINT.sv",
+    "dir::src/CLINTClockSinkDomain.sv",
+    "dir::src/CSRFile.sv",
+    "dir::src/CaptureChain_JTAGIdcodeBundle.sv",
+    "dir::src/CaptureUpdateChain_DMIAccessCapture_To_DMIAccessUpdate.sv",
+    "dir::src/CaptureUpdateChain_DTMInfo_To_DTMInfo.sv",
+    "dir::src/CaptureUpdateChain_UInt5_To_UInt5.sv",
+    "dir::src/ChipTop.sv",
+    "dir::src/ChipyardPRCICtrlClockSinkDomain.sv",
+    "dir::src/ClockCrossingReg_w15.sv",
+    "dir::src/ClockCrossingReg_w32.sv",
+    "dir::src/ClockCrossingReg_w32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/ClockCrossingReg_w43.sv",
+    "dir::src/ClockCrossingReg_w55.sv",
+    "dir::src/ClockGroupAggregator_allClocks.sv",
+    "dir::src/ClockGroupAsyncResetCoercer.sv",
+    "dir::src/ClockGroupCombiner.sv",
+    "dir::src/ClockGroupResetSynchronizer.sv",
+    "dir::src/DCache.sv",
+    "dir::src/DCacheDataArray.sv",
+    "dir::src/DMIToTL.sv",
+    "dir::src/DebugTransportModuleJTAG.sv",
+    "dir::src/DecoupledSerialPhy.sv",
+    "dir::src/DecoupledSerialPhy_TestHarness_UNIQUIFIED.sv",
+    "dir::src/DigitalTop.sv",
+    "dir::src/EICG_wrapper.v",
+    "dir::src/ErrorDeviceWrapper.sv",
+    "dir::src/FixedClockBroadcast_2.sv",
+    "dir::src/FixedClockBroadcast_4.sv",
+    "dir::src/FixedClockBroadcast_7.sv",
+    "dir::src/FlitToPhit_f32_p32.sv",
+    "dir::src/FlitToPhit_f32_p32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/FrontBus.sv",
+    "dir::src/Frontend.sv",
+    "dir::src/GenericDeserializer_TLBeatw10_f32.sv",
+    "dir::src/GenericDeserializer_TLBeatw10_f32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/GenericDeserializer_TLBeatw67_f32.sv",
+    "dir::src/GenericDeserializer_TLBeatw67_f32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/GenericDeserializer_TLBeatw87_f32.sv",
+    "dir::src/GenericDeserializer_TLBeatw87_f32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/GenericDeserializer_TLBeatw88_f32.sv",
+    "dir::src/GenericDeserializer_TLBeatw88_f32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/GenericDigitalInIOCell.v",
+    "dir::src/GenericDigitalOutIOCell.v",
+    "dir::src/GenericSerializer_TLBeatw10_f32.sv",
+    "dir::src/GenericSerializer_TLBeatw67_f32.sv",
+    "dir::src/GenericSerializer_TLBeatw87_f32.sv",
+    "dir::src/GenericSerializer_TLBeatw88_f32.sv",
+    "dir::src/HellaCacheArbiter.sv",
+    "dir::src/IBuf.sv",
+    "dir::src/ICache.sv",
+    "dir::src/ITLB.sv",
+    "dir::src/InferredResetSynchronizerPrimitiveShiftReg_d3_i0.sv",
+    "dir::src/IntSyncAsyncCrossingSink_n1x1.sv",
+    "dir::src/IntSyncCrossingSource_n1x1.sv",
+    "dir::src/IntSyncCrossingSource_n1x1_Registered.sv",
+    "dir::src/IntSyncCrossingSource_n1x2.sv",
+    "dir::src/IntSyncSyncCrossingSink_n1x1.sv",
+    "dir::src/IntSyncSyncCrossingSink_n1x2.sv",
+    "dir::src/IntXbar_i3_o1.sv",
+    "dir::src/JtagBypassChain.sv",
+    "dir::src/JtagStateMachine.sv",
+    "dir::src/JtagTapController.sv",
+    "dir::src/LevelGateway.sv",
+    "dir::src/MulDiv.sv",
+    "dir::src/NonSyncResetSynchronizerPrimitiveShiftReg_d3.sv",
+    "dir::src/OptimizationBarrier_TLBEntryData.sv",
+    "dir::src/PLICClockSinkDomain.sv",
+    "dir::src/PLICFanIn.sv",
+    "dir::src/PMAChecker.sv",
+    "dir::src/PMPChecker_s2.sv",
+    "dir::src/PTW.sv",
+    "dir::src/PeripheryBus_cbus.sv",
+    "dir::src/PeripheryBus_pbus.sv",
+    "dir::src/PhitArbiter_p32_f32_n5.sv",
+    "dir::src/PhitArbiter_p32_f32_n5_TestHarness_UNIQUIFIED.sv",
+    "dir::src/PhitDemux_p32_f32_n5.sv",
+    "dir::src/PhitDemux_p32_f32_n5_TestHarness_UNIQUIFIED.sv",
+    "dir::src/PhitToFlit_p32_f32.sv",
+    "dir::src/PhitToFlit_p32_f32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/PlusArgTimeout.sv",
+    "dir::src/Queue1_RegMapperInput_i23_m8.sv",
+    "dir::src/Queue1_TLBundleA_a14d64s7k1z4u.sv",
+    "dir::src/Queue1_TLBundleA_a64d64s8k8z8c.sv",
+    "dir::src/Queue1_TLBundleD_a64d64s8k8z8c.sv",
+    "dir::src/Queue2_TLBundleA_a14d64s7k1z4u.sv",
+    "dir::src/Queue2_TLBundleA_a21d64s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleA_a29d64s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleA_a32d32s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleA_a32d64s1k1z4u.sv",
+    "dir::src/Queue2_TLBundleA_a32d64s1k1z4u_TestHarness_UNIQUIFIED.sv",
+    "dir::src/Queue2_TLBundleA_a32d64s4k1z4u.sv",
+    "dir::src/Queue2_TLBundleA_a32d64s5k1z4u.sv",
+    "dir::src/Queue2_TLBundleA_a32d64s7k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a14d64s7k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a21d64s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleD_a29d64s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleD_a32d32s7k1z3u.sv",
+    "dir::src/Queue2_TLBundleD_a32d64s1k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a32d64s1k1z4u_TestHarness_UNIQUIFIED.sv",
+    "dir::src/Queue2_TLBundleD_a32d64s4k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a32d64s5k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a32d64s7k1z4u.sv",
+    "dir::src/Queue2_TLBundleD_a32d8s1k1z4u.sv",
+    "dir::src/Queue8_Flit.sv",
+    "dir::src/Queue8_Flit_TestHarness_UNIQUIFIED.sv",
+    "dir::src/Queue8_UInt8.sv",
+    "dir::src/Queue8_UInt8_TestHarness_UNIQUIFIED.sv",
+    "dir::src/RVCExpander.sv",
+    "dir::src/Repeater_TLBundleA_a12d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a13d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a17d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a21d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a26d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a28d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a29d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a32d32s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleA_a32d64s7k1z3u.sv",
+    "dir::src/Repeater_TLBundleD_a32d64s1k1z4u.sv",
+    "dir::src/ResetCatchAndSync_d3.sv",
+    "dir::src/ResetCatchAndSync_d3_TestHarness_UNIQUIFIED.sv",
+    "dir::src/ResetSynchronizerShiftReg_w1_d3_i0.sv",
+    "dir::src/Rocket.sv",
+    "dir::src/RocketALU.sv",
+    "dir::src/RocketTile.sv",
+    "dir::src/SBToTL.sv",
+    "dir::src/ScratchpadSlavePort.sv",
+    "dir::src/SerialRAM.sv",
+    "dir::src/SerialTL0ClockSinkDomain.sv",
+    "dir::src/ShiftQueue.sv",
+    "dir::src/SimTSI.v",
+    "dir::src/SynchronizerShiftReg_w1_d3.sv",
+    "dir::src/SystemBus.sv",
+    "dir::src/TLAFromBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLAFromBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLAToBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLAsyncCrossingSink_a9d32s1k1z2u.sv",
+    "dir::src/TLAsyncCrossingSource_a9d32s1k1z2u.sv",
+    "dir::src/TLAtomicAutomata_cbus.sv",
+    "dir::src/TLAtomicAutomata_pbus.sv",
+    "dir::src/TLBFromBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLBFromBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLBToBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLBuffer_a14d64s7k1z4u.sv",
+    "dir::src/TLBuffer_a21d64s7k1z3u.sv",
+    "dir::src/TLBuffer_a29d64s7k1z3u.sv",
+    "dir::src/TLBuffer_a29d64s7k1z3u_1.sv",
+    "dir::src/TLBuffer_a32d32s7k1z3u_1.sv",
+    "dir::src/TLBuffer_a32d64s1k1z4u_1.sv",
+    "dir::src/TLBuffer_a32d64s1k1z4u_2.sv",
+    "dir::src/TLBuffer_a32d64s4k1z4u.sv",
+    "dir::src/TLBuffer_a32d64s5k1z4u.sv",
+    "dir::src/TLBuffer_a32d64s7k1z4u.sv",
+    "dir::src/TLBusBypass.sv",
+    "dir::src/TLBusBypassBar.sv",
+    "dir::src/TLCFromBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLCFromBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLCToBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLDFromBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLDFromBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLDToBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLDebugModule.sv",
+    "dir::src/TLDebugModuleInner.sv",
+    "dir::src/TLDebugModuleInnerAsync.sv",
+    "dir::src/TLDebugModuleOuter.sv",
+    "dir::src/TLDebugModuleOuterAsync.sv",
+    "dir::src/TLEFromBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLEFromBeat_serial_tl_0_a64d64s8k8z8c.sv",
+    "dir::src/TLEToBeat_SerialRAM_a64d64s8k8z8c.sv",
+    "dir::src/TLError.sv",
+    "dir::src/TLError_1.sv",
+    "dir::src/TLFragmenter_1.sv",
+    "dir::src/TLFragmenter_BootAddrReg.sv",
+    "dir::src/TLFragmenter_CLINT.sv",
+    "dir::src/TLFragmenter_Debug.sv",
+    "dir::src/TLFragmenter_PLIC.sv",
+    "dir::src/TLFragmenter_TileClockGater.sv",
+    "dir::src/TLFragmenter_TileResetSetter.sv",
+    "dir::src/TLFragmenter_UART.sv",
+    "dir::src/TLFragmenter_bootrom.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_bootrom.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_clint.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_debug.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_plic.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_prci_ctrl.sv",
+    "dir::src/TLInterconnectCoupler_cbus_to_rockettile.sv",
+    "dir::src/TLInterconnectCoupler_fbus_from_debug_sb.sv",
+    "dir::src/TLInterconnectCoupler_fbus_from_port_named_serial_tl_0_in.sv",
+    "dir::src/TLInterconnectCoupler_pbus_to_bootaddressreg.sv",
+    "dir::src/TLInterconnectCoupler_pbus_to_device_named_uart_0.sv",
+    "dir::src/TLMonitor.sv",
+    "dir::src/TLMonitor_1.sv",
+    "dir::src/TLMonitor_10.sv",
+    "dir::src/TLMonitor_11.sv",
+    "dir::src/TLMonitor_12.sv",
+    "dir::src/TLMonitor_13.sv",
+    "dir::src/TLMonitor_14.sv",
+    "dir::src/TLMonitor_16.sv",
+    "dir::src/TLMonitor_17.sv",
+    "dir::src/TLMonitor_18.sv",
+    "dir::src/TLMonitor_19.sv",
+    "dir::src/TLMonitor_2.sv",
+    "dir::src/TLMonitor_20.sv",
+    "dir::src/TLMonitor_21.sv",
+    "dir::src/TLMonitor_22.sv",
+    "dir::src/TLMonitor_23.sv",
+    "dir::src/TLMonitor_24.sv",
+    "dir::src/TLMonitor_25.sv",
+    "dir::src/TLMonitor_26.sv",
+    "dir::src/TLMonitor_27.sv",
+    "dir::src/TLMonitor_28.sv",
+    "dir::src/TLMonitor_29.sv",
+    "dir::src/TLMonitor_3.sv",
+    "dir::src/TLMonitor_30.sv",
+    "dir::src/TLMonitor_31.sv",
+    "dir::src/TLMonitor_32.sv",
+    "dir::src/TLMonitor_33.sv",
+    "dir::src/TLMonitor_34.sv",
+    "dir::src/TLMonitor_35.sv",
+    "dir::src/TLMonitor_36.sv",
+    "dir::src/TLMonitor_37.sv",
+    "dir::src/TLMonitor_38.sv",
+    "dir::src/TLMonitor_39.sv",
+    "dir::src/TLMonitor_4.sv",
+    "dir::src/TLMonitor_40.sv",
+    "dir::src/TLMonitor_41.sv",
+    "dir::src/TLMonitor_42.sv",
+    "dir::src/TLMonitor_43.sv",
+    "dir::src/TLMonitor_44.sv",
+    "dir::src/TLMonitor_45.sv",
+    "dir::src/TLMonitor_46.sv",
+    "dir::src/TLMonitor_5.sv",
+    "dir::src/TLMonitor_6.sv",
+    "dir::src/TLMonitor_7.sv",
+    "dir::src/TLMonitor_8.sv",
+    "dir::src/TLMonitor_9.sv",
+    "dir::src/TLPLIC.sv",
+    "dir::src/TLROM.sv",
+    "dir::src/TLSerdesser_SerialRAM.sv",
+    "dir::src/TLSerdesser_serial_tl_0.sv",
+    "dir::src/TLUART.sv",
+    "dir::src/TLUARTClockSinkDomain.sv",
+    "dir::src/TLWidthWidget1.sv",
+    "dir::src/TLWidthWidget8_4.sv",
+    "dir::src/TLXbar_MasterXbar_RocketTile_i2_o1_a32d64s1k1z4u.sv",
+    "dir::src/TLXbar_cbus_in_i2_o1_a32d64s7k1z4u.sv",
+    "dir::src/TLXbar_cbus_out_i1_o8_a32d64s7k1z4u.sv",
+    "dir::src/TLXbar_dmixbar_i1_o2_a9d32s1k1z2u.sv",
+    "dir::src/TLXbar_fbus_i2_o1_a32d64s5k1z4u.sv",
+    "dir::src/TLXbar_pbus_out_i1_o2_a29d64s7k1z3u.sv",
+    "dir::src/TLXbar_prcibus_i1_o2_a21d64s7k1z3u.sv",
+    "dir::src/TLXbar_sbus_i2_o1_a32d64s6k1z4u.sv",
+    "dir::src/TSIToTileLink.sv",
+    "dir::src/TileClockGater.sv",
+    "dir::src/TilePRCIDomain.sv",
+    "dir::src/TileResetSetter.sv",
+    "dir::src/UARTAdapter.sv",
+    "dir::src/UARTRx.sv",
+    "dir::src/UARTRx_TestHarness_UNIQUIFIED.sv",
+    "dir::src/UARTTx.sv",
+    "dir::src/UARTTx_TestHarness_UNIQUIFIED.sv",
+    "dir::src/bootromClockSinkDomain.sv",
+    "dir::src/chipyard.harness.TestHarness.TinyRocketConfig.top.mems.v",
+    "dir::src/extern_modules.sv",
+    "dir::src/plusarg_reader.v",
+    "dir::src/ram_2x10.sv",
+    "dir::src/ram_2x104.sv",
+    "dir::src/ram_2x110.sv",
+    "dir::src/ram_2x116.sv",
+    "dir::src/ram_2x116_TestHarness_UNIQUIFIED.sv",
+    "dir::src/ram_2x118.sv",
+    "dir::src/ram_2x119.sv",
+    "dir::src/ram_2x120.sv",
+    "dir::src/ram_2x122.sv",
+    "dir::src/ram_2x50.sv",
+    "dir::src/ram_2x77.sv",
+    "dir::src/ram_2x77_TestHarness_UNIQUIFIED.sv",
+    "dir::src/ram_2x80.sv",
+    "dir::src/ram_2x81.sv",
+    "dir::src/ram_2x82.sv",
+    "dir::src/ram_2x83.sv",
+    "dir::src/ram_2x84.sv",
+    "dir::src/ram_8x8.sv",
+    "dir::src/ram_8x8_TestHarness_UNIQUIFIED.sv",
+    "dir::src/ram_flit_8x32.sv",
+    "dir::src/ram_flit_8x32_TestHarness_UNIQUIFIED.sv",
+    "dir::src/rf_31x32.sv",
+    "dir::src/rockettile_dcache_data_arrays_0.sv",
+    "dir::src/rockettile_dcache_data_arrays_1.sv",
+    "dir::src/rockettile_icache_data_arrays_0_0.sv",
+    "dir::src/rockettile_icache_data_arrays_1_0.sv",
+    "dir::src/rockettile_icache_tag_array_0.sv",
+    "dir::srams/rocket_srams.v"
+  ],
+  "CLOCK_PORT": "clock_uncore",
+  "CLOCK_PERIOD": 50,
+  "SYNTH_ELABORATE_ONLY": false,
+  "RUN_LINTER": false,
+  "ERROR_ON_SYNTH_CHECKS": false,
+  "ERROR_ON_UNMAPPED_CELLS": false,
+  "USE_SLANG": true,
+  "SLANG_ARGUMENTS": [
+    "--single-unit",
+    "--ignore-timing"
+  ],
+  "MACROS": {
+    "sky130_sram_1kbyte_1rw1r_32x256_8": {
+      "gds": [
+        "dir::macros/sky130_sram_1kbyte_1rw1r_32x256_8.gds"
+      ],
+      "lef": [
+        "dir::macros/sky130_sram_1kbyte_1rw1r_32x256_8.lef"
+      ],
+      "lib": {
+        "*": [
+          "dir::macros/sky130_sram_1kbyte_1rw1r_32x256_8_TT_1p8V_25C.lib"
+        ]
+      },
+      "instances": {
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[0].macro": {
+          "location": [
+            500.55,
+            250.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[1].macro": {
+          "location": [
+            1180.33,
+            250.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[2].macro": {
+          "location": [
+            1860.11,
+            250.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[3].macro": {
+          "location": [
+            2539.89,
+            250.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[4].macro": {
+          "location": [
+            3219.67,
+            250.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[5].macro": {
+          "location": [
+            500.55,
+            847.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[6].macro": {
+          "location": [
+            1180.33,
+            847.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.b[7].macro": {
+          "location": [
+            1860.11,
+            847.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[0].macro": {
+          "location": [
+            2539.89,
+            847.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[1].macro": {
+          "location": [
+            3219.67,
+            847.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[2].macro": {
+          "location": [
+            500.55,
+            3552.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[3].macro": {
+          "location": [
+            1180.33,
+            3552.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[4].macro": {
+          "location": [
+            1860.11,
+            3552.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[5].macro": {
+          "location": [
+            2539.89,
+            3552.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[6].macro": {
+          "location": [
+            3219.67,
+            3552.5
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.b[7].macro": {
+          "location": [
+            500.55,
+            2955.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_0_0.rockettile_icache_data_arrays_0_0_ext.macro0": {
+          "location": [
+            1180.33,
+            2955.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_0_0.rockettile_icache_data_arrays_0_0_ext.macro1": {
+          "location": [
+            1860.11,
+            2955.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_1_0.rockettile_icache_data_arrays_0_0_ext.macro0": {
+          "location": [
+            2539.89,
+            2955.0
+          ],
+          "orientation": "N"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_1_0.rockettile_icache_data_arrays_0_0_ext.macro1": {
+          "location": [
+            3219.67,
+            2955.0
+          ],
+          "orientation": "N"
+        }
+      }
+    }
+  },
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [
+    0,
+    0,
+    4200.0,
+    4200.0
+  ],
+  "CORE_AREA": [
+    20,
+    20,
+    4180.0,
+    4180.0
+  ],
+  "PL_TARGET_DENSITY_PCT": 20,
+  "ERROR_ON_DISCONNECTED_PINS": false
+}

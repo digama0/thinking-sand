@@ -90,8 +90,29 @@ sources we can modify, at a single pinned era.
 130nm and GF180 is 180nm; no smaller open PDK exists. "Modern" can therefore
 mean modern *microarchitecture* — out-of-order execution, branch prediction, an
 MMU, a cache hierarchy, Linux capability — but never modern frequency. A complex
-core at 130nm lands in the 50–150 MHz range. Cache **SRAM**, not logic area, is
-the binding practical constraint on open 130nm flows.
+core at 130nm lands in the 50–150 MHz range.
+
+**Memory area bounds fabrication, not the tower.** On-chip SRAM dominates the
+die: at 0.142 mm² per KiB from the sky130 macro, cache and scratchpad outweigh
+the logic they serve by roughly five to one in the configuration measured below.
+That is a real constraint on what fits in a shuttle slot, and it is worth
+stating as one — but it is not a constraint on the verification, and the two
+should not be run together.
+
+Two reasons. First, memory is the most *parametric* thing in the design: the
+obligation is discharged against the macro and the banking that composes it,
+and a proof that a 256×32 array meets its contract is not re-paid per bank. A
+larger memory costs area and nothing else. Second, the subject is a **CPU, not a
+computer**. `ChipLikeRocketConfig` already puts main memory — 4 GiB of it — off
+the die, reached over serial TileLink through the pins. What the tower owes
+there is the *protocol*: that the port's transactions mean what L5 says they
+mean. The DRAM on the far side is somebody else's part, named as an external
+assumption in the same register as the power-on reset, and its size is not a
+number this book has to carry.
+
+So the honest statement of the constraint is: on-chip memory sets how much of
+the hierarchy can be *fabricated* at 130nm, while the pin protocol sets how much
+has to be *proved*. Shrinking a cache buys silicon, not certainty.
 
 **A physical object remains reachable.** Efabless closed in March 2025, but the
 route recovered: ChipFoundry restored SKY130 MPW access, wafer.space added
