@@ -29,11 +29,23 @@ The growth is the flow buying hold margin, and it is most of the design.
 
 ## Signoff, and what fails
 
-**Magic DRC: 0.** Clean on the streamed layout.
+**Magic DRC: 0. KLayout DRC: 4.** The two signoff engines disagree, and KLayout
+is the one telling the truth: 2 × `m4.1` (minimum width) and 2 × `m4.2` (minimum
+spacing). Magic sees none of them. Take the disagreement itself as the finding —
+a single DRC verdict is not evidence, and this project's whole thesis is about
+which claims are checkable.
+
+(KLayout has to be run against `ChipTop.klayout.gds`; see the stream-out finding
+below. The `nwell.6` lines in its log name `sky130_fd_io__*` pad cells and come
+from the PDK's own deck, not from this design.)
 
 **Routing: 14 unresolved violations, all on met4 — 9 metal-spacing, 5 shorts.**
 The router ran 64 iterations, oscillating between 5 and 247, and settled at 14.
 met4 carries the PDN straps, so these are signal-versus-power-strap collisions.
+
+Three independent tools, one story: every physical defect in this design is on
+met4. The router counts 9 spacing plus 5 shorts, KLayout confirms 4 of them
+geometrically, and LVS catches one of the shorts electrically.
 
 **LVS: fails, on exactly one net.** Devices match exactly (84,051 each); nets
 differ by one (84,585 extracted vs 84,586 in the netlist). 0 unmatched devices,
