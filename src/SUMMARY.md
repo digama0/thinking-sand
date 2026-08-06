@@ -70,7 +70,6 @@
 [Appendix: Glossary](glossary.md)
 [Appendix: Axioms — the register](axioms.md)
 [Appendix: Findings — measured data](findings.md)
-[Appendix: Platform assessment — why the target is changing](platform-assessment.md)
 [Appendix: Scoreboard — checker results](scoreboard.md)
 [Appendix: Reading list](reading-list.md)
 [Appendix: Bibliography](bibliography.md)

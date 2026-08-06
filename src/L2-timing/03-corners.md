@@ -50,7 +50,7 @@ The parameter space is not one box. A sound model distinguishes three tiers, bec
 
 Getting these tiers wrong in either direction is the classic failure: linear accumulation of local variation makes deep paths unclosable (the √n is what rescues them — the same nothing-accumulates pattern as everywhere else in the stack); ignoring shared clock prefixes double-charges skew and fails hold checks that actually pass.
 
-The formal object: `Θ = Θ_global × Πcells Θ_local`, delay arcs as functions on `Θ`, and P4 as the axiom "the shipped die's parameters lie in `Θ`" — which absorbs what E4's empirical half used to say. The soundness theorem quantifies over `Θ` and the corner check plus quadrature bound plus CPPR must jointly dominate it.
+The formal object: `Θ = Θ_global × Πcells Θ_local`, delay arcs as functions on `Θ`, and P4 as the axiom "the fabricated die's parameters lie in `Θ`" — which absorbs what E4's empirical half used to say. The soundness theorem quantifies over `Θ` and the corner check plus quadrature bound plus CPPR must jointly dominate it.
 
 ## Derates, honestly
 

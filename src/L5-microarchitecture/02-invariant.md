@@ -22,12 +22,12 @@ What `I` must actually say, per the anatomy:
 
 1. **Pipeline control sanity**: the stage valid/stall/flush arbitration bits are mutually coherent (no stage simultaneously firing and flushed; stalls propagate upstream contiguously).
 2. **Per-stage payload coherence**: each stage's control bundle equals the decode of the instruction it travels with — the generated decoder's output, replayed. Wide, shallow, per stage.
-3. **In-flight semantics, per station**: the [`LightShifter`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ShiftPlugins.scala)'s accumulator holds the partially-shifted value with its counter consistent; a mid-flight [`DBusSimple`](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala) transaction's address/data registers hold what the retiring instruction requires; the fetch front end's pc chain is consistent with the committed pc plus in-flight redirects.
-4. **Interlock correctness**: no instruction advances past Decode while an in-flight writer targets one of its source registers; the write-back buffer's pending write is reflected in hazard detection.
+3. **In-flight semantics, per station**: the iterative mul/div unit's accumulator holds the partial result with its counter consistent; a mid-flight memory transaction's address/data registers hold what the retiring instruction requires; an open LR reservation is consistent with the reserving instruction; the fetch front end's pc chain is consistent with the committed pc plus in-flight redirects.
+4. **Bypass/interlock correctness**: every value routed sideways through the bypass network equals the value its producer will write back; where bypassing cannot serve (load-use, mul/div in flight, CSR effects), no reader advances past the unresolved writer.
 5. **Flush correctness**: instructions younger than a taken redirect never reach WriteBack; the redirect target is the one the retiring step computed.
-6. **I-cache agreement**: each of the two valid lines equals backing memory at its tag — modulo the `fence.i` window, whose obligation is exactly that software cannot observe the staleness.
-7. **Wishbone transaction coherence**: `CYC/STB` discipline, single outstanding dBus beat, iBus burst-refill bookkeeping ([04](04-buses-debug.md)).
-8. **CSR coherence**: `mstatus.MIE`/`mie`/`mip` consistent with the spec state; the external-interrupt array's mask/pending pair consistent with its CSRs ([05](05-interrupts.md)).
+6. **I-cache agreement**: every valid line equals backing memory at its tag — modulo the `fence.i` window, whose obligation is exactly that software cannot observe the staleness.
+7. **TileLink transaction coherence**: channel legality, source-ID bookkeeping, refill-burst accounting on the fetch side ([04](04-buses-debug.md)).
+8. **CSR coherence**: `mstatus.MIE`/`mie`/`mip` consistent with the spec state; the PMP configuration consistent with the checks the access paths apply ([05](05-interrupts.md)).
 9. **α-well-definedness**: at retirement boundaries, the architectural readout is total.
 
 Clauses 1, 4, and 7 are exactly the *local control invariants* IC3-class engines find unaided; 2 is wide but mechanical; 3, 5, 6 carry the semantic content the human supplies; the glue — that the clauses jointly imply the retirement step matches the ISA — is human work.

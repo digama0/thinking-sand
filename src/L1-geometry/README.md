@@ -85,7 +85,7 @@ Caveats: bias is density-dependent so r = r(x); line-end pullback and corner rou
 
 **Below extraction it becomes image processing for real:** DRC is polygon booleans; LVS is extraction + graph isomorphism; **OPC is literal inverse imaging** (simulate partially-coherent image formation, iteratively adjust mask polygons); fracturing is rasterisation, and multi-beam mask writers take a bitmap. Note E7 sits *between* LVS and the fab: the mask is deliberately not the drawn layout, so LVS-verified geometry is not what prints.
 
-**GDS is a clean formal object with dirty corners.** A finite set of layer-tagged integer-coordinate polygons plus a hierarchy — far cleaner than Verilog. But: layer numbers are *semantically empty* (need an external layer map); PATH endcap type 1 is a *semicircle* so the format isn't purely polygonal; self-intersecting polygons and same-layer overlap semantics are unspecified. Restrict to a well-formed subset. Encouragingly, Caravel's routing uses **zero PATH records** — all BOUNDARY — so production output lives in a much cleaner subset than the format permits.
+**GDS is a clean formal object with dirty corners.** A finite set of layer-tagged integer-coordinate polygons plus a hierarchy — far cleaner than Verilog. But: layer numbers are *semantically empty* (need an external layer map); PATH endcap type 1 is a *semicircle* so the format isn't purely polygonal; self-intersecting polygons and same-layer overlap semantics are unspecified. Restrict to a well-formed subset. Encouragingly, OpenROAD-era routing streams out as BOUNDARY polygons — so production output lives in a much cleaner subset than the format permits (pinned per layout by the checker).
 
 ### The geometric combinatorial obligations
 

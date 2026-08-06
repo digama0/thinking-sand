@@ -25,7 +25,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 
 | | |
 |---|---|
-| **pad / IO cell** | the chip's physical interface: the *bond pad* is a bare metal square (~60 µm) on the die perimeter that a bond wire attaches to; the *IO cell* behind it is a large circuit doing level shifting (1.8 V core ↔ 3.3 V world), ESD protection, drive-strength output staging, input buffering, and direction control. In Caravel these are `sky130_fd_io` macros — at 60–77k polygons each, individually bigger than most logic blocks. `obs` is defined at the pad metal: the last point that is still "the chip" |
+| **pad / IO cell** | the chip's physical interface: the *bond pad* is a bare metal square (~60 µm) on the die perimeter that a bond wire attaches to; the *IO cell* behind it is a large circuit doing level shifting (1.8 V core ↔ 3.3 V world), ESD protection, drive-strength output staging, input buffering, and direction control. Here these are `sky130_fd_io` macros — at tens of thousands of polygons each, individually bigger than most logic blocks. `obs` is defined at the pad metal: the last point that is still "the chip" |
 | **P&R** | Place and Route — choosing where each cell sits and how wires connect them |
 | **LEF / DEF** | the abstract views P&R works in: cell outlines and pin locations (LEF), placements and routes (DEF) |
 | **GDS / GDSII** | the layout interchange format — layer-tagged polygons; what goes to the mask shop |
@@ -54,7 +54,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **ECC** | Error Correcting Code — redundancy that repairs upsets, at the cost of a layout-level independence assumption |
 | **latch-up** | a parasitic thyristor turning on — a *second solution branch* of the device equations, which tap cells exist to destroy |
 | **electromigration** | current gradually voiding a wire; a wearout criterion over a trajectory, not a state |
-| **POR** | Power-On Reset — the circuit that holds the chip in reset from power-good until the supply is stable, supplying each power epoch's initial state. Caravel's (`simple_por`) is an RC ramp detector: it catches rise-from-zero, not sags |
+| **POR** | Power-On Reset — the circuit that holds the chip in reset from power-good until the supply is stable, supplying each power epoch's initial state. this design carries none on-die — the arrangement is board/harness territory (X4), and an RC ramp detector catches rise-from-zero, not sags |
 | **BOR** | Brown-Out Reset — a supervisor that asserts reset whenever the supply *sags* below operating minimum, closing the gray band between "logic misbehaves" and "state is lost" that a ramp-only POR leaves open. Fail-safe by construction: below its own validity range, reset is the passive default |
 | **MCU** | microcontroller — a commodity single-chip computer (STM32, AVR). Cited here as precedent: every MCU ships a BOR, so the gray-band fix is a solved industrial problem, not a research item |
 
@@ -88,18 +88,18 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 
 | | |
 |---|---|
-| **Yosys / ABC** | the open-source synthesis tool and its logic-optimisation engine — the pair that produced the shipped netlist |
+| **Yosys / ABC** | the open-source synthesis tool and its logic-optimisation engine — the pair that produces the hardened netlist |
 | **Verilator / Icarus** | independent open-source Verilog simulators — L4's differential-testing oracles |
 | **Sail** | the ISA-description language; its RISC-V model is the officially *ratified* one and exports to proof assistants |
-| **RVFI** | the riscv-formal interface: RTL ports announcing each instruction retirement — the designer's own commit-point map (L5/01) |
-| **VexRiscv / SpinalHDL / LiteX** | the shipped management core: VexRiscv is a plugin-composed pipelined RISC-V core written in SpinalHDL (a Scala-embedded HDL); LiteX is the Python SoC builder that generated the surrounding mgmt_core |
-| **PCPI** | picorv32's coprocessor port (comparison core); multiply and divide live behind it as iterative units |
-| **DFFRAM** | RAM compiled from standard-cell flip-flops rather than a foundry SRAM macro — which makes Caravel's memory *verifiable* by the same machinery as its logic (L3/02) |
-| **XIP** | execute-in-place: instructions fetched directly from SPI flash through a small controller, wait states and all — the source of the bus latency bound's worst case |
-| **SPI / UART** | the two serial interfaces here: SPI is clocked and master-driven (the flash); UART is asynchronous and baud-framed (the observable output channel) |
-| **GPIO** | general-purpose I/O — the 38 runtime-configurable user pads |
+| **trace port / RVFI** | RTL ports announcing each instruction retirement (the core's trace interface; RVFI is riscv-formal's version of the same discipline) — the designer's own commit-point map (L5/01) |
+| **Rocket / Chisel / Chipyard** | the design stack: Rocket is the original RISC-V core generator, written in Chisel (a Scala-embedded HDL); Chipyard is the Berkeley framework that composes it with buses, devices, and harnesses into the SoC |
+| **FIRRTL / CIRCT / firtool** | the specified intermediate representation Chisel elaborates to, the LLVM hardware-compiler project, and its FIRRTL-to-SystemVerilog compiler — the storey above the RTL (L4/04) |
+| **SRAM22** | the open SRAM generator whose sky130 macros carry this design's memories — hard macros with *published* transistor-level collateral, so their contracts are checkable-by-effort rather than foundry-opaque (L3/02) |
+| **serial TileLink** | the off-chip port: on-chip bus transactions serialised into 32-bit phits under the link's own clock — the load path for programs and the source of the bus latency bound's worst case |
+| **JTAG / UART** | two of the chip's serial interfaces: JTAG is the five-wire debug port reaching the standard debug module; UART is asynchronous and baud-framed (the observable output channel) |
+| **TileLink** | the on-chip interconnect protocol of the Rocket ecosystem: request/response channel pairs with source-ID tags — the bus contract's alphabet (L7/02) |
 | **CSR / WARL** | RISC-V's control-and-status registers; WARL fields ("write any values, read legal values") are where the standard deliberately leaves behaviour implementation-defined (S4) |
-| **q-registers** | picorv32's four custom interrupt registers (comparison core); the shipped core uses standard machine-mode CSRs |
+| **CLINT / PLIC** | the standard RISC-V interrupt sources: the core-local interruptor (software + timer interrupts) and the platform-level interrupt controller (device interrupts, claim/complete) — device models in L7/03 |
 | **LRM** | the Verilog Language Reference Manual — the event-driven semantics this project deliberately does *not* formalise (L4/00) |
 | **Tcl** | the scripting language EDA tools embed; an SDC file is a Tcl *program*, which is why it must be elaborated before it can be analysed |
 
@@ -114,7 +114,7 @@ The jargon net for the whole book — hardware-flow terms first (in the order a 
 | **CPPR** | common-path pessimism removal: launch and capture clocks share a tree prefix whose variation cannot differ between them — credit it once |
 | **OCV / derate** | on-chip variation (per-cell randomness) and the flat percentage margins that industrially stand in for its proper statistics |
 | **false path** | a graph path STA can see but logic can never activate; *declaring* one is an unchecked human claim — the subject of L2/04 |
-| **FSM / one-hot** | finite-state machine; one-hot encoding gives each state its own bit, exactly one set — picorv32's control (the comparison core) is an 8-state one-hot FSM |
+| **FSM / one-hot** | finite-state machine; one-hot encoding gives each state its own bit, exactly one set |
 | **tri-state** | a driver that can disconnect (high impedance) as well as drive 0/1 — the one legitimate way two drivers share a net |
 | **latch inference** | Verilog silently converting an incomplete combinational block into a state element — the classic way RTL grows unintended memory (L4/02) |
 | **blocking / non-blocking** | Verilog's `=` vs `<=`: immediate sequential update vs two-phase simultaneous commit; the distinction that makes clocked logic order-independent |

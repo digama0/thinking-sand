@@ -8,21 +8,21 @@ Before anything can be proved about the RTL, the RTL must *mean* something. Veri
 
 ## Statement
 
-A semantics for **the synthesisable subset this design actually uses** — not for Verilog: the simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), with the relationship to the LRM's event scheduler isolated as the scheduler-independence claim — probed by adequacy checks, stateable as a theorem. The subset is measured: 22 construct sites plus 25 don't-care `'bx` literals needing care, with the worst of Verilog's categories absent.
+A semantics for **the synthesisable subset this design actually uses** — not for Verilog: the simple synchronous semantics (two-phase non-blocking commit over an acyclic combinational pass), with the relationship to the LRM's event scheduler isolated as the scheduler-independence claim — probed by adequacy checks, stateable as a theorem. The subset is measured over the emitted design: one level-sensitive block (the clock-gate primitive), one X-idiom (23 memory-read don't-care sites), one initializer idiom, and the worst of the language's categories absent by construction.
 
 ## Subcomponents
 
 | | | status |
 |---|---|---|
 | [00](00-elaborated-object.md) | `⟦·⟧ : Config → RTL → TransitionSystem`; the simple semantics; **scheduler independence** stated; the shipped configuration as part of the object | weeks |
-| [01](01-subset.md) | The construct census of the shipped pair; the admissible-subset move (third instance); the enforced boundary | census done |
-| [02](02-comb-blocks.md) | Completeness of the 15 `always @*` blocks (latch inference — the check that *changes the circuit* if missed); RTL-level acyclicity; the 2-block blocking-assignment rewrite | days |
+| [01](01-subset.md) | The construct census of the emitted design; the admissible-subset move (third instance); the enforced boundary | census measured |
+| [02](02-comb-blocks.md) | Completeness (latch inference — the check that *changes the circuit* if missed); RTL-level acyclicity; the clock-gate primitive carved out | days |
 | [03](03-x-and-reset.md) | The two-valued strengthening, split three ways: X-elimination where the spec claims definiteness, refinement into spec nondeterminism where it doesn't, value-independence for the residue | weeks |
-| [04](04-adequacy.md) | Differential simulation; **the CEC cross-check** (disagreement with Yosys is detected, not silent); the FIRRTL counterfactual | weeks; mostly inherited |
+| [04](04-adequacy.md) | Differential simulation; **the CEC cross-check** (disagreement with Yosys is detected, not silent); the FIRRTL anchor | weeks; mostly inherited |
 
 ## Interfaces
 
-**Consumes:** `picorv32.v` (3,044 lines) and the surrounding SoC RTL; the shipped configuration. **Exports:** `⟦RTL⟧` to L3 and L5; the configuration record to L3/05 (PCPI existence), L6 (ISA subset), and L5; the reset/X story to L7's epoch model.
+**Consumes:** the emitted SystemVerilog design cone (~230 modules) and its FIRRTL ancestor; the elaborated configuration. **Exports:** `⟦RTL⟧` to L3 and L5; the configuration record to L6 (ISA subset) and L5; the reset/X story to L7's epoch model.
 
 ## Axioms introduced
 
@@ -35,13 +35,13 @@ Everything here is the admissible-subset move plus its receipts. [01](01-subset.
 ## Open problems
 
 1. Prove scheduler independence for the subset ([00](00-elaborated-object.md)) — bounded, genuine, severable from the critical path.
-2. The SoC-level census sweep ([01](01-subset.md)) — the census covers the picorv32 file only.
-3. Resolve the one `initial` site against the shipped netlist ([03](03-x-and-reset.md)).
+2. The census as an enforced regression over the synthesis file list ([01](01-subset.md)).
+3. The register power-up story against the hardened netlist ([03](03-x-and-reset.md)).
 
 ## First experiments
 
-- Extract and record the shipped configuration (gates three other layers' scoping — cheapest high-value item in the layer).
-- The 15 completeness checks and the RTL SCC check ([02](02-comb-blocks.md)) — an afternoon each, and both are hard failures the front end should enforce thereafter.
+- Extract and record the elaborated configuration (gates three other layers' scoping — cheapest high-value item in the layer).
+- The completeness and RTL SCC checks ([02](02-comb-blocks.md)) — an afternoon each, and both are hard failures the front end should enforce thereafter.
 - The differential harness on the design's own testbenches ([04](04-adequacy.md)).
 
 ## Effort
@@ -50,4 +50,4 @@ Everything here is the admissible-subset move plus its receipts. [01](01-subset.
 
 ## Reading
 
-[Lööw](../bibliography.md#loow-2021)'s HOL4 Verilog semantics — the existing deep embedding, and the reference point for how much of the language one actually needs. The FIRRTL spec, for what the alternative architecture would have looked like ([04](04-adequacy.md)).
+[Lööw](../bibliography.md#loow-2021)'s HOL4 Verilog semantics — the existing deep embedding, and the reference point for how much of the language one actually needs. The FIRRTL spec — the IR the design actually descends through, and the layer's long-term anchor ([04](04-adequacy.md)).

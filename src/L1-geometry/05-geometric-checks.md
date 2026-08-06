@@ -22,7 +22,7 @@ The finite, decidable obligations L1 owns. These are the *discharge points* for 
 ∀ device d.  ∃ well tap t.  dist(d, t) ≤ d_max   (same well)
 ```
 
-Nearest-neighbour query over device and tap positions; `O(n log n)` with a k-d tree. Caravel has **77,857** `tapvpwrvgnd_1` instances, so the tap set is large and the query is the whole cost.
+Nearest-neighbour query over device and tap positions; `O(n log n)` with a k-d tree. A finished layout carries tap cells by the tens of thousands (the flow places them on a fixed grid), so the tap set is large and the query is the whole cost.
 
 **This is a hypothesis of well-posedness, not a reliability rule.** Latch-up is a *second solution branch* of the stationary device PDE (M1); tap coverage destroys the parasitic thyristor and hence the branch. Filing it under reliability is the field's convention; it is what makes "the transistor's I-V characteristic" well-defined at all.
 
@@ -36,7 +36,7 @@ where `R_MCU` is the measured multi-cell-upset radius — a **D3/D4-class empiri
 
 **The sharpest cross-layer obligation in the project.** ECC's independence assumption is discharged by layout geometry: the netlist cannot see placement, the code's algebra cannot see particles, and the obligation lives in the GDS where neither can look. Needs the ECC word structure as an input, which comes from L3/L5, so it is the one check here that is not self-contained.
 
-Applicable only if the design has ECC — `RAM128` should be examined before assuming so.
+Applicable only if the design has ECC — the SRAM macros and the tile configuration should be examined before assuming so (the tiny configuration elides ECC).
 
 ### G3 — antenna ratio
 
@@ -88,7 +88,7 @@ Two of the six need inputs from outside L1, and both of those inputs are things 
 
 ## First experiments
 
-- G6 on Caravel: is the metal fill tied? A single connectivity query, and the answer determines whether 04's argument needs its harder version.
+- G6 on the flow's layout: is the metal fill tied? A single connectivity query, and the answer determines whether 04's argument needs its harder version.
 - G1 on the extracted device positions, once L1/02's extraction runs.
 - Establish whether the design has ECC at all before investing in G2.
 

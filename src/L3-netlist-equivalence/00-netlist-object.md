@@ -2,7 +2,7 @@
 
 ## Background
 
-Between the RTL a human wrote and the geometry the fab printed sits the **netlist**: the design expressed as a list of *gates* and the *wires* connecting them. It is produced from the RTL by **synthesis** — a compiler, in every meaningful sense: it parses the Verilog, maps the described logic onto a fixed vocabulary of available gates, and optimises hard along the way, restructuring the logic beyond recognition while (one hopes) preserving its function. The gate vocabulary is the **standard cell library**: a catalog of a few hundred pre-designed, pre-characterised primitive circuits — NAND gates, inverters, flip-flops, multiplexers, each in several drive strengths — provided with the fabrication process. Everything computational on the die is an instance of one of these cells; this design has 275,608 of them.
+Between the RTL a human wrote and the geometry the fab printed sits the **netlist**: the design expressed as a list of *gates* and the *wires* connecting them. It is produced from the RTL by **synthesis** — a compiler, in every meaningful sense: it parses the Verilog, maps the described logic onto a fixed vocabulary of available gates, and optimises hard along the way, restructuring the logic beyond recognition while (one hopes) preserving its function. The gate vocabulary is the **standard cell library**: a catalog of a few hundred pre-designed, pre-characterised primitive circuits — NAND gates, inverters, flip-flops, multiplexers, each in several drive strengths — provided with the fabrication process. Everything computational on the die is an instance of one of these cells; this design's synthesis netlist has 51,359 of them, drawn from just 96 cell types, and place-and-route adds more (clock buffers, hold-fix buffers, physical cells) before the netlist is final.
 
 The netlist's file format is **structural Verilog** — the same language as the RTL, but stripped of everything programmatic: no `always` blocks, no assignments, no control flow, just instance declarations ("here is a NAND2 named `_04531_`, its pin A connects to net `_1234_`...") repeated a few hundred thousand times. Where the RTL is a program, the netlist is a parts list with a wiring diagram, and its semantics is correspondingly simpler to define — which is why this chapter is the cleanest formal artifact in the book.
 
@@ -14,7 +14,7 @@ Define `N` and `Mealy(N)` — the shared object of [the overview's spec tower](.
 
 ## One parse, three consumers
 
-`N = ⟦gl_caravel_core.v⟧` under a single parser. The same object is: L1's LVS target (`N_intended`), L2's STA subject, and this layer's left-hand side. That identification is used silently everywhere and must be established once — it is **X1's obligation**, a verified parser for a deliberately tiny language.
+`N = ⟦ChipTop.mapped.v⟧` (and, for the physical layers, its post-P&R successor) under a single parser. The same object is: L1's LVS target (`N_intended`), L2's STA subject, and this layer's left-hand side. That identification is used silently everywhere and must be established once — it is **X1's obligation**, a verified parser for a deliberately tiny language.
 
 Structural Verilog is a *file format*, not a programming language: module instantiations, wire declarations, port connections — **~20 productions**, no `always`, no assignments, no scheduling, no delta cycles, no X literals. The admissible-subset move from L1/00 (GDS) applies again: parse exactly what production output uses, reject the rest.
 

@@ -12,35 +12,33 @@ The second condition is **acyclicity**. Combinational blocks read each other's o
 
 The two well-formedness conditions on the combinational sublanguage, without which [00](00-elaborated-object.md)'s step function is not defined. These are W1–W4's analogues one level up, and one of them is the single most consequential check in the layer.
 
-## Completeness: the 15 `always @*` blocks
+## Completeness: one level-sensitive block, by design
 
-An `always @*` block that fails to assign an output on some control path makes that output *hold its previous value* on that path — Verilog silently infers a **latch**, and the block is no longer combinational. The formal condition:
+An `always @*` block that fails to assign an output on some control path makes that output *hold its previous value* on that path — the language silently infers a **latch**, and the block is no longer combinational. The formal condition:
 
 ```
 ∀ block B, ∀ output v of B, ∀ control path π through B:   π assigns v
 ```
 
-Decidable per block by path enumeration or, robustly, by checking the generated logic has no latch — and this is **checked** ([`rtlcheck.py`](../tools/rtlcheck.py)): yosys elaborates the shipped core, the SoC, housekeeping and the GPIO control block, and **not one `$dlatch` appears in any of them**. Every combinational block assigns its outputs on every path. This is the check that *changes the circuit* if missed — a phantom state element appears, ρ (L3/03) has no RTL counterpart for it, and the refinement is false, not merely harder. It is also load-bearing for L3: the "naive netlist" oracle is well-defined only conditional on these 15 checks — the obligation is genuinely shared between layers.
-
-The standard idiom (default-assign at block top, then override) discharges most blocks syntactically; the residue needs per-path inspection. Fifteen blocks is an afternoon.
+The emitted design makes this almost a non-event: the compiler expresses combinational logic as `assign` expressions, so the design cone contains exactly **one** `always @*` block — and it is a latch *on purpose*. `EICG_wrapper`, the integrated-clock-gate model, latches its enable while the clock is low (`if (!in) en_latched = en || test_en`) and gates the clock with the latched enable — the textbook glitch-free clock gate, mapped to a dedicated clock-gate library cell in hardening. The right treatment is not to "fix" the incomplete block but to remove it from the combinational sublanguage entirely: the wrapper is a **primitive** with its own contract (enable sampled while the clock is low; the gated clock equals `clk ∧ en_latched`), consumed by L2's clock analysis. The completeness check then quantifies over the remaining blocks — expected to pass vacuously — and its standing job is to catch any *unintended* latch a future generator bump might introduce, the failure that *changes the circuit*: a phantom state element appears, ρ (L3/03) has no RTL counterpart for it, and the refinement is false, not merely harder.
 
 ## Acyclicity: the RTL-level W3
 
-Combinational blocks and `assign`s read each other's outputs; the read-depends-on graph must be acyclic for the fixpoint-free valuation to exist. Verilog permits combinational loops (the language would give simulation nontermination or oscillation; hardware would give L3/W3 violations). The check is the same SCC computation as W3, over RTL signal dependencies instead of nets — and it is now **checked** rather than expected ([`rtlcheck.py`](../tools/rtlcheck.py)): yosys's `scc` pass reports **zero** strongly-connected components in all four units. The netlist-level W3 found only the PLL, which is not RTL; the RTL level is clean outright.
+Combinational blocks and `assign`s read each other's outputs; the read-depends-on graph must be acyclic for the fixpoint-free valuation to exist. Verilog permits combinational loops (the language would give simulation nontermination or oscillation; hardware would give L3/W3 violations). The check is the same SCC computation as W3, over RTL signal dependencies instead of nets — to be re-run over the emitted cone by the layer's checker (yosys's `scc` pass), with zero SCCs the expected verdict for compiler-emitted code and any hit a generator finding.
 
-The same elaboration answers a third question for free — wires that are *read but never driven*, which are X sources. Most such reports are artifacts of reading a module whose drivers live in an absent macro, so the discriminator is whether the unit is a **closed hierarchy**. Exactly one of the four is: the shipped core, which instantiates nothing it does not also define. It contains **two undriven wires**, both fed as inputs to the instruction cache — `io_cpu_fetch_isRemoved`, which the cache never reads, and `io_cpu_fetch_mmuRsp_bypassTranslation`, which it latches into a register nothing reads. Both are X-inert, so nothing downstream changes; but they are real dangling signals in shipped RTL, and the reason they are harmless is a fact that had to be established rather than assumed.
+The same elaboration answers a third question for free — wires that are *read but never driven*, which are X sources. Most such reports are artifacts of reading a module whose drivers live in an absent macro (here, the SRAM macros), so the discriminator is whether the unit under check is a **closed hierarchy**; the sweep must therefore run with the macro behavioural models in place, and any genuinely undriven wire is a finding whose harmlessness must be established, never assumed.
 
 One subtlety absent at netlist level: **apparent** cycles through a block that never realise (block A reads x, writes y; block B reads y, writes x; but on disjoint control paths). The netlist after synthesis resolves this through mux structure; at RTL the honest options are the conservative syntactic check (reject apparent cycles — likely sufficient here) or a per-path refinement. Take the conservative check unless it fails.
 
 ## The blocking-assignment residue
 
-The 2 clocked blocks using `=` are not combinational-block problems, but they are resolved with the same machinery: within a block, blocking assignments impose sequential evaluation, so either the semantics models intra-block ordering (a small operational layer over the two blocks only) or the blocks are **rewritten to non-blocking normal form and proved equivalent once** — a two-site, one-time obligation. The rewrite option keeps [00](00-elaborated-object.md)'s two-phase semantics uniform and is the recommendation.
+There is none in the design cone: the emitted clocked blocks are uniformly non-blocking (the census's four blocking sites are DPI harness collateral outside the cone). [00](00-elaborated-object.md)'s two-phase semantics therefore applies without a normal-form rewrite — one whole class of order-dependence obligations deleted by the compiler's discipline.
 
 ## Obligations
 
-1. The 15 completeness checks, as front-end hard failures (shared with L3's naive-netlist well-definedness).
+1. The completeness check over the cone's blocks, as a front-end hard failure (shared with L3's naive-netlist well-definedness), with the clock-gate wrapper carved out as a primitive.
 2. The RTL-level SCC check, conservative version.
-3. The 2-block normal-form rewrite with its equivalence proof.
+3. The clock-gate primitive contract, stated once and exported to L2.
 
 ## Effort
 

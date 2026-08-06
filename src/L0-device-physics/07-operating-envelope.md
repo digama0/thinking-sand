@@ -33,7 +33,7 @@ This is the third time this pattern has appeared in the project. L1's min-width 
 | V5 | Every device within *d* of a well tap | **latch-up** — the second PDE solution branch | tap-coverage rule (L1 geometry) |
 | V6 | Current density below electromigration limits | wearout opens | EM design rules (L1) |
 | V7 | No manufacturing short or open | arbitrary behaviour | LVS + DRC + test (P5) |
-| V8 | Supply ramps follow the specified sequencing and rate | **latch-up during power transitions** — wrong rail order forward-biases junctions in a multi-rail bring-up (vddio 3.3 / vccd 1.8 / vdda, switchable user rails), reaching M1's second branch *during the ramp*, when the wells are not yet at their rails and tap coverage does not yet protect | board design + POR (`simple_por`, X4-class); a **trajectory** condition (type D) on the transitions between U and powered operation — V1–V7 constrain powered states, V8 the paths between them |
+| V8 | Supply ramps follow the specified sequencing and rate | **latch-up during power transitions** — wrong rail order forward-biases junctions in a multi-rail bring-up (the 3.3 V IO rail vs the 1.8 V core rail), reaching M1's second branch *during the ramp*, when the wells are not yet at their rails and tap coverage does not yet protect | board design + the POR arrangement (X4-class); a **trajectory** condition (type D) on the transitions between U and powered operation — V1–V7 constrain powered states, V8 the paths between them |
 
 ## Notes on the interesting ones
 

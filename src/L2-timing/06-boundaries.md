@@ -46,21 +46,23 @@ The per-domain bridge theorem composes across declared boundaries:
 
 > Partition the flops by clock domain. If each domain satisfies [01](01-bridge-theorem.md)'s hypotheses internally, and every inter-domain net crosses through a ladder gadget whose external assumption holds, then the composite implements a network of Mealy machines communicating through nondeterministic-latency channels — with the channel nondeterminism bounded by the gadget contracts, and ε summing the P1 terms.
 
-The abstraction above L2 is therefore *not* one Mealy machine but this network; for Caravel it collapses back to nearly one machine because the secondary domains (`hk_serial_clk`, `hk_serial_load`, `hkspi_clk` — the two `set_clock_groups` declarations) are low-speed configuration paths.
+The abstraction above L2 is therefore *not* one Mealy machine but this network; for this design it collapses back to nearly one machine because the secondary domains (the JTAG port's TCK domain and the serial link's clock domain) are low-speed control and transport paths, each meeting the core through generated synchroniser structures.
 
 ## The outward direction
 
 Symmetric, and easy to forget: the world's flops need *our* outputs stable in *their* windows. For each interface the proof **exports** a guarantee in the same graded vocabulary — a derived AC-timing table (clk-to-out min/max from STA) for synchronous peers, a frequency-accuracy bound for the UART TX, minimum pulse widths for async consumers. B3's composition at L7 is precisely matching our exports against the peers' assumptions and vice versa. The datasheet AC-timing page is the theorem-shaped version of this, derived rather than characterised.
 
-## Caravel's boundary inventory
+## The boundary inventory
 
 | interface | rung | notes |
 |---|---|---|
-| `mprj_io[*]` GPIO | asynchronous | the 112 false paths ([04](04-sdc-exceptions.md)); synchroniser presence unverified — **F1/F3's home** |
-| SPI flash | source-synchronous outward (chip emits SCK); MISO return | capture sound because the round trip fits the period at the low SPI rate — a real hypothesis, write it down |
-| UART RX | clock recovery | frequency-tolerance budget |
-| housekeeping SPI | external `hkspi_clk` (declared clock, 100 ns) | the `set_clock_groups` pair |
-| reset | async assert, synchronised release | `xres_buf`, `simple_por` (X4-class analog model) |
+| serial TileLink | own link clock (`serial_tl_0_clock_in`) | the generated async-FIFO crossing into the core domain — the design's main CDC, mid-ladder |
+| JTAG (`jtag_TCK`) | own clock domain | the debug transport's crossing to the core domain (the debug spec's DMI boundary) |
+| UART RX | clock recovery | synchronise once per start edge, then frequency tolerance — the budget below |
+| `custom_boot`, interrupts-at-pads | asynchronous | synchroniser predicate per pin |
+| reset (`reset_io`) | async assert, synchronised release | the generated reset synchronisers (the `AsyncResetSynchronizerShiftReg` family — the emitted RTL names them) |
+
+A structural gift of the generated design: the crossings are *library instances* — the framework's async queues and reset synchronisers, named as such in the emitted RTL — so the inventory is an enumeration of known module types rather than a hunt for hand-rolled patterns, and the synchroniser predicate checks instances of three shapes instead of arbitrary flop pairs.
 
 ## Obligations
 
@@ -71,8 +73,8 @@ Symmetric, and easy to forget: the world's flops need *our* outputs stable in *t
 
 ## First experiments
 
-- Enumerate every inter-domain net and every async input; check each lands on the synchroniser pattern. This is simultaneously [04](04-sdc-exceptions.md)'s asynchronous-class discharge and the F1 closure — one experiment, two findings.
-- Compute the UART tolerance budget from the design's divisor and check it against P6's oscillator spec.
+- Enumerate every inter-domain net and every async input; check each lands on one of the framework's synchroniser shapes. This is simultaneously [04](04-sdc-exceptions.md)'s completeness discharge and the P1 ledger's seed — one experiment, two deliverables.
+- Compute the UART tolerance budget from the configured divisor and check it against the board oscillator's spec (P6/X4).
 
 ## Effort
 

@@ -2,53 +2,54 @@
 
 ## Background
 
-A **bus** is the shared pathway over which a CPU reaches everything that is not itself: memory, the flash controller, the UART. "Reaching" something over a bus is a small protocol, not a single act. In picorv32's native protocol, the core raises a signal called `mem_valid` while presenting an address (and, for a store, data); the surrounding fabric does whatever is needed to serve the request — which may take one clock cycle or many — and raises `mem_ready` when the answer is present. Cycles spent waiting are called **wait states**. This valid/ready **handshake** is the entire vocabulary of the interface: everything the core ever learns about the outside world arrives as a `ready` with data attached.
+A **bus** is the shared pathway over which a CPU reaches everything that is not itself: memories, peripherals, the outside world. "Reaching" something over a bus is a small protocol, not a single act. In this design the protocol is **TileLink**, the interconnect standard of the Rocket ecosystem: an agent issues a request on its **A channel** — opcode, address, size, a *source ID* tag — while a valid/ready handshake governs when the beat transfers; the fabric routes the request to the addressed device, and the response comes back on the **D channel**, tagged with the same source ID. Cycles spent waiting are called **wait states**. This channel pair is the entire vocabulary of the interface: everything the core ever learns about the outside world arrives as a D-channel beat with data attached.
 
-The number of wait states varies wildly, and that variance is the crux of this chapter. On-chip RAM answers in a cycle. But an instruction fetch that has to go to the external flash chip becomes a serial SPI transaction — command byte, address bytes, then the data, shifted a few bits per clock — easily dozens of core cycles, with the exact count depending on how the flash controller is configured. Academic verification work almost universally assumes memory answers instantly; that assumption is false of every real system, and a proof built on it says nothing about the fabricated chip.
+The number of wait states varies wildly, and that variance is the crux of this chapter. The tightly-integrated data memory answers in a cycle or two. An instruction-cache refill from the boot ROM crosses the fabric — a handful of cycles. But an access to an address mapped behind the **serial TileLink port** leaves the chip: the transaction is serialised into 32-bit phits, clocked across the pads at the link's own (slower) clock, served by whatever agent sits on the far end, and returned the same way — easily dozens or hundreds of core cycles, with the exact count depending on the link clock ratio and the far agent. Academic verification work almost universally assumes memory answers instantly; that assumption is false of every real system, and a proof built on it says nothing about the fabricated chip.
 
-The technique for handling an interface like this without verifying both sides at once is **assume-guarantee reasoning**, and it is used at every interface in this book, so it is worth stating carefully here at its first major appearance. Split the interface's obligations by *direction*: what the fabric promises the core (the *assume* half — requests get answered, answers are stable, flash reads return the program's actual bytes), and what the core promises the fabric (the *guarantee* half — requests are well-formed, held stable until answered, never overlapping). The core's correctness proof (L5) *assumes* the first half and *proves* the second; the SoC-level proof (B2 in [01](01-boundary.md)) then *proves* the first half about the actual fabric, at which point the assumption is discharged and the two proofs compose into an unconditional statement. Each side's proof is finite and local; neither ever has to look inside the other. The one danger in this style — a circularity where each side's promise is justified only by the other's — is avoided here because the split is by polarity: no clause is simultaneously assumed and guaranteed by the same party.
+The technique for handling an interface like this without verifying both sides at once is **assume-guarantee reasoning**, and it is used at every interface in this book, so it is worth stating carefully here at its first major appearance. Split the interface's obligations by *direction*: what the fabric promises the core (the *assume* half — requests get answered, answers are stable, fetches return the program's actual bytes), and what the core promises the fabric (the *guarantee* half — requests are well-formed, legal TileLink, source IDs managed, never exceeding the negotiated concurrency). The core's correctness proof (L5) *assumes* the first half and *proves* the second; the SoC-level proof (B2 in [01](01-boundary.md)) then *proves* the first half about the actual fabric, at which point the assumption is discharged and the two proofs compose into an unconditional statement. Each side's proof is finite and local; neither ever has to look inside the other. The one danger in this style — a circularity where each side's promise is justified only by the other's — is avoided here because the split is by polarity: no clause is simultaneously assumed and guaranteed by the same party.
 
-One promise in the assume half is quietly the most important: not *that* requests are answered, but that they are answered **within a bound** `B`. Without a bound, "the processor executes the program" degenerates into "the processor executes the program if the memory ever answers" — a statement with no liveness content at all. Producing that single number (really, a function of the flash controller's configuration) requires knowing the worst case of everything between the core and the flash chip, and is where this chapter earns its place in the tower.
+One promise in the assume half is quietly the most important: not *that* requests are answered, but that they are answered **within a bound** `B`. Without a bound, "the processor executes the program" degenerates into "the processor executes the program if the memory ever answers" — a statement with no liveness content at all. Producing that single number (really, a function of the configuration and, for off-chip addresses, the far agent's contract) requires knowing the worst case of everything between the core and the addressed device, and is where this chapter earns its place in the tower.
 
 ## Statement
 
-Author the contract at the core's memory port — the formerly orphaned artifact L5 consumes. It is the *interface half of `Sys`*: what the fabric promises the core. Authored here, **assumed** by L5's refinement, **discharged** against the SoC RTL as part of B2.
+Author the contract at the tile's memory port — the formerly orphaned artifact L5 consumes. It is the *interface half of `Sys`*: what the fabric promises the core. Authored here, **assumed** by L5's refinement, **discharged** against the SoC RTL as part of B2.
 
-> **Scope note.** The shipped core's two masters speak **Wishbone** ([L5/04](../L5-microarchitecture/04-buses-debug.md) has the guarantee halves); the clauses below are written in a generic valid/ready idiom and must be instantiated over the Wishbone signals — the contract's shape (assume/guarantee split, the latency bound `B`, the XIP worst case) is unchanged.
+> **Scope note.** The tile's ports speak **TileLink** ([L5/04](../L5-microarchitecture/04-buses-debug.md) has the guarantee halves); the clauses below are written in a generic request/response idiom and must be instantiated over the TileLink channel signals — the contract's shape (assume/guarantee split, the latency bound `B`, the off-chip worst case) is protocol-independent.
 
 ## The contract
 
-Over picorv32's native valid/ready handshake (with the look-ahead variant's consistency handled on the core side — L5/04's `LA` lemma):
+Over the A/D channel pair at the tile boundary:
 
 **Assume half (the fabric's promises, this file's content):**
 
 ```
-A1  every request is answered:  mem_valid ⟹ mem_ready within B cycles
-A2  mem_rdata is valid and stable when mem_ready
-A3  no spurious ready (ready only in response to a request)
-A4  reads from flash-mapped addresses return F's contents,
-    through the XIP controller's wait-state behaviour
-A5  reads/writes to RAM/peripheral addresses behave per the memory map [03]
+A1  every request is answered:  an accepted A-beat gets its D-beat within B cycles
+A2  D-channel data is valid and stable when the beat fires
+A3  no spurious responses (every D-beat answers an outstanding A-beat,
+    matching source ID; no duplication, no invention)
+A4  fetches from the boot region return F's contents; accesses to
+    serial-TileLink-mapped addresses behave per the far agent's contract
+A5  reads/writes to memory-mapped devices behave per the memory map [03]
 ```
 
-**Guarantee half** — the core's request discipline (well-formed cycles, stability until acknowledge, no overlapping transactions) — is *morally part of the core's external spec* and is proved in [L5/04](../L5-microarchitecture/04-buses-debug.md); the contract is the assume-guarantee pair, split by polarity across the two layers.
+**Guarantee half** — the core's request discipline (legal TileLink: aligned addresses, permitted opcodes and sizes, source-ID management within the negotiated bounds) — is *morally part of the core's external spec* and is proved in [L5/04](../L5-microarchitecture/04-buses-debug.md); the contract is the assume-guarantee pair, split by polarity across the two layers.
 
 ## The latency bound B is load-bearing
 
-Without `A1`'s bound, L5's measure does not exist and "instructions commit" silently weakens to "commit if the bus answers" — the refinement's liveness content hangs on this one number. `B`'s worst case is the **XIP path**: an instruction fetch missing the (config-dependent) prefetch means an SPI transaction — dozens of core cycles, wait states set by the flash's speed grade and the controller's mode bits. So `B` is not a constant but a function of the XIP configuration — one more register-dependent hypothesis in the F4/F6 family, resolved the same way ([05](05-operating-conditions.md)): either quantify over reachable XIP configs or declare the excess out of spec.
+Without `A1`'s bound, L5's measure does not exist and "instructions commit" silently weakens to "commit if the bus answers" — the refinement's liveness content hangs on this one number. `B`'s worst case is the **off-chip path**: an access mapped behind the serial TileLink port becomes a phit-serialised transaction — dozens to hundreds of core cycles, set by the link clock ratio and the far agent's response time. So `B` is not a constant but a function of the configuration — clock gating state, link clocking, and for off-chip addresses the X4 contract of the far end — one more register-dependent hypothesis, resolved the same way as the other configuration knobs ([05](05-operating-conditions.md)): either quantify over reachable configurations or declare the excess out of spec.
 
-**Most academic work assumes a magic single-cycle memory — a load-bearing cheat this file exists to avoid.** The contract's entire point is that the fabric's real behaviour (wait states, arbitration with the housekeeping port, RAM's single-cycle path vs. flash's dozens) fits behind five clauses and one bound.
+**Most academic work assumes a magic single-cycle memory — a load-bearing cheat this file exists to avoid.** The contract's entire point is that the fabric's real behaviour (wait states, arbitration among the tile, the debug module, and the inbound serial-link master; the DTIM's near-single-cycle path vs. the serial link's dozens) fits behind five clauses and one bound.
 
 ## Discharge at B2
 
-Against the SoC RTL: the fabric between core and DFFRAM/XIP/housekeeping is ordinary synchronous logic, so A1–A5 become invariant-style lemmas about it — with `A4`'s flash side remaining conditional on the flash device model (X4's B3 batch) while the *controller's* wait-state generation is B2-provable RTL. The split point (controller proved, device assumed) should be marked in the clause itself.
+Against the SoC RTL: the fabric between tile, memories, and peripherals is ordinary synchronous logic, so A1–A5 become invariant-style lemmas about it — with `A4`'s off-chip side remaining conditional on the far agent's model (X4's B3 batch) while the *bridge's* serialisation behaviour is B2-provable RTL. The split point (bridge proved, far agent assumed) should be marked in the clause itself.
 
 ## Obligations
 
-1. The five clauses stated over the handshake alphabet, with `B(config)` explicit.
-2. Check against picorv32's own testbench transactions (days — the L5-unblocking experiment).
+1. The five clauses stated over the channel alphabet, with `B(config)` explicit.
+2. Check against the tile's TileLink transactions in simulation (days — the L5-unblocking experiment).
 3. The B2 discharge lemmas; the A4 split point marked.
-4. Arbitration: whether housekeeping's flash pass-through can starve the core (an `A1` threat — if the arbiter admits starvation, `B` is conditional on housekeeping quiescence, which must then be a recorded spec condition).
+4. Arbitration: whether an inbound serial-TileLink master or the debug module can starve the tile (an `A1` threat — if the fabric's arbitration admits starvation, `B` is conditional on those agents' quiescence, which must then be a recorded spec condition).
 
 ## Effort
 

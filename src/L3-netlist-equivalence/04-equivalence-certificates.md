@@ -19,9 +19,9 @@ Per-cone equivalence + ρ + matched reset then compose into the bisimulation `Me
 SAT sweeping works by proposing candidate-equivalent *internal* nodes via random simulation and proving each with a small local SAT call, using previously proven equivalences as rewrites. The candidates exist because **both sides are the same design through one tool** — structural similarity is the fuel. Two consequences:
 
 - **An independent reference model is the wrong architecture.** Comparing a hand-written model against a synthesised netlist destroys the internal equivalence points; the miter becomes one enormous SAT problem. (This is quite apart from the register-mapping problem an independent model creates.) The RTL that *generated* the netlist is the right comparand.
-- **Register boundaries bound every miter.** With ρ in hand, each proof obligation is one cone — picorv32's are shallow — so even certificate-free fallback SAT stays tractable per cone.
+- **Register boundaries bound every miter.** With ρ in hand, each proof obligation is one cone — an in-order core's are shallow — so even certificate-free fallback SAT stays tractable per cone.
 
-**Unmap rather than map**: substitute each SKY130 cell's verified Boolean function (L0/05) to bring the shipped netlist down to generic gates, instead of technology-mapping the RTL side up. Free — L0 already produced the functions — and it removes tech mapping from the comparison entirely.
+**Unmap rather than map**: substitute each SKY130 cell's verified Boolean function (L0/05) to bring the hardened netlist down to generic gates, instead of technology-mapping the RTL side up. Free — L0 already produced the functions — and it removes tech mapping from the comparison entirely.
 
 ## The certificate architecture: instrument ABC's trail
 

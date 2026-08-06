@@ -46,7 +46,7 @@ The format permits objects with no agreed meaning. Restrict to a well-formed sub
 | same-layer overlap | union or XOR? unstated | fix: union |
 | `SREF` non-90° rotation, magnification ≠ 1 | rounding on integer coordinates | forbid |
 
-Encouragingly the restriction costs nothing in practice: **Caravel's routing uses zero `PATH` records** — all `BOUNDARY` — so production output already lives in a much cleaner subset than the format allows. The hand-drawn library cells do use `PATH` (2 in `inv_1`), so the polygonalisation question is confined to ~400 small files.
+Encouragingly the restriction is expected to cost nothing in practice: OpenROAD-era stream-out emits `BOUNDARY` polygons for routing, so production output lives in a much cleaner subset than the format allows — a claim the layer's checker pins per layout. The hand-drawn library cells do use `PATH` (2 in `inv_1`), so the polygonalisation question is confined to ~400 small files.
 
 ## What is *not* determined by D
 

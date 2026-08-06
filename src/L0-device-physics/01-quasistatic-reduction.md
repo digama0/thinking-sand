@@ -20,12 +20,12 @@ Every downstream statement (RC enclosures, delay, Kirchhoff's laws) presupposes 
 
 **The criterion is scale separation:** feature size `L ≪ λ = c/(f√ε_r)`.
 
-At 130 nm in SiO₂ (`ε_r ≈ 3.9`), λ is roughly 1.5 m at 100 MHz and 15 mm at 10 GHz. The die is ~5 mm. So at Caravel's tens-of-MHz operating frequency the separation is five orders of magnitude and the approximation is excellent; at multi-GHz on global nets it starts to bind, which is exactly when on-chip inductance became an industry concern.
+At 130 nm in SiO₂ (`ε_r ≈ 3.9`), λ is roughly 1.5 m at 100 MHz and 15 mm at 10 GHz. The die is a few mm. So at this design's tens-of-MHz operating frequency the separation is five orders of magnitude and the approximation is excellent; at multi-GHz on global nets it starts to bind, which is exactly when on-chip inductance became an industry concern.
 
 **Two sub-regimes, and only one matters here:**
 
 - **Electroquasistatic (EQS)** — `∇×E ≈ 0`, capacitance dominates. This is the interconnect regime and the one L1 solves.
-- **Magnetoquasistatic (MQS)** — inductance, current loops. Relevant for long global nets and clock distribution at high frequency. **Not local**: there is no screening argument for inductance because return paths can be distant, which is why inductance extraction is much harder than capacitance extraction — the engineering response is the *partial inductance* formalism ([Ruehli](../bibliography.md#ruehli-1974)'s PEEC; [FastHenry](../bibliography.md#kamon-tsuk-white-1994) is the reference extractor), which assigns loop-free per-segment values and recovers physical loop inductance only in closed sums. At Caravel's frequency it is negligible; that should be a stated and checked condition, not an assumption.
+- **Magnetoquasistatic (MQS)** — inductance, current loops. Relevant for long global nets and clock distribution at high frequency. **Not local**: there is no screening argument for inductance because return paths can be distant, which is why inductance extraction is much harder than capacitance extraction — the engineering response is the *partial inductance* formalism ([Ruehli](../bibliography.md#ruehli-1974)'s PEEC; [FastHenry](../bibliography.md#kamon-tsuk-white-1994) is the reference extractor), which assigns loop-free per-segment values and recovers physical loop inductance only in closed sums. At this design's frequency it is negligible; that should be a stated and checked condition, not an assumption.
 
 **What the error bound should look like.** Expand in the small parameter `L/λ` (equivalently `ωL/c`). The leading correction to the EQS solution is `O((L/λ)²)`, so a rigorous statement has the form
 

@@ -4,24 +4,24 @@
 
 ## Background
 
-An ISA — instruction set architecture — is the contract between hardware and software: the instructions, their encodings, and their exact effects on architectural state. This layer fixes that contract as a mathematical object, because L5's refinement theorem is only as meaningful as the spec it refines against. The object has three components with three different levels of trust: RISC-V's official formal model is *imported* — the base ISA and, because the shipped core implements the standard machine-mode trap machinery, the ratified machine-mode subset of the privileged architecture with it ([00](00-sail-base.md)); the small pieces of behaviour that live *outside* the ratified model — the core's custom external-interrupt CSRs, chiefly — must be *authored* ([01](01-irq-spec.md)); and where the standard is deliberately loose, the choices this implementation embodies are *recorded* rather than silently assumed ([02](02-underspecification.md)). A totality sweep ([03](03-coverage.md)) then makes the spec answer for all 2³² instruction words, not just the meaningful ones.
+An ISA — instruction set architecture — is the contract between hardware and software: the instructions, their encodings, and their exact effects on architectural state. This layer fixes that contract as a mathematical object, because L5's refinement theorem is only as meaningful as the spec it refines against. The object has three components with three different levels of trust: RISC-V's official formal model is *imported* — the base ISA and, because the shipped core implements the standard machine-mode trap machinery, the ratified machine-mode subset of the privileged architecture with it ([00](00-sail-base.md)); the small pieces of behaviour that live *outside* the ratified model — the generated core's custom extension and the platform interrupt controllers' register conventions, chiefly — must be *authored* or imported from de-facto documents ([01](01-irq-spec.md)); and where the standard is deliberately loose, the choices this implementation embodies are *recorded* rather than silently assumed ([02](02-underspecification.md)). A totality sweep ([03](03-coverage.md)) then makes the spec answer for all 2³² instruction words, not just the meaningful ones.
 
 ## Statement
 
-What L5's theorem is *stated against*: `Sail-RV32(config) ⊕ authored residue ⊕ S4-choices ⊕ spec-UB clause` — the last assigning the measured reserved-accept set unspecified behaviour ([03](03-coverage.md)) — its authored components carrying the three fidelity axioms — **S2** (the official model's small residue, now covering the machine-mode subset as well as the base), **S3** (the authored residue: the external-interrupt array and anything else outside the ratified model), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: the same core in a different SoC keeps this layer's spec while L7's is replaced wholesale.
+What L5's theorem is *stated against*: `Sail-RV32(config) ⊕ authored residue ⊕ S4-choices ⊕ spec-UB clause` — the last assigning the reserved encoding space unspecified behaviour ([03](03-coverage.md)) — its authored components carrying the three fidelity axioms — **S2** (the official model's small residue, now covering the machine-mode subset as well as the base), **S3** (the authored residue: the custom extension and anything else outside the ratified model), **S4** (the recorded choices). It is *not* the top of the tower — the pad-level system spec is L7's — and the boundary test is portability: the same core in a different SoC keeps this layer's spec while L7's is replaced wholesale.
 
 ## Subcomponents
 
 | | | status |
 |---|---|---|
 | [00](00-sail-base.md) | **How RISC-V is structured** (volumes, base + extension letters, formats, encoding space) and how Sail specifies it — with `addi`/`beq` worked; the machine-mode subset; S2 and the import path | weeks |
-| [01](01-irq-spec.md) | **S3** — the authored residue: the external-interrupt array CSRs, the never-pending standard interrupts, the debug exclusion; the anchor methodology against circularity | weeks; the thinking |
+| [01](01-irq-spec.md) | **S3** — the authored residue: the custom extension, the performance-counter event space, the debug exclusion; the anchor methodology against circularity | weeks; the thinking |
 | [02](02-underspecification.md) | **S4** — the choice register: pick, record, flow down; mid-proof stalls become filing operations | days to seed; discipline thereafter |
-| [03](03-coverage.md) | The encoding sweep: implemented ↔ Sail clauses, everything else ⟹ traps-correctly — for RV32I-only, "everything else" is most of the space | months of mechanised typing |
+| [03](03-coverage.md) | The encoding sweep: implemented ↔ Sail clauses, everything else ⟹ traps-correctly — across both the 32-bit space and the compressed 16-bit space | months of mechanised typing |
 
 ## Interfaces
 
-**Consumes:** the standard, [`sail-riscv`](https://github.com/riscv/sail-riscv), the [configuration record](../tools/config-record.py) (which *derives* the subset boundary), the RTL + plugin sources + firmware as S3's anchors. **Exports:** `ISA` to L5 (refinement target) and L7 (core of `Sys`); the partition of the encoding space to L5/03; the choice register to L5's lemmas.
+**Consumes:** the standard, [`sail-riscv`](https://github.com/riscv/sail-riscv), the [configuration record](../tools/config-record.py) (which *derives* the subset boundary), the RTL + generator sources + test software as S3's anchors. **Exports:** `ISA` to L5 (refinement target) and L7 (core of `Sys`); the partition of the encoding space to L5/03; the choice register to L5's lemmas.
 
 ## Axioms introduced
 
@@ -42,7 +42,7 @@ Entropy sorted by kind: [00](00-sail-base.md) receives the bulk for free (offici
 ## First experiments
 
 - Import [`sail-riscv`](https://github.com/riscv/sail-riscv) at a pinned commit, carve the configuration's subset, and run the [architectural compliance suite](https://github.com/riscv-non-isa/riscv-arch-test) against the imported model ([00](00-sail-base.md)) — the only handle on S2.
-- Draft the array residue from the [plugin source](https://github.com/SpinalHDL/VexRiscv/blob/master/src/main/scala/vexriscv/plugin/ExternalInterruptArrayPlugin.scala) and [LiteX](https://github.com/enjoy-digital/litex) conventions *first*, then diff against RTL behaviour; log every discrepancy ([01](01-irq-spec.md)).
+- Draft the custom-extension residue from the generator source *first*, then diff against the emitted RTL's behaviour; log every discrepancy ([01](01-irq-spec.md)).
 - Generate the encoding partition from the [configuration record](../tools/config-record.py) ([03](03-coverage.md)).
 
 ## Effort

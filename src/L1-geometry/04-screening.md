@@ -92,8 +92,8 @@ Local extraction is unsound, and every capacitance number in the flow — indust
 ## First experiments
 
 - **Numerically test the cascade before committing.** A 2D mesh of grounded strips with a source on one side: measure attenuation per cell, check it is geometric in the number of cells, and extract an empirical `α(a/p)`. Cheap, and it either supports the exponential form or kills it early.
-- Compute the shielding coverage actually present in Caravel between representative net pairs — is there grid metal interposed, or are there sparsely-gridded regions where the hypothesis fails locally?
-- Check whether Caravel's metal fill is tied or floating. If floating, the locality argument needs the harder version.
+- Compute the shielding coverage actually present in the flow's layout between representative net pairs — is there grid metal interposed, or are there sparsely-gridded regions where the hypothesis fails locally?
+- Check whether the flow's metal fill is tied or floating. If floating, the locality argument needs the harder version.
 
 ## Effort
 

@@ -66,7 +66,7 @@ Caveat: the free energy decreases toward *thermal equilibrium*, i.e. toward the 
 |---|---|---|
 | supply voltage | Vdd within spec, droop bounded | P6 |
 | temperature | within corner range | E4 |
-| clock | present, frequency/jitter bounded | P6, X5 |
+| clock | present, frequency/jitter bounded | P6 (board-supplied; X4's oscillator row) |
 | primary inputs | stable outside their windows | L2 |
 | radiation | Poisson, rate λ | P2 |
 

@@ -34,7 +34,7 @@ Three properties carry the weight:
 
 - **X is drive-recoverable.** A controlling definite input forces a definite output (`AND(0,X)=0`); a flop capturing a definite value exits X. This is what distinguishes *untracked* from *broken*, and it is why reset works: power-up is all-X, and L4's initialisation obligation is precisely an **X-elimination proof** — the reset sequence, run in ternary semantics, reaches definiteness on every bit the invariant reads. Checkable by ternary symbolic simulation.
 - **Reading X is demonic beyond "some fixed unknown Boolean."** During an unresolved window the same mid-rail wire can be read 0 by one receiver and 1 by another (thresholds differ), so the fresh-Boolean-variable model is **unsound** (it proves `x∧¬x=0`); Kleene ternary is sound because `X∧¬X=X`. The timed model is consistent with this for free: the escape hatch is at waveform level — one voltage, disagreement in the readers.
-- **Z is deleted, not modelled.** Classical HDL logic is four-valued; W1/W2 (one driver per net, no floating reads — measured clean) are exactly the licence to drop the undriven value and work ternary. The unpowered case inside `γ(X)` is load-bearing here: Caravel's user area is a separate power domain, and the `mgmt_protect`/`mprj_logic_high` macros exist to keep reads of a possibly-unpowered domain definite.
+- **Z is deleted, not modelled.** Classical HDL logic is four-valued; W1/W2 (one driver per net, no floating reads — measured clean) are exactly the licence to drop the undriven value and work ternary. The unpowered case inside `γ(X)` matters less here than on multi-domain chips — this design has one core power domain ([L7/04](../L7-system/04-power-epochs.md)) — but it remains load-bearing at the pad ring, where core and IO rails differ.
 
 This layer also gives hypothesis violations their honest meaning: an **overclocked core stays physically healthy** — combinational wires are ordinary late transients — but mass window violations flood the *captured state* with X. `Mealy(N)` over {0,1} stops describing the chip; the ternary machine over {0,1,X} still soundly does; the envelope still holds; recovery (restore the clock, reset, re-drive definiteness) remains provable. L7's operating-conditions clause should define "unspecified" as exactly this: envelope-bounded demonic nondeterminism — far weaker than C-style undefined behaviour.
 
@@ -45,7 +45,7 @@ One could state the bridge theorem directly over `Contracts(N)`'s dynamical sema
 ## Obligations
 
 1. **Adequacy is inherited, and the seam must be stated**: every run of L0/04's contract-network semantics projects to a run of this model. This is a lemma against L0, not an axiom — but it must be written, because the two models' notions of "stable" (regime membership vs. voltage band) must be aligned once.
-2. **Well-formedness inputs**: combinational acyclicity and one-driver-per-net (L3's W1/W3, measured clean after the PLL excision).
+2. **Well-formedness inputs**: combinational acyclicity and one-driver-per-net (L3's W1/W3, to be measured on the hardened netlist).
 3. The domain conditions (`max_transition`, `max_capacitance`) are *part of the model*: a run that exits a contract's domain satisfies the model vacuously, so the theorems above it say nothing. Cf. F2.
 
 ## First experiments

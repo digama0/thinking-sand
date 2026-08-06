@@ -28,7 +28,7 @@ Confusing them is the most common modelling error in this area. Thermal noise is
 | mechanism | form | scaling | verdict |
 |---|---|---|---|
 | thermal / kT/C | Gaussian tail, 40–125σ | area × time | **discharged** |
-| oscillator phase drift | Wiener, σ² ∝ t | the one non-restoring mode | **carried** as jitter budget (X5 → P6) |
+| oscillator phase drift | Wiener, σ² ∝ t | the one non-restoring mode | **carried** as jitter budget (P6 → P6) |
 | timing variation (PVT) | distribution over dies | → *yield* | caught by test |
 | metastability | exp(−t/τ) | localised to synchronisers | design-controlled |
 | **particle strikes (SEU)** | **Poisson** | **linear in area × time** | **carried** |
@@ -103,7 +103,7 @@ The netlist cannot see geometry. The code's algebra cannot see particles. **The 
 ## First experiments
 
 - Write the four-mechanism model formally, with the thermal term explicitly **discharged**, and check the layering composes into a single statement of the form `P(T-cycle execution refines spec) ≥ 1 − (λ·A·T·AVF + N_sync·P_meta + …)`.
-- Check whether the shipped design has ECC at all (`RAM128`), and if not, what the raw FIT budget is and whether it matters for the claim being made.
+- Check whether the design has ECC at all (the tiny configuration elides it), and if not, what the raw FIT budget is and whether it matters for the claim being made.
 - Enumerate every asynchronous input and CDC in the design — this list *is* P1's scope, and L2 needs it anyway.
 
 ## Effort

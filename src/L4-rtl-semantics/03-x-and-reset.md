@@ -20,9 +20,11 @@ The chapter's actual subject is a mismatch this creates. The semantics defined i
 
 **Where neither applies, prove value-independence.** Any remaining uninitialised bit must never flow to an observation before being written. In ternary terms: X from that bit never reaches a definite-claimed output. These are the classical value-independence lemmas, now stated as X-flow properties — per-bit, mechanical, and expected few after the first two parts have consumed the bulk.
 
-## The one `initial` block
+## The `initial` blocks and the X idioms
 
-The census found exactly one. Its semantics (a power-up value, distinct from reset behaviour) must be given explicitly — synthesis tools map `initial` on registers inconsistently across targets (FPGA bitstream init vs. ASIC nothing-at-all), so for this ASIC flow the honest reading is: **`initial` is documentation unless the netlist shows an initialised cell.** Check what Yosys did with it in the shipped netlist; the answer decides whether the site is semantics or comment.
+The census found 425 `initial` blocks — all one machine idiom, the compiler's register-randomization initializer, whose entire body sits behind simulation-only macro guards. With those macros undefined (every synthesis run), the blocks are empty: **no register in the design carries a power-up value**, which is exactly the all-X starting point this chapter's ternary story wants, stated by the emitter itself. The idiom exists so that *simulation* can start from randomized rather than zeroed state — the ecosystem's own defence against code that accidentally relies on uninitialised registers reading zero, i.e. a fuzzer for precisely this chapter's third obligation.
+
+The design's 23 `'bx` literals are also one idiom: behavioural memory models yield X on a read with the enable low (`read_data = en ? mem[addr] : 'bx`). Per site, that is a *declared* don't-care — the generator asserting that disabled-read data is never consumed — which converts directly into a value-independence obligation: X from a disabled read never reaches a definite-claimed output. (In the hardened netlist these models are replaced by SRAM macros whose disabled-read behaviour is the macro contract's business — the RTL X-site and the macro contract must agree, a small cross-layer check.)
 
 ## Interfaces
 
@@ -33,7 +35,7 @@ This file is where three layers meet, deliberately thin: [L2/00](../L2-timing/00
 1. The ternary reset simulation for the definite-claimed set (pc, FSM, CSRs).
 2. The spec-nondeterminism matching clause in the refinement statement (with L5/L6: which architectural state is reset-unspecified).
 3. The residual value-independence sweep.
-4. Resolve the `initial` site against the shipped netlist.
+4. The disabled-read value-independence sweep over the 23 memory X-sites, and its agreement with the SRAM macro contracts.
 
 ## Effort
 

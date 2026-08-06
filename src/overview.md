@@ -2,11 +2,11 @@
 
 ## Background
 
-The [introduction](introduction.md) set the scene — the tower of trust, how the industry establishes correctness today, the validation-not-design plan, the Caravel/picorv32 target, and the eight layers in prose. This page is the mathematical front door: the statement the project is trying to establish, the named objects at the layer seams, and the dispatch of the proof into layers with their prices. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md).
+The [introduction](introduction.md) set the scene — the tower of trust, how the industry establishes correctness today, the validation-not-design plan, the Chipyard/Rocket target, and the eight layers in prose. This page is the mathematical front door: the statement the project is trying to establish, the named objects at the layer seams, and the dispatch of the proof into layers with their prices. Project structure and tooling live in the repository's root README; the flow's jargon is in the [glossary](glossary.md), and textbook on-ramps for the fields the tower spans are in the [reading list](reading-list.md).
 
 ## The top-level statement
 
-Let `d` be a fabricated die, `F` a flash image, `E` an environment (supply, clock, temperature, radiation, asynchronous inputs). Write `obs(d,F,E)` for the observable trace at the pads and `Sys(F)` for the pad-trace semantics of the system specification — both **defined by [L7](L7-system/README.md)**, not primitive.
+Let `d` be a fabricated die, `F` a program image, `E` an environment (supply, clock, temperature, radiation, asynchronous inputs). Write `obs(d,F,E)` for the observable trace at the pads and `Sys(F)` for the pad-trace semantics of the system specification — both **defined by [L7](L7-system/README.md)**, not primitive. (How `F` gets into the machine — resident boot ROM, the debug module, or the serial TileLink port — is part of L7's boundary decision, not an aside: every load path is a pad-trace prefix.)
 
 ```
      Envelope(d, E)                                     ← L0/07, V1–V7
@@ -24,7 +24,7 @@ Three features of this statement are deliberate and worth defending.
 
 **It is probabilistic, and irreducibly so.** No amount of proof removes `ε`. P1 is irreducible by [Marino](bibliography.md#marino-1981)'s theorem — no continuous bistable escapes unbounded settling — and P2 is a Poisson process driven by an external flux. What proof *can* do is derive their coefficients rather than measure them, which is what shrinks P1 and P2 in the axiom register without eliminating them.
 
-**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's — which for the shipped VexRiscv core must include the machine-mode privileged subset (CSRs, traps, interrupts) alongside the base ISA — and parts of the surrounding SoC's behaviour exist only as generated code and informal documentation, so the residual device/CSR semantics must be authored rather than imported ([L6](L6-isa/README.md), [L7](L7-system/README.md)).
+**Both ends are slots filled by their own layers, and neither is a placeholder for something easy.** `Envelope` is L0's, and is a genuine intersection of five structurally different constraint shapes ([L0/07](L0-device-physics/07-operating-envelope.md)). `Sys` is L7's, its ISA core is L6's — which for the Rocket core must include the machine-mode privileged subset (CSRs, traps, interrupts, PMP) alongside the base ISA — and parts of the surrounding SoC's behaviour exist only as generated code, device-tree annotations, and de-facto register conventions, so the residual device/CSR semantics must be authored rather than imported ([L6](L6-isa/README.md), [L7](L7-system/README.md)).
 
 **`⊑` is trace refinement up to stuttering, not equality.** The implementation takes many cycles per architectural step; L5's obligation is a stuttering simulation with a measure function, not a cycle-accurate correspondence.
 
@@ -41,7 +41,7 @@ The named objects at the seams. Every layer README opens with which of these it 
 | `ISA` | `Sail-RV32(config, incl. machine-mode subset) ⊕ S4-choices ⊕ residual authored semantics ⊕ spec-UB clause` | [L6](L6-isa/README.md) (definition) |
 | `Sys(F)`, `obs` | pad-trace semantics of the system spec; the physical observation map | [L7](L7-system/README.md) (definition) |
 
-One identification is used silently everywhere and stated only here: **`N` is a single shared object.** The netlist that L1's LVS certifies the geometry against, the netlist L2's STA runs on, and the left-hand side of L3's equivalence are all `⟦gl_caravel_core.v⟧` under one parse — X1's obligation, one parser, three consumers.
+One identification is used silently everywhere and stated only here: **`N` is a single shared object.** The netlist that L1's LVS certifies the geometry against, the netlist L2's STA runs on, and the left-hand side of L3's equivalence are all `⟦ChipTop.mapped.v⟧` — the flow's hardened netlist — under one parse. X1's obligation, one parser, three consumers.
 
 ## The organising principle
 
@@ -49,7 +49,7 @@ One identification is used silently everywhere and stated only here: **`N` is a 
 
 Everything merely hard collapses to time. What survives is what is *not* a theorem: specification fidelity, empirical models, physical facts, and genuinely probabilistic phenomena. So each layer is organised around what it **discharges** and what it **introduces**, and the running register is [axioms.md](axioms.md) — with the open *mathematical* questions (M1–M8) kept separate from the axioms, because effort could in principle remove them.
 
-**Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the shipped design (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [Axioms](axioms.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
+**Notation.** Lettered identifiers index the appendix registers: **S/E/P/X**+number are axioms, **F**+number are findings about the design and its flow (unestablished or false hypotheses), **M**+number are the open mathematical questions — all in [Axioms](axioms.md). Layer-local check families are defined in their owning chapters: **W1–W4** (netlist well-formedness, L3/01), **G1–G6** (geometric checks, L1/05), **V1–V8** (the operating envelope, L0/07), **C1–C7** (spec choices, L6/02), **B1–B3** (claim boundaries, L7/01). The spec-tower objects are introduced just below; the standalone value **X** — the untracked third logic value — is in the [glossary](glossary.md). Reading top-down, these appear before their definitions; every mention is a link.
 
 **Backgrounds.** No single reader arrives knowing all of the fields this book crosses — the required intersection (computer architecture ∩ EDA ∩ analog design ∩ device physics ∩ PDE theory ∩ formal methods) is empty. So every chapter after the [introduction](introduction.md) (which is background throughout) opens with a **Background** section written for a reader from *outside* its field: the concepts, mechanisms, and proof techniques the chapter is about to use, explained from scratch (the layer chapters' are brief orientations; the sub-chapters' do the real teaching). Experts in a chapter's home field should skip its Background; everyone else should not. The [glossary](glossary.md) is the quick-lookup complement; the [reading list](reading-list.md) is the textbook-depth one.
 
@@ -64,8 +64,8 @@ Five layers are **theorems**, three are **definitions** — marked, because a de
 | **[L0](L0-device-physics/)** | theorem | `Field(d) ⊑ Contracts(N)`; the error model is Poisson | **M3** lumping/composition · **M7** regime decomposition (I)(P)(A) · **M1** device uniqueness · CCC cut discipline · **M8** metastable eigenvalue | 1–3 yr |
 | **[L1](L1-geometry/)** | theorem | layout ⟹ `N` + RC enclosures, ∀A in the E7 family | **(H1)(H2)(H3)** sandwich · **(D1)–(D3)** device-level · **M2** screening · Dirichlet/Thomson bracket · G1–G6 | 2–4 yr |
 | **[L2](L2-timing/)** | theorem | `Contracts(N) ⊑ Mealy(N)` given timing closure | **M5** the bridge theorem · **M4** where monotonicity holds · SDC exception classification | 1–1.5 yr |
-| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness *(run — see [Status](#status))* · CEC with certificates · **ρ**, the register correspondence (F5) | 6–9 mo |
-| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | the measured construct census | 3–6 mo |
+| **[L3](L3-netlist-equivalence/)** | theorem | `Mealy(N) ≈ρ ⟦RTL⟧` | **W1–W4** well-formedness · CEC with certificates · **ρ**, the register correspondence (F5) | 6–9 mo |
+| **[L4](L4-rtl-semantics/)** | definition | `⟦RTL⟧` | the measured construct census · the FIRRTL adequacy route | 3–6 mo |
 | **[L5](L5-microarchitecture/)** | theorem | `⟦RTL⟧ ⊑ ISA` | **the invariant** — stuttering refinement at a commit point | 1–2 yr |
 | **[L6](L6-isa/)** | definition | `ISA` | **S2** [Sail](https://github.com/riscv/sail-riscv) fidelity (now incl. the machine-mode subset) · **S3** residual authored semantics · **S4** underspecification choices | 6–9 mo |
 | **[L7](L7-system/)** | definition | `Sys(F)`, `obs` | **X4** device models · the bus contract · the boundary decision (core / SoC / device) | ~6 mo |
@@ -80,8 +80,8 @@ Note one deliberate inversion: L3's theorem *consumes* L4's object, so proof ord
 device d ∈ Envelope
   ⊨ L0   Field(d) ⊑ Contracts(N)                     [M3, M7; modulo E1]        †
   ⊨ L1   N and RC well-defined ∀A in the E7 family   [(H1)(H2) checked, E7 ⊨ (H3); M2]
-  ⊨ L2   Contracts(N) ⊑ Mealy(N)                     [M5; F1–F4 to clear]       †
-  ⊨ L3   Mealy(N) ≈ρ ⟦RTL⟧                           [W1–W4 ✓, CEC, ρ = F5]
+  ⊨ L2   Contracts(N) ⊑ Mealy(N)                     [M5; F-series to clear]    †
+  ⊨ L3   Mealy(N) ≈ρ ⟦RTL⟧                           [W1–W4, CEC, ρ = F5]
   ≔ L4   ⟦RTL⟧                                       [measured census]
   ⊨ L5   ⟦RTL⟧ ⊑ ISA                                 [the invariant]
   ≔ L6   ISA  = Sail-RV32 ⊕ machine-mode subset       [S2, S3, S4]
@@ -97,9 +97,9 @@ device d ∈ Envelope
 Each layer exports a thin object. The **functional** chain and the **physical** chain are nearly independent and meet only at the netlist:
 
 ```
-                    L7  Sys(F): pad traces (memory map, XIP, UART, obs)
+                    L7  Sys(F): pad traces (memory map, serial TL, UART, obs)
                      ↑  composition of the tower, at the boundary chosen
-                    L6  ISA (Sail + the picorv32-specific parts that must be authored)
+                    L6  ISA (Sail + the Rocket-specific parts that must be authored)
                      ↑  refinement proof — invariants, word-level          ← THE WORK
                     L5  RTL (buses, arithmetic, hierarchy intact)
                      ↑  semantics of the synthesisable subset
@@ -124,7 +124,7 @@ These are why the edifice is possible, and they shape every proof in it.
 
 **2. Continuous perturbations get discharged; discrete events get carried.** The continuous mechanisms are suppressed by hundreds of orders of magnitude — thermal escape faces a ~7,500 kT barrier, giving ~10⁻³²⁸⁵ — and should be *bounded away and deleted*, not carried as epsilons. The discrete ones (particle strikes, manufacturing defects) are Poisson, do not shrink with margin, and are handled by redundancy or by test, never by better analysis. **Confusing the two is the most common modelling error in this area**, and the trap is that coupling capacitance *looks* like the first kind and behaves like the second: it is additive, so its far-field sum needs a genuine convergence argument (M2) rather than a smallness claim.
 
-**3. Amortisation is the whole game.** ~400 standard cells verified once cover every design on the process. A fixed vertical stack is exactly what makes the extraction pattern library finite. `gpio_control_block` appears 38 times. The per-design entropy is far smaller than the artifact size suggests: 291 MB of GDS carries perhaps a few MB of real content, and 275,608 instances reduce to ~21,600 that matter.
+**3. Amortisation is the whole game.** The ~400 standard cells of the library, verified once, cover every design on the process — this design's hardened netlist draws its 51,359 instances from just **96 cell types**. One SRAM macro proof covers every instance of that macro (the 2 KiB data array appears twice; the memory obligation is parametric in depth, so size costs area, never proof). And because the design is *generated*, its entropy is the configuration: a few dozen lines of Scala elaborate to 228 modules and 9.4 MB of SystemVerilog. The per-design content is far smaller than the artifact size suggests.
 
 ## A pattern worth naming
 
@@ -140,12 +140,12 @@ Instances so far: min-width and min-spacing are the hypotheses of L1's topology-
 
 **Open mathematics** (M1–M8 in [axioms.md](axioms.md)): M2 (the screening exponent) and M5 (the bridge theorem) are the two the project's structure most depends on; M1 (uniqueness for stationary drift–diffusion) is the only one that is open *mathematics* rather than open *formalisation*.
 
-**Established for the shipped design** — the parts that are not speculative:
+**Established for this design** — the parts that are not speculative:
 
-- W1–W4 run clean, and prove X5's PLL excision **minimal**: `pll.ringosc` holds the netlist's only combinational cycle (1 SCC, 64 nets) *and* its only multi-driver nets (26, all tri-state, discharged structurally by complementary enables). Excise it and the netlist is acyclic and contention-free.
-- The Liberty tables are non-monotone in slew at two grid points of the simplest cell, so the interpolation enclosure must take the max over all four corners of the enclosing cell — and corner-based methodology's monotonicity hypothesis (M4) is not free.
+- The full generation chain reproduces from pinned sources: Chisel elaboration through FIRRTL and CIRCT to SystemVerilog, synthesis to a netlist with **zero unmapped cells**, all memories resolved to three SRAM macro kinds. The artifacts the layers name exist and were produced here.
+- Independent signoff engines are not interchangeable, and the register carries the measurement: on the same layout, one DRC engine reports clean while another reports violations — so a single engine's verdict is treated as *one witness*, and the geometric checks (G1–G6) are stated engine-independently.
 
-**Unestablished for the shipped design** (F1–F5): three of nine corners fail `in2reg` hold; one passes only modulo `max_tran`/`max_cap`, meaning parts of the design sit outside the Liberty characterisation range where STA is *vacuous* rather than merely inaccurate; 159 SDC exceptions are unverified; register correspondence through synthesis is unknown. **The hypotheses of the bridge theorem are not currently established for this design as shipped.**
+**Unestablished for this design** (the F-series in [axioms.md](axioms.md)): the physical signoff — multi-corner timing, DRC, LVS on the final layout — is not yet closed by the flow, and until it is, the hypotheses of the bridge theorem are not established; the SDC exception set is unverified; register correspondence through synthesis is unknown. The checker suite that pins these rows is being re-anchored to the flow's artifacts, and the [scoreboard](scoreboard.md) tracks exactly which obligations have a running check.
 
 See [findings.md](findings.md) for the measured data behind all of it — and the [scoreboard](scoreboard.md) for the live checker verdicts of the commit this book was built from: every obligation as PASS, FINDING, TODO (with its blocker named), or EXTERN.
 

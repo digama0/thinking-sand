@@ -38,7 +38,7 @@ The grid could contaminate everything — every delay depends on V. It is kept t
 
 Downstream of this single bound: (i) the voltage tier of [03](03-corners.md)'s corners covers V ± ΔV_grid — supply variation becomes *corner content*, not a new mechanism; (ii) L1/04's screening theorem gets its Dirichlet hypothesis — the grid is a shield only if it is an equipotential, so **the decaps are doing double duty** (delay stability *and* shield quality); (iii) the residual — droop beyond the bound under worst-case simultaneous switching — is `P_droop` in the overview's ε, a P6-class environment/design bound.
 
-Slower edges relax the band over which the impedance bound must hold *and* shrink both crosstalk effects — one more independent way a conservatively-clocked design is cheaper to verify, and by now the third such coincidence (cf. F2's slew limits, the SPI round-trip hypothesis).
+Slower edges relax the band over which the impedance bound must hold *and* shrink both crosstalk effects — one more independent way a conservatively-clocked design is cheaper to verify, and by now the third such coincidence (cf. the slew-limit domain conditions, the serial link's relaxed link-clock budget).
 
 ## Obligations
 
@@ -49,8 +49,8 @@ Slower edges relax the band over which the impedance bound must hold *and* shrin
 
 ## First experiments
 
-- Extract the coupling graph for the worst few nets from the shipped SPEF-equivalent (or re-extract) and run the glitch sum against SKY130's noise margins. If the worst net passes with margin, the whole absorption strategy is confirmed cheap for this design.
-- Census the parallel-run lengths in the routed DEF against a candidate rule — is the geometric discharge already true of the shipped layout, or does it need the timing-window fallback anywhere?
+- Extract the coupling graph for the worst few nets from the flow's SPEF and run the glitch sum against SKY130's noise margins. If the worst net passes with margin, the whole absorption strategy is confirmed cheap for this design.
+- Census the parallel-run lengths in the routed DEF against a candidate rule — is the geometric discharge already true of the flow's layout, or does it need the timing-window fallback anywhere?
 
 ## Effort
 

@@ -12,11 +12,11 @@ The asymmetry between the two halves also deserves plain statement, because it d
 
 Over the timed model of [00](00-timed-model.md):
 
-> Let `N` be the netlist with `pll.ringosc` excised (X5) and partitioned into clock domains with declared asynchronous boundaries ([06](06-boundaries.md)). Suppose:
+> Let `N` be the hardened netlist, partitioned into clock domains with declared asynchronous boundaries ([06](06-boundaries.md)). Suppose:
 >
-> 1. *(domain)* every cell's load and input slew lie inside its contract's domain — `max_capacitance` / `max_transition`. **Currently false for the shipped design (F2)**;
-> 2. *(closure)* setup and hold hold at every flop, at every corner, with respect to the clock arrival function — certified by STA ([02](02-verified-sta.md)). **Currently false at 3 of 9 corners (F1)**;
-> 3. *(exceptions)* every path excluded from (2) carries a justified SDC exception ([04](04-sdc-exceptions.md)). **Unverified (F3, F4)**;
+> 1. *(domain)* every cell's load and input slew lie inside its contract's domain — `max_capacitance` / `max_transition` — an F-series row until the flow's signoff closes it;
+> 2. *(closure)* setup and hold hold at every flop, at every corner, with respect to the clock arrival function — certified by STA ([02](02-verified-sta.md)) — likewise an F-series row until multi-corner closure is achieved and pinned;
+> 3. *(constraints)* the constraint set is complete — every domain declared, every excluded path justified ([04](04-sdc-exceptions.md));
 > 4. *(conditioning)* no fault event (P2) and no unresolved synchroniser read (P1) occurs in `[0, T]`.
 >
 > Then every run of the timed model over `[0, T]` agrees with `Mealy(N)`: at each clock edge `n`, every flop holds `s_n`, and `s_{n+1} = δ(s_n, i_n)`.
@@ -45,8 +45,8 @@ Each of these violates a hypothesis structurally, not numerically:
 
 | construct | what breaks | status here |
 |---|---|---|
-| combinational loops | the DAG cut | only `pll.ringosc` — excised, provably minimal |
-| latch-based time borrowing | no clean capture edge; windows span stages | absent (flop-based design) |
+| combinational loops | the DAG cut | expected none (no on-die oscillator); W3's check enforces it |
+| latch-based time borrowing | no clean capture edge; windows span stages | absent as a *design style*; the clock-gate ICG latches are primitives with their own contract ([05](05-clock.md)) |
 | wave pipelining | multiple waves in flight per segment | absent |
 | multicycle paths | capture skips edges; *two* extra claims (destination not enabled between; source held throughout) plus a hold adjustment | **zero declared** — a genuine gift |
 | clock gating | the arrival function becomes data-dependent | see [05](05-clock.md) |
@@ -59,12 +59,12 @@ Hypothesis (4) is not a technicality: it is **where ε enters the whole project*
 
 1. **Write it.** Bounded-delay model, window rule, per-cycle induction — a solid paper, not a decade. Its absence is a fact about nobody working at the boundary, not about difficulty. [Lööw](../bibliography.md#loow-2021)'s stack is the closest prior art and stops short of this statement.
 2. The multi-domain version: the theorem above is per-domain; the composition across declared boundaries is [06](06-boundaries.md)'s.
-3. Whether hypothesis (1) can be weakened from "in domain" to "in domain or provably unobservable this cycle" — the F2 violations may be on nets whose values are dead; that would repair the shipped design's status without touching silicon.
+3. Whether hypothesis (1) can be weakened from "in domain" to "in domain or provably unobservable this cycle" — domain violations on dead nets would then not falsify the hypothesis; worth stating before the first signoff report is adjudicated.
 
 ## First experiments
 
 - State and prove the single-domain theorem for a toy: two flops, three gates, interval delays. Every structural feature (both window halves, the escape hatch, slew propagation) already appears at this size.
-- Check whether the F2-violating nets are functionally dead (open problem 3) — this is cheap and would clear one of the two false hypotheses.
+- When the flow's signoff reports slew/cap violations, check whether the violating nets are functionally dead (open problem 3) — cheap, and it decides how each report adjudicates.
 
 ## Effort
 

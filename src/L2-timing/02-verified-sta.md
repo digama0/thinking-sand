@@ -37,7 +37,7 @@ The verified version is not a transcription of an industrial engine; these must 
 
 **3. Negative delays are legitimate, but causality bounds them — check it.** A delay entry is the difference of two 50%-anchor *labels*, and at light load / slow slew the output's label can precede the input's (conduction starts at V_th, below the anchor — [03](03-corners.md)'s mechanism), so `d < 0` is bookkeeping, not back-propagation. But the output cannot respond before the input *starts* moving, so `d ≥ −(t₅₀ − t_start)` ≈ `−O(slew)` with the coefficient set by the library's trip-point conventions. An entry below that bound is a characterisation error. This is a mechanical table-validity sweep, and it matters doubly for **hold**: negative *min*-delay entries shorten short paths, so an erroneously negative entry manufactures phantom hold violations — or masks real ones if clamped to zero, which some tools do and which is exactly the kind of silent repair a verified engine must not perform.
 
-**4. Domain checking is part of the pass, not a lint.** Every table lookup must assert its arguments lie inside the characterised region (`max_transition`, `max_capacitance`). Outside it the industrial tool extrapolates and the result is **vacuous rather than wrong** — the shipped design's `t-max` corner does exactly this (F2). In the verified engine an out-of-domain lookup is a *failed hypothesis*, reported as such.
+**4. Domain checking is part of the pass, not a lint.** Every table lookup must assert its arguments lie inside the characterised region (`max_transition`, `max_capacitance`). Outside it the industrial tool extrapolates and the result is **vacuous rather than wrong** — max-slew and max-cap violations, which real runs of this flow do produce, are exactly reports that parts of the design sat outside the characterised region (the F-series tracks them). In the verified engine an out-of-domain lookup is a *failed hypothesis*, reported as such.
 
 ## Plumbing to the exceptions
 
@@ -48,7 +48,7 @@ STA does not decide which paths matter; the SDC does. The soundness statement is
 1. The soundness theorem above, against [00](00-timed-model.md)'s model — the real content; the traversal itself is textbook.
 2. The interpolation enclosure with the derivative-bound side condition (from L0/03).
 3. Slew-interval propagation or a per-arc monotonicity certificate (with [03](03-corners.md)).
-4. Re-derive the shipped design's timing verdict with the verified rules and compare against the OpenSTA reports in `signoff/` — agreement is evidence, disagreement is a finding either way.
+4. Re-derive the flow's timing verdict with the verified rules and compare against its own STA reports — agreement is evidence, disagreement is a finding either way.
 
 ## First experiments
 

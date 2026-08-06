@@ -8,7 +8,7 @@ The project's centre of gravity for a reader arriving from formal methods is the
 
 - **Harris & Harris, [*Digital Design and Computer Architecture* (RISC-V edition)](https://pages.hmc.edu/harris/ddca/)** — the single best on-ramp: gates → HDL → a working microarchitecture, in the project's own ISA. Read this and L5/00 becomes familiar territory.
 - **Patterson & Hennessy, [*Computer Organization and Design* (RISC-V edition)](https://shop.elsevier.com/books/computer-organization-and-design-risc-v-edition/patterson/978-0-12-820331-6)** — the standard first course, ISA-centric; the background for L6.
-- **Hennessy & Patterson, [*Computer Architecture: A Quantitative Approach*](https://shop.elsevier.com/books/computer-architecture/hennessy/978-0-12-811905-1)** — the graduate text; caches, pipelines, speculation, OOO. Read it to understand what L5/00's absence table is *pricing* — everything in this book is something picorv32 doesn't have.
+- **Hennessy & Patterson, [*Computer Architecture: A Quantitative Approach*](https://shop.elsevier.com/books/computer-architecture/hennessy/978-0-12-811905-1)** — the graduate text; caches, pipelines, speculation, OOO. Read it to understand what L5/00's presence/absence table is *pricing* — each row of that table is a chapter of this book.
 
 ## Electrical engineering (L0, L2)
 

@@ -1,10 +1,10 @@
 # L3 — Netlist ↔ RTL equivalence
 
-> **Spec below:** `Mealy(N)` — the shipped netlist's discrete machine. **Spec above:** `⟦RTL⟧` — L4's transition system. **Kind: theorem.** Note the proof-order inversion: this theorem *consumes* L4's object, so it is proved after L4 despite sitting below it in the tower — numbering is artifact altitude, not logical dependency. (The book's top-down reading order happens to agree: L4's chapters precede these.)
+> **Spec below:** `Mealy(N)` — the hardened netlist's discrete machine. **Spec above:** `⟦RTL⟧` — L4's transition system. **Kind: theorem.** Note the proof-order inversion: this theorem *consumes* L4's object, so it is proved after L4 despite sitting below it in the tower — numbering is artifact altitude, not logical dependency. (The book's top-down reading order happens to agree: L4's chapters precede these.)
 
 ## Background
 
-Synthesis compiled the hand-written RTL into the netlist that was actually fabricated: 275,608 standard-cell instances with mangled names and aggressively restructured logic. This layer proves the compilation preserved meaning — not by trusting the tool, but by checking certificates the tool's run can be made to emit. The route: define the netlist's semantics ([00](00-netlist-object.md)), check it is electrically sane ([01](01-well-formedness.md) — already run, clean), delete the 92% of instances that compute nothing under explicitly licensed theorems ([02](02-licensed-deletions.md)), recover the register correspondence by reproducing the pinned build ([03](03-register-correspondence.md)), and prove per-register-boundary equivalence by certificate, with exploratory SAT confined to where no certificate exists ([04](04-equivalence-certificates.md), [05](05-hard-cones.md)).
+Synthesis compiled the emitted RTL into the netlist the flow hardens: 51,359 standard-cell instances (drawn from 96 cell types) with mangled names and aggressively restructured logic, growing further in place-and-route as clock trees, hold buffers, and physical cells are inserted. This layer proves the compilation preserved meaning — not by trusting the tool, but by checking certificates the tool's run can be made to emit. The route: define the netlist's semantics ([00](00-netlist-object.md)), check it is electrically sane ([01](01-well-formedness.md)), delete the instances that compute nothing under explicitly licensed theorems ([02](02-licensed-deletions.md)), extract the register correspondence from the flow's own run ([03](03-register-correspondence.md)), and prove per-register-boundary equivalence by certificate, with exploratory SAT confined to where no certificate exists ([04](04-equivalence-certificates.md), [05](05-hard-cones.md)).
 
 ## Statement
 
@@ -15,22 +15,22 @@ Mealy(N) / (delete PHYSICAL · collapse clock to the global tick · collapse buf
     is bisimilar under ρ to   ⟦RTL⟧,   from matched reset states.
 ```
 
-Established by **certificates**, with exploratory SAT confined to where no certificate exists. The `N` here is the shared object of [the overview's tower](../overview.md#the-spec-tower): one parse of `gl_caravel_core.v` serves L1's LVS target, L2's STA subject, and this theorem's left-hand side.
+Established by **certificates**, with exploratory SAT confined to where no certificate exists. The `N` here is the shared object of [the overview's tower](../overview.md#the-spec-tower): one parse of `ChipTop.mapped.v` (and its post-P&R successor) serves L1's LVS target, L2's STA subject, and this theorem's left-hand side.
 
 ## Subcomponents
 
 | | | status |
 |---|---|---|
 | [00](00-netlist-object.md) | `N` and `Mealy(N)` — ~20-production format, ~30-line semantics, S1 derived not posited | weeks; build first |
-| [01](01-well-formedness.md) | **W1–W4** — the semantics' preconditions, measured on the shipped netlist | **done** at tool level |
-| [02](02-licensed-deletions.md) | The 85.5% + 5.6% + 1.1% deletions, each with its licence; macros as holes — **DFFRAM can be opened** | weeks |
+| [01](01-well-formedness.md) | **W1–W4** — the semantics' preconditions, measured on the hardened netlist | checker to re-run |
+| [02](02-licensed-deletions.md) | The physical/clock/buffer deletions, each with its licence; the SRAM macros as holes with open collateral | weeks |
 | [03](03-register-correspondence.md) | ρ and **F5**; reproduce-the-synthesis as the decision procedure | **the project's first experiment** |
 | [04](04-equivalence-certificates.md) | CEC by certificate: ABC's trail instrumented, NPN library verified once, LRAT residue | months |
 | [05](05-hard-cones.md) | Arithmetic by width-generic template theorems, PAC demoted to trail-loss fallback; the contingency table → certificate-of-absence | template inductions: weeks |
 
 ## Interfaces
 
-**Consumes:** shipped netlist, RTL, `⟦·⟧` (L4), the synthesis flow, per-cell Boolean functions (L0). **Exports:** to L2, `N` with identified registers/clock/reset; to L5, the licence to reason about `⟦RTL⟧` instead of the netlist.
+**Consumes:** the hardened netlist, RTL, `⟦·⟧` (L4), the synthesis flow, per-cell Boolean functions (L0). **Exports:** to L2, `N` with identified registers/clock/reset; to L5, the licence to reason about `⟦RTL⟧` instead of the netlist.
 
 ## Axioms introduced
 
@@ -44,11 +44,11 @@ Everything reduces to the register boundary. Only ports and state elements need 
 
 1. **F5** — run [03](03-register-correspondence.md)'s reproduction; both outcomes are results.
 2. The ABC trail patch and checker ([04](04-equivalence-certificates.md)) — the cheapest site anywhere in the project for the congruence-certificate architecture.
-3. The PCPI configuration check ([05](05-hard-cones.md)) — decides whether the multiplier problem class exists here at all.
+3. The mul/div parameter check ([05](05-hard-cones.md)) — confirms the multiplier stays iterative, keeping the hard problem class away.
 
 ## First experiments
 
-**Reproduce the synthesis** ([03](03-register-correspondence.md)) — before anything else in the project. Alongside: promote W1–W4 to lemmas ([01](01-well-formedness.md)), and open the DFFRAM hole ([02](02-licensed-deletions.md)) as the first test of the certificate machinery on a regular structure.
+**Instrument the synthesis** ([03](03-register-correspondence.md)) — the flow is ours to re-run, so ρ is logged, not excavated. Alongside: promote W1–W4 to lemmas ([01](01-well-formedness.md)), and state the SRAM macro contracts ([02](02-licensed-deletions.md)).
 
 ## Effort
 
