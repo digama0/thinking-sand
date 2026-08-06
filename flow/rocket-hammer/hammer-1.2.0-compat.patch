@@ -1,0 +1,389 @@
+diff -ru a/hammer/par/openroad/__init__.py b/hammer/par/openroad/__init__.py
+--- a/hammer/par/openroad/__init__.py
++++ b/hammer/par/openroad/__init__.py
+@@ -797,7 +797,9 @@
+ 
+         self.block_append(f"""
+         # Init floorplan + Place Macros
+-        source -verbose {floorplan_tcl}
++        # NOT "source -verbose": current OpenROAD uses stock Tcl source, which
++        # rejects the flag with 'wrong # args'. See flow/rocket-hammer.
++        source {floorplan_tcl}
+ 
+         # Make tracks
+         # create routing tracks""")
+@@ -844,7 +846,7 @@
+             set macros [find_macros]
+             if {{ $macros != "" }} {{
+                 foreach macro $macros {{
+-                    place_cell -inst_name $macro -orient R90 -origin {{ 0 0 }} -status PLACED
++                    place_inst -name $macro -orientation R90 -origin {{ 0 0 }} -status PLACED
+                 }}
+                 # Timing Driven Mixed Sized Placement
+                 global_placement -density 0.6 -pad_left {padding} -pad_right {padding}
+@@ -932,12 +934,31 @@
+ 
+         pdn_grid_tcl = ""
+         i = 1
+-        for layer in self.macro_top_layers:
++        # This does what the TODO below asks. Two reasons it has to:
++        #   * A macro's power pins are not necessarily on its topmost layer.
++        #     sram22's sky130 SRAMs route up to met3 but expose vdd/vss on
++        #     met2, so a grid built from "top layer + 1" spans met3-met4 and
++        #     never touches a power shape -> PDN-0232/0233.
++        #   * "top layer + 1" may have no straps at all. example-sky130.yml
++        #     restricts straps to met4/met5, so met3 carries nothing to
++        #     connect to.
++        # So: include the macro pin layers, and connect each to the lowest
++        # layer ABOVE it that actually carries straps.
++        strap_layers = self.get_setting(
++            'par.generate_power_straps_options.by_tracks.strap_layers')
++        macro_layers = list(self.macro_top_layers)
++        for extra in ("met2",):
++            if extra not in macro_layers:
++                macro_layers.append(extra)
++        for layer in macro_layers:
+             layer_idx = stackup.get_metal(layer).index
+             try:
++                higher = [l for l in strap_layers
++                          if stackup.get_metal(l).index > layer_idx]
+                 # get next layer up if it's valid
+                 # TODO: should restrict layers to those specified by power straps
+-                next_layer = stackup.get_metal_by_index(layer_idx+1).name
++                next_layer = higher[0] if higher else \
++                    stackup.get_metal_by_index(layer_idx+1).name
+             except:
+                 continue
+ 
+@@ -996,7 +1017,7 @@
+         ################################################################
+         # Power distribution network insertion
+         # pdngen -verbose {power_straps_tcl_path}
+-        source -echo -verbose {power_straps_tcl_path}
++        source {power_straps_tcl_path}
+         pdngen
+         """)
+         return True
+@@ -1046,7 +1067,11 @@
+         #   can only be done in openroad by "excluding" the entire length of the other 3 sides from pin placement
+         cmds = ""
+         if random:
+-                cmds += f"place_pins -random -hor_layers {{{' '.join(hor_layers)}}} -ver_layers {{{' '.join(ver_layers)}}}\n"
++                # No -random: current OpenROAD warns "PPL-0113 -random and
++                # -random_seed are obsolete. Skipping random pin placement."
++                # and then places NOTHING, so global placement dies with
++                # "GPL-0326 <port> toplevel port is not placed".
++                cmds += f"place_pins -hor_layers {{{' '.join(hor_layers)}}} -ver_layers {{{' '.join(ver_layers)}}}\n"
+         else:
+             for pin in pin_assignments:
+                 if ('*' not in pin.pins) and (pin.location is not None):
+@@ -1827,7 +1852,7 @@
+                     orientation = self.convert_orientation_hammer2openroad(orientation)
+                     inst_name=new_path
+ 
+-                    floorplan_cmd = f"""place_cell -inst_name {inst_name} -orient {orientation} -origin $origin -status FIRM"""
++                    floorplan_cmd = f"""place_inst -name {inst_name} -orientation {orientation} -origin $origin -status FIRM"""
+ 
+                     self.block_tcl_append(f"""
+                     set inst [[ord::get_db_block] findInst {inst_name}]
+diff -ru a/hammer/synthesis/yosys/__init__.py b/hammer/synthesis/yosys/__init__.py
+--- a/hammer/synthesis/yosys/__init__.py
++++ b/hammer/synthesis/yosys/__init__.py
+@@ -269,8 +269,17 @@
+ 
+         # Technology mapping of flip-flops
+         """)
+-        for liberty_file in self.liberty_files_tt.split():
+-            self.verbose_append(f"dfflibmap -map-only -liberty {liberty_file}")
++        # The first liberty is the standard-cell library. It must NOT get
++        # -map-only: sky130 has no synchronous-reset or enable flop, so yosys
++        # has to synthesise those from what exists, and -map-only forbids
++        # exactly that. Newer yosys infers $_SDFFE_*/$_SDFFCE_* far more
++        # eagerly than the 0.27 this plugin was written against, so with
++        # -map-only thousands survive to the netlist and P&R then dies with
++        # "LEF master $_SDFFE_PP0P_ not found". The IO pad libraries carry no
++        # flops, so they keep -map-only.
++        for i, liberty_file in enumerate(self.liberty_files_tt.split()):
++            flags = "" if i == 0 else "-map-only "
++            self.verbose_append(f"dfflibmap {flags}-liberty {liberty_file}")
+         self.verbose_append("opt")
+ 
+         self.write_sdc_file()
+diff -ru a/hammer/technology/sky130/__init__.py b/hammer/technology/sky130/__init__.py
+--- a/hammer/technology/sky130/__init__.py
++++ b/hammer/technology/sky130/__init__.py
+@@ -226,11 +226,18 @@
+                     # Extract broken macro
+                     for idx_broken_macro in  start_check_indices:
+                         # Find the start of the next_macro
+-                        idx_start_next_macro = [idx for idx in range(idx_broken_macro+1, len(sl)) if "MACRO" in sl[idx]][0]
+-                        # Find the broken macro ending
+-                        idx_end_broken_macro = len(sl)
+-                        idx_end_broken_macro = [idx for idx in range(idx_broken_macro+1, len(sl)) if end_broken_macro in sl[idx]][0]
+-                        
++                        next_macros = [idx for idx in range(idx_broken_macro+1, len(sl)) if "MACRO" in sl[idx]]
++                        if not next_macros:
++                            continue
++                        idx_start_next_macro = next_macros[0]
++                        # Find the broken macro ending. A PDK build that already
++                        # carries the upstream fix has no such line, and the
++                        # unguarded [0] here raises IndexError - see NOTES.
++                        broken_ends = [idx for idx in range(idx_broken_macro+1, len(sl)) if end_broken_macro in sl[idx]]
++                        if not broken_ends:
++                            continue
++                        idx_end_broken_macro = broken_ends[0]
++
+                         # Fix
+                         if idx_end_broken_macro < idx_start_next_macro: 
+                             sl[idx_end_broken_macro] = end_fixed_macro
+diff -ru a/hammer/technology/sky130/sram-cache.json b/hammer/technology/sky130/sram-cache.json
+--- a/hammer/technology/sky130/sram-cache.json
++++ b/hammer/technology/sky130/sram-cache.json
+@@ -1,90 +1,6 @@
+ [
+   {
+     "type": "sram",
+-    "name": "sram22_4096x8m8w8",
+-    "source": "sram22",
+-    "depth": "4096",
+-    "width": 8,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 8,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 8,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+-    "name": "sram22_512x32m4w32",
+-    "source": "sram22",
+-    "depth": "512",
+-    "width": 32,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 4,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 32,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+-    "name": "sram22_64x32m4w32",
+-    "source": "sram22",
+-    "depth": "64",
+-    "width": 32,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 4,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 32,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+     "name": "sram22_512x64m4w8",
+     "source": "sram22",
+     "depth": "512",
+@@ -141,62 +57,6 @@
+   },
+   {
+     "type": "sram",
+-    "name": "sram22_64x24m4w24",
+-    "source": "sram22",
+-    "depth": "64",
+-    "width": 24,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 4,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 24,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+-    "name": "sram22_4096x32m8w8",
+-    "source": "sram22",
+-    "depth": "4096",
+-    "width": 32,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 8,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 8,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+     "name": "sram22_256x32m4w8",
+     "source": "sram22",
+     "depth": "256",
+@@ -225,34 +85,6 @@
+   },
+   {
+     "type": "sram",
+-    "name": "sram22_64x4m4w2",
+-    "source": "sram22",
+-    "depth": "64",
+-    "width": 4,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 4,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 2,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+-  },
+-  {
+-    "type": "sram",
+     "name": "sram22_2048x32m8w8",
+     "source": "sram22",
+     "depth": "2048",
+@@ -278,34 +110,6 @@
+         "mask port polarity": "active high"
+       }
+     ]
+-  },
+-  {
+-    "type": "sram",
+-    "name": "sram22_1024x32m8w32",
+-    "source": "sram22",
+-    "depth": "1024",
+-    "width": 32,
+-    "family": "1rw",
+-    "mask": "true",
+-    "vt": "svt",
+-    "mux": 8,
+-    "ports": [
+-      {
+-        "address port name": "addr",
+-        "address port polarity": "active high",
+-        "clock port name": "clk",
+-        "clock port polarity": "active high",
+-        "write enable port name": "we",
+-        "write enable port polarity": "active high",
+-        "output port name": "dout",
+-        "output port polarity": "active high",
+-        "input port name": "din",
+-        "input port polarity": "active high",
+-        "mask port name": "wmask",
+-        "mask granularity": 32,
+-        "mask port polarity": "active high"
+-      }
+-    ]
+   },
+   {
+     "type": "sram",
+diff -ru a/hammer/technology/sky130/sram_compiler/__init__.py b/hammer/technology/sky130/sram_compiler/__init__.py
+--- a/hammer/technology/sky130/sram_compiler/__init__.py
++++ b/hammer/technology/sky130/sram_compiler/__init__.py
+@@ -54,13 +54,17 @@
+             base_dir=self.get_setting('technology.sky130.sram22_sky130_macros')
+ 
+             found = False
+-            for fidelity in ["rcc", "rc", "c"]:
+-                lib_path="{b}/{n}/{n}_{c}.{f}.lib".format(b=base_dir,n=sram_name,c=corner_str, f=fidelity)
++            # "" is the plain NLDM lib the current sram22_sky130_macros master
++            # ships; the extraction-fidelity variants this plugin was written
++            # against are not in that repo any more. See flow/rocket-hammer.
++            for fidelity in ["rcc", "rc", "c", ""]:
++                suffix = ".{f}.lib".format(f=fidelity) if fidelity else ".lib"
++                lib_path="{b}/{n}/{n}_{c}{s}".format(b=base_dir,n=sram_name,c=corner_str, s=suffix)
+                 if os.path.exists(lib_path):
+                     found = True
+                     break
+                 else:
+-                    self.logger.warning(f"SKY130 {params.name} SRAM cache does not support corner {corner_str} with {fidelity} extraction")
++                    self.logger.warning(f"SKY130 {params.name} SRAM cache does not support corner {corner_str} with {fidelity or 'nldm'} extraction")
+ 
+             if not found:
+                 self.logger.error(f"SKY130 {params.name} SRAM cache does not support corner {corner_str}")
