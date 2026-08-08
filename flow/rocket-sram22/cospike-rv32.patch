@@ -1,0 +1,103 @@
+diff --git a/src/main/resources/testchipip/csrc/cospike_impl.cc b/src/main/resources/testchipip/csrc/cospike_impl.cc
+index ac5f6e3..f7781b8 100644
+--- a/src/main/resources/testchipip/csrc/cospike_impl.cc
++++ b/src/main/resources/testchipip/csrc/cospike_impl.cc
+@@ -130,7 +130,19 @@ void cospike_set_sysinfo(char* isa, char* priv, int pmpregions, int maxpglevels,
+   if (!info) {
+     info = new system_info_t;
+     // technically the targets aren't zicntr compliant, but they implement the zicntr registers
+-    info->isa = std::string(isa) + "_zicntr";
++    // thinking-sand: strip custom (x*) extensions before handing the string to
++    // spike — it would try to dlopen a plugin per x-extension (e.g. rocket's
++    // "xrocket" marker for its implementation-control CSRs). The golden model
++    // covers the ratified surface; touches of custom state then mismatch
++    // loudly, which is the correct behaviour while the custom fragment is
++    // authored-spec rather than golden-modeled.
++    std::string isa_s(isa);
++    size_t xpos;
++    while ((xpos = isa_s.find("_x")) != std::string::npos) {
++      size_t next = isa_s.find('_', xpos + 1);
++      isa_s = isa_s.substr(0, xpos) + (next == std::string::npos ? "" : isa_s.substr(next));
++    }
++    info->isa = isa_s + "_zicntr";
+     info->priv = std::string(priv);
+     info->maxpglevels = maxpglevels;
+     info->pmpregions = pmpregions;
+@@ -310,7 +322,10 @@ int cospike_cosim(unsigned long long int cycle,
+     }
+ #endif
+ 
+-    assert(info->maxpglevels >= 3 && info->maxpglevels <= 5);
++    // thinking-sand: RV32/no-VM targets report maxpglevels outside the RV64
++    // Sv39..Sv57 range this assert guarded; the set_impl calls below already
++    // degrade gracefully for them.
++    assert(info->maxpglevels <= 5);
+     sim->configure_log(true, true);
+     for (int i = 0; i < info->nharts; i++) {
+       // Use our own reset vector
+@@ -416,7 +431,12 @@ int cospike_cosim(unsigned long long int cycle,
+   }
+ #endif
+   uint64_t s_pc = s->pc;
+-  uint64_t interrupt_cause = cause & 0x7FFFFFFFFFFFFFFF;
++  // thinking-sand: spike stores RV32 registers sign-extended in its 64-bit
++  // state; the DUT trace zero-extends. Compare in the architectural width.
++  const uint64_t xmask = (info->isa.rfind("rv32", 0) == 0) ? 0xFFFFFFFFULL : ~0ULL;
++  // thinking-sand: the interrupt bit is xlen-1 — bit 31 on RV32, not only
++  // bit 63 as the original RV64-shaped mask assumed.
++  uint64_t interrupt_cause = cause & ~0x8000000080000000ULL;
+   bool ssip_interrupt = interrupt_cause == 0x1;
+   bool msip_interrupt = interrupt_cause == 0x3;
+   bool stip_interrupt = interrupt_cause == 0x5;
+@@ -427,6 +447,15 @@ int cospike_cosim(unsigned long long int cycle,
+   // We can't model external interrupts properly with Spike, so if it might be external,
+   // set mip.seip to trigger the interrupt, but restore
+   bool unset_seip = false;
++  static bool cosim_started = false;
++  if (raise_interrupt && !cosim_started) {
++    // Pre-boot wake: cause may be X-propagated garbage. Set the standard
++    // pending bit if recognisable, but never step spike here.
++    if (msip_interrupt) s->mip->backdoor_write_with_mask(MIP_MSIP, MIP_MSIP);
++    if (mtip_interrupt) s->mip->backdoor_write_with_mask(MIP_MTIP, MIP_MTIP);
++    return 0;
++  }
++  if (valid) cosim_started = true;
+   if (raise_interrupt) {
+     COSPIKE_PRINTF("%" PRIu64 " interrupt %" PRIx32 "\n", cycle, cause);
+ 
+@@ -476,7 +505,7 @@ int cospike_cosim(unsigned long long int cycle,
+   }
+ 
+   if (valid && !raise_exception) {
+-    if (s_pc != iaddr) {
++    if ((s_pc & xmask) != (iaddr & xmask)) {
+       COSPIKE_PRINTF("%" PRIx64 " PC mismatch spike %" PRIx64 " != DUT %" PRIx64 "\n", cycle, s_pc, iaddr);
+       if (unlikely(cospike_debug)) {
+         COSPIKE_PRINTF("spike mstatus is %" PRIx64 "\n", s->mstatus->read());
+@@ -583,7 +612,7 @@ int cospike_cosim(unsigned long long int cycle,
+           uint64_t read_bits = s->csrmap[csr_addr]->read();
+           uint64_t write_bits = (read_bits & ~ignore_bits) | (wdata & ignore_bits);
+           s->csrmap[csr_addr]->write(write_bits);
+-          if ((wdata & ~ignore_bits) != (regwrite.second.v[0] & ~ignore_bits)) {
++          if ((wdata & ~ignore_bits & xmask) != (regwrite.second.v[0] & ~ignore_bits & xmask)) {
+             COSPIKE_PRINTF("%lld wdata mismatch reg %d %lx != %llx\n", cycle, rd,
+                            regwrite.second.v[0], wdata);
+             return 1;
+@@ -593,7 +622,7 @@ int cospike_cosim(unsigned long long int cycle,
+                                 (csr_addr == 0x243) ||
+                                 (csr_addr == 0x643))) {
+           // Implementations may set tval to zero instead of writing the actual bits
+-          if (wdata != 0 && wdata != regwrite.second.v[0]) {
++          if (wdata != 0 && (wdata & xmask) != (regwrite.second.v[0] & xmask)) {
+             COSPIKE_PRINTF("%" PRIx64 " wdata mismatch reg %" PRId32 " %" PRIx64 " != %" PRIx64 "\n", cycle, rd,
+                            regwrite.second.v[0], wdata);
+           }
+@@ -605,7 +634,7 @@ int cospike_cosim(unsigned long long int cycle,
+           // tohost/fromhost/clint with vaddrs anyways
+           if (cospike_printf) COSPIKE_PRINTF("Read override %" PRIx64 " = %" PRIx64 "\n", mem_read_addr, wdata);
+           s->XPR.write(rd, wdata);
+-        } else if (wdata != regwrite.second.v[0]) {
++        } else if ((wdata & xmask) != (regwrite.second.v[0] & xmask)) {
+           COSPIKE_PRINTF("%" PRIx64 " wdata mismatch reg %" PRId32 " %" PRIx64 " != %" PRIx64 "\n", cycle, rd,
+                  regwrite.second.v[0], wdata);
+           return 1;

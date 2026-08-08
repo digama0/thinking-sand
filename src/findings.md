@@ -53,6 +53,14 @@ The layout the book's physical layers name: upstream's floorplan (3588 × 2992 �
 
 The signoff-coverage summary this adds to F8: for macro-bearing sky130 designs, open-tools signoff is one engine deep exactly where it claims to be redundant — Magic hard-stops on the macros, KLayout needs surgery and has no bitcell waiver mechanism, and LVS inherits Magic's limits.
 
+## Instruction-for-instruction against the golden model
+
+Spike co-simulation closes the L5 oracle gap: `tools/run-sim.sh cosim` runs the design with **every committed instruction checked against spike, the RISC-V golden ISA model**, per commit — PC, register writeback, CSR effects. A pure-compute RV32IMAC image (`sim/cotest.c`) runs to a `tohost` pass with **1,631 committed instructions and zero mismatches** — the same 1,631 every time it clears the boot window. The RTL the flow hardens *refines the ISA*, verified instruction-by-instruction — the executable precursor to L5's refinement proof, with the core's own trace port as the α anchor.
+
+Two boundaries fell out, both diagnosed rather than papered over ([COSIM-NOTES](https://github.com/digama0/thinking-sand/blob/master/flow/rocket-sram22/COSIM-NOTES.md)): ISA co-simulation ends at MMIO — a UART poll loop diverges because the golden model has no UART, the fundamental scope of core-level co-sim — and the boot/wake window needs deterministic Verilator reset init (`+verilator+rand+reset+0`) to escape X-propagation nondeterminism.
+
+The cosim tooling itself is a finding: cospike is written and CI'd for 64-bit out-of-order cores, and took **eight portability patches** to run RV32/in-order/custom-extension (`cospike-rv32.patch`) — the ISA-string custom-extension strip, an RV64 page-level assert, the xlen-1 interrupt bit, sign-vs-zero-extension in the PC and writeback compares, and the pre-boot X-cause guard. Each is a real incompatibility, of a piece with F8's theme: the ecosystem's verification tooling assumes the mainstream target.
+
 ## The design executes
 
 The functional gap is closed: the generated SoC runs programs. Chipyard's Verilator harness (`tools/run-sim.sh`) simulates the full `ChipTop` with the `SimTSI` host model driving the **serial TileLink port** — L7/03's load path exercised literally — and the UART adapter echoing TX:

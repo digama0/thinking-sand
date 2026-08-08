@@ -43,16 +43,37 @@ run() {
   env_run "$SIM" "$1"
 }
 
-hello() {
+cc() {  # cc <src.c> <out.riscv> — build a bare-metal RV32IMAC image with stock clang
   local d="$REPO/flow/rocket-sram22/sim"
   ( cd "$d" && clang --target=riscv32-unknown-elf -march=rv32imac_zicsr -mabi=ilp32 \
-      -O2 -nostdlib -ffreestanding -fuse-ld=lld -T link.ld crt0.S hello.c -o hello.riscv )
-  run "$d/hello.riscv"
+      -O2 -nostdlib -ffreestanding -fuse-ld=lld -T link.ld crt0.S "$1" -o "$2" )
 }
+
+hello() {
+  cc hello.c hello.riscv
+  run "$REPO/flow/rocket-sram22/sim/hello.riscv"
+}
+
+# cosim — the L5 trace-oracle: build CospikeTinyRocketConfig (trace port +
+# DebugROB + spike attached) and run a pure-compute image, every committed
+# instruction checked against the golden ISA model. The cospike C++ needs the
+# RV32 portability patch (flow/rocket-sram22/cospike-rv32.patch) applied to the
+# testchipip submodule first; see NOTES. ELF *before* the +verilator plusarg so
+# htif takes the ELF as target while Verilator parses the reset-init flag.
+COSIM_SIM="$SIMDIR/simulator-chipyard.harness-CospikeTinyRocketConfig"
+cosim() {
+  [ -x "$COSIM_SIM" ] || { echo "cosim simulator missing — run: $0 cosim-build" >&2; exit 1; }
+  local elf="${1:-$REPO/flow/rocket-sram22/sim/cotest.riscv}"
+  [ -f "$elf" ] || cc cotest.c cotest.riscv
+  env_run "$COSIM_SIM" "$elf" +verilator+rand+reset+0
+}
+cosim_build() { env_run make -C "$SIMDIR" CONFIG=CospikeTinyRocketConfig VERILATOR_THREADS=1 -j6; }
 
 case "${1:-}" in
   build) build ;;
   run) shift; run "$1" ;;
   hello) hello ;;
-  *) echo "usage: $0 {build|run <elf>|hello}" >&2; exit 2 ;;
+  cosim-build) cosim_build ;;
+  cosim) shift; cosim "${1:-}" ;;
+  *) echo "usage: $0 {build|run <elf>|hello|cosim-build|cosim [elf]}" >&2; exit 2 ;;
 esac
