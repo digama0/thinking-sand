@@ -40,6 +40,19 @@ The same RTL was also hardened through a second, independently configured flow (
 - **Fill dominates the census.** Fill insertion took the instance count from 271,473 placed cells to 3,564,849 — a 13× multiplication by cells that compute nothing, L3/02's deletion classes made vivid.
 - **The met4 story.** Detailed routing settled at 14 violations, all on the layer carrying the PDN straps (9 spacing, 5 shorts); LVS independently caught one of the shorts electrically (one net of 84,586 mismatched, all 84,051 devices matching — a slew-repair buffer chain extracted onto the power rail). Congestion, DRC, and LVS told one consistent story from three directions.
 
+## The flow of record (rocket-sram22)
+
+The layout the book's physical layers name: upstream's floorplan (3588 × 2992 µm ≈ **10.73 mm²**, five rotated SRAM22 macros) hardened through librelane. Measured on run `gds3`:
+
+- **Detailed routing: 0 violations** — the first fully clean route of this design in any configuration; the floorplan (rotated macros, real channels) is what changed.
+- **Timing: all nine corners pass** at the 100 ns clock — hold +0.05…+0.26 ns, setup +25.6…+28.3 ns. The clock is the conservative-verification choice made concrete: at 50 ns, hold passes everywhere and setup fails on unrepaired high-fanout nets (worst path ≈ 83 ns).
+- **The F2 rows stay open**: 19,110 max-slew, 1,145 max-cap, 1,817 max-fanout violations — the priced cost of skipping OpenROAD's `repair_design`, which is unrunnable on 32 GB hardware: it retains ~600 KB *per iteration* (independent of repairs performed) and was OOM-killed at the same iteration in four runs across two flows, once taking the machine with it. Every flow launch now runs under `ulimit -v`.
+- **BEOL DRC (KLayout, tiled): 150 flow-owned violations, all at macro interfaces.** The raw report says 90,081 — of which 89,931 sit strictly inside the SRAM macros: bitcell geometry checked against logic rules it was never meant to satisfy, because the deck's `sram_exclude` guards FEOL only and SRAM22's GDS carries no `areaid` waiver markers. Coordinate clustering against the macro boxes separates the two classes in minutes and belongs in the layer checker.
+- **DRC needed deck surgery to run at all**: the PDK deck's monolithic deep mode wants >14 GiB and 5–16 h (died twice in the 16M-polygon `mcon` block); enabling the deck's own commented-out tiling (500 µm tiles, `deep` off) runs the same rules in 1 h 44 m at 2.5 GB peak. The tiled deck is in `flow/rocket-sram22/`.
+- **LVS is blocked** on this design: Magic cannot read the SRAM22 GDS at all (`sky130_fd_bd_sram` cells, unknown layer 64/44) — which also explains why upstream's own flow sets `drc.magic.generate_only: true`. Connectivity signoff needs a non-Magic extraction route; until then the row is TODO, not green.
+
+The signoff-coverage summary this adds to F8: for macro-bearing sky130 designs, open-tools signoff is one engine deep exactly where it claims to be redundant — Magic hard-stops on the macros, KLayout needs surgery and has no bitcell waiver mechanism, and LVS inherits Magic's limits.
+
 ## Signoff engines disagree (F8)
 
 On one and the same layout: **Magic DRC reported 0 violations; KLayout DRC reported 4** (2 × met4 minimum width, 2 × met4 minimum spacing). Netgen LVS meanwhile flagged the power short the geometric engines split on. Additional engine-behaviour findings from the same runs: Magic's GDS stream-out emitted the SRAM macro's internal subcells as 13 *top-level* cells (breaking any consumer that resolves a single top; KLayout's stream-out of the same design has exactly one), and the flow's nine-corner STA step runs all corners in parallel against the fill-expanded netlist — exhausting a 31 GB machine and dying on SIGKILL, with each corner completing cleanly when run alone. The register's conclusion (F8): a single engine's verdict is one witness, never the verdict.

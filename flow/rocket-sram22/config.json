@@ -1,0 +1,135 @@
+{
+  "DESIGN_NAME": "ChipTop",
+  "VERILOG_FILES": [
+    "dir::src/*.sv",
+    "dir::src/*.v"
+  ],
+  "USE_SLANG": true,
+  "SLANG_ARGUMENTS": [
+    "--single-unit",
+    "--ignore-timing"
+  ],
+  "CLOCK_PORT": "clock_uncore",
+  "CLOCK_PERIOD": 100.0,
+  "ERROR_ON_SYNTH_CHECKS": false,
+  "ERROR_ON_DISCONNECTED_PINS": false,
+  "ERROR_ON_PDN_VIOLATIONS": false,
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [
+    0,
+    0,
+    3588,
+    2992
+  ],
+  "CORE_AREA": [
+    10.12,
+    10.88,
+    3577.88,
+    2981.12
+  ],
+  "PL_TARGET_DENSITY_PCT": 40,
+  "MACROS": {
+    "sram22_2048x32m8w8": {
+      "gds": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_2048x32m8w8/sram22_2048x32m8w8.gds"
+      ],
+      "lef": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_2048x32m8w8/sram22_2048x32m8w8.lef"
+      ],
+      "lib": {
+        "*": [
+          "/project/thinking-sand-tools/sram22_sky130_macros/sram22_2048x32m8w8/sram22_2048x32m8w8_tt_025C_1v80.lib"
+        ]
+      },
+      "instances": {
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_0.rockettile_dcache_data_arrays_0_ext.mem_0_0": {
+          "location": [
+            49.68,
+            149.6
+          ],
+          "orientation": "W"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.dcache.data.rockettile_dcache_data_arrays_1.rockettile_dcache_data_arrays_0_ext.mem_0_0": {
+          "location": [
+            49.68,
+            748.0
+          ],
+          "orientation": "W"
+        }
+      },
+      "vh": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_2048x32m8w8/sram22_2048x32m8w8.v"
+      ]
+    },
+    "sram22_512x32m4w8": {
+      "gds": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_512x32m4w8/sram22_512x32m4w8.gds"
+      ],
+      "lef": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_512x32m4w8/sram22_512x32m4w8.lef"
+      ],
+      "lib": {
+        "*": [
+          "/project/thinking-sand-tools/sram22_sky130_macros/sram22_512x32m4w8/sram22_512x32m4w8_tt_025C_1v80.lib"
+        ]
+      },
+      "instances": {
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_0_0.rockettile_icache_data_arrays_0_0_ext.mem_0_0": {
+          "location": [
+            2612.8,
+            149.6
+          ],
+          "orientation": "FW"
+        },
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_data_arrays_1_0.rockettile_icache_data_arrays_0_0_ext.mem_0_0": {
+          "location": [
+            2612.8,
+            598.4
+          ],
+          "orientation": "FW"
+        }
+      },
+      "vh": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_512x32m4w8/sram22_512x32m4w8.v"
+      ]
+    },
+    "sram22_64x32m4w8": {
+      "gds": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_64x32m4w8/sram22_64x32m4w8.gds"
+      ],
+      "lef": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_64x32m4w8/sram22_64x32m4w8.lef"
+      ],
+      "lib": {
+        "*": [
+          "/project/thinking-sand-tools/sram22_sky130_macros/sram22_64x32m4w8/sram22_64x32m4w8_tt_025C_1v80.lib"
+        ]
+      },
+      "instances": {
+        "system.tile_prci_domain.element_reset_domain_rockettile.frontend.icache.rockettile_icache_tag_array_0.rockettile_icache_tag_array_0_ext.mem_0_0": {
+          "location": [
+            2612.8,
+            1033.6
+          ],
+          "orientation": "FW"
+        }
+      },
+      "vh": [
+        "/project/thinking-sand-tools/sram22_sky130_macros/sram22_64x32m4w8/sram22_64x32m4w8.v"
+      ]
+    }
+  },
+  "PDN_MACRO_CONNECTIONS": [],
+  "FP_PDN_HORIZONTAL_HALO": 25.0,
+  "FP_PDN_VERTICAL_HALO": 25.0,
+  "GRT_ALLOW_CONGESTION": false,
+  "RUN_KLAYOUT_XOR": false,
+  "RUN_IRDROP_REPORT": false,
+  "LINTER_ERROR_ON_LATCH": false,
+  "PRIMARY_GDSII_STREAMOUT_TOOL": "klayout",
+  "MAX_FANOUT_CONSTRAINT": 10,
+  "SYNTH_ABC_BUFFERING": true,
+  "MAX_TRANSITION_CONSTRAINT": 1.5,
+  "STA_THREADS": 1,
+  "KLAYOUT_DRC_THREADS": 4
+}
