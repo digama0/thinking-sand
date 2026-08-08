@@ -1,76 +1,58 @@
 #!/usr/bin/env bash
-# run-sim.sh — execute the SHIPPED core on a REAL firmware image and check the
-# L5/04 Wishbone guarantee clauses on the trace.
+# run-sim.sh — build and drive the Verilator simulation of the design.
 #
-# This is the project's first execution of the design. The testbench
-# (tools/sim/tb_core.v) wires the core to a two-region memory — flash at the
-# XIP base the reset vector targets, RAM where the linker puts data and stack —
-# and asserts the bus clauses continuously. See that file for the clause list.
+# The functional half of the flow: Chipyard's own TestHarness (SimTSI loads an
+# ELF over the serial-TileLink port — L7/03's load path — and watches the
+# riscv-tests tohost protocol; the UART adapter echoes TX to stdout).
 #
-# The monitor is validated by construction: `--negative` re-runs with a memory
-# latency past the clause's own bound, and the run is only trusted if that
-# FAILS. A monitor that cannot fail proves nothing.
+# Usage:
+#   tools/run-sim.sh build              # build the simulator binary (~10 min)
+#   tools/run-sim.sh run <prog.riscv>   # run an ELF; exit 0 = tohost pass
+#   tools/run-sim.sh hello              # build + run the smoke test program
 #
-# Usage: tools/run-sim.sh [--negative]     (needs iverilog + a built image)
+# Requirements (see NOTES): Spike installed at $ROOT/riscv (for libriscv —
+# tools/../flow/rocket-sram22/NOTES.md records the v1.1.0 build recipe incl.
+# the -include cstdint fix and the manual libriscv.a install); the radiance
+# generator's chipyard.mk hook disabled (its GPU submodules are not checked
+# out and TinyRocket does not use them).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-NEG=0; SWEEP=0
-case "${1:-}" in --negative) NEG=1 ;; --sweep) SWEEP=1 ;; esac
-OUT=build-sim
-# the TARGET core (see tools/checklib.py:core_v)
-CORE=data/mgmt/VexRiscv_target.v
-[ -s "$CORE" ] || CORE=data/mgmt/VexRiscv_MinDebugCache.v
-IMG=build-fw/fw.bin
+REPO=$(pwd)
+ROOT="${TS_TOOLS:-/project/thinking-sand-tools}"
+CHIPYARD="$ROOT/chipyard"
+SIMDIR="$CHIPYARD/sims/verilator"
+SIM="$SIMDIR/simulator-chipyard.harness-TinyRocketConfig"
+L="$ROOT/librelane-root"
 
-command -v iverilog >/dev/null || {
-  echo "iverilog not found — tools/install-toolchain.sh --only cad" >&2; exit 1; }
-[ -s "$IMG" ] || { echo "no image — run tools/build-firmware.sh first" >&2; exit 1; }
-[ -s "$CORE" ] || { echo "missing $CORE — tools/fetch-data.sh mgmt" >&2; exit 1; }
+env_run() {
+  ulimit -v 16777216
+  export JAVA_HOME="${JAVA_HOME_11:-/usr/lib/jvm/java-11-openjdk-amd64}"
+  export RISCV="$ROOT/riscv"
+  export PATH="$JAVA_HOME/bin:$ROOT/firtool-1.75.0/bin:$ROOT/dtc:$PATH"
+  bwrap --dev-bind / / --bind "$L/nix" /nix -- "$L/entrypoint" "$@"
+}
 
-mkdir -p "$OUT"
-python3 - "$IMG" "$OUT/fw.hex" <<'PY'
-import pathlib, struct, sys
-d = pathlib.Path(sys.argv[1]).read_bytes()
-d += b"\x00" * ((-len(d)) % 4)
-pathlib.Path(sys.argv[2]).write_text(
-    "\n".join("%08x" % struct.unpack("<I", d[i:i+4])[0] for i in range(0, len(d), 4)) + "\n")
-PY
+build() {
+  [ -f "$CHIPYARD/generators/radiance/chipyard.mk" ] && \
+    mv "$CHIPYARD/generators/radiance/chipyard.mk" "$CHIPYARD/generators/radiance/chipyard.mk.disabled"
+  env_run make -C "$SIMDIR" CONFIG=TinyRocketConfig VERILATOR_THREADS=1 -j6
+}
 
-if [ "$SWEEP" = 1 ]; then
-  # L5/01 claims the I-cache-miss stutter is f(B), the bus latency bound. Vary
-  # the memory's wait states and watch the worst retirement gap: if the claim is
-  # right the relation is affine, and its SLOPE should be the cache line length
-  # in words (each word of the burst refill pays the latency once).
-  echo "== sweeping bus latency B against the worst retirement gap"
-  : > "$OUT/sweep.txt"
-  for lat in 0 2 8 16; do
-    iverilog -g2012 -P tb_core.MEM_LAT=$lat -o "$OUT/sweep.vvp" tools/sim/tb_core.v "$CORE"
-    g=$( cd "$OUT" && vvp sweep.vvp 2>/dev/null | grep -oP '(?<=gap_max=)\d+' )
-    echo "$lat $g" >> "$OUT/sweep.txt"
-    echo "   B=$lat  gap_max=$g"
-  done
-  python3 - "$OUT/sweep.txt" <<'PY2'
-import sys, pathlib
-rows = [tuple(map(int, l.split())) for l in
-        pathlib.Path(sys.argv[1]).read_text().split("\n") if l.strip()]
-slopes = {(rows[i+1][1]-rows[i][1])/(rows[i+1][0]-rows[i][0]) for i in range(len(rows)-1)}
-print(f"   affine: {len(slopes)==1}, slope {slopes}, intercept {rows[0][1]}")
-PY2
-  exit 0
-fi
+run() {
+  [ -x "$SIM" ] || { echo "simulator missing — run: $0 build" >&2; exit 1; }
+  env_run "$SIM" "$1"
+}
 
-if [ "$NEG" = 1 ]; then
-  echo "== NEGATIVE control: memory latency past the G3 bound (violations EXPECTED)"
-  iverilog -g2012 -P tb_core.MEM_LAT=100 -o "$OUT/sim.vvp" tools/sim/tb_core.v "$CORE"
-else
-  echo "== running the shipped core on $IMG"
-  iverilog -g2012 -o "$OUT/sim.vvp" tools/sim/tb_core.v "$CORE"
-fi
-( cd "$OUT" && vvp sim.vvp ) 2>&1 | grep -vE "^WARNING.*readmemh" | tee "$OUT/sim.log" | grep -E "VIOLATION|SUMMARY" | head -5
-echo
-grep -q "violations=0" "$OUT/sim.log" && V=clean || V=violations
-if [ "$NEG" = 1 ]; then
-  [ "$V" = violations ] && { echo "negative control OK: the monitor fires when the clause is broken"; exit 0; }
-  echo "NEGATIVE CONTROL FAILED: the monitor stayed silent — it proves nothing" >&2; exit 1
-fi
-[ "$V" = clean ] && echo "no bus-guarantee violation in the run" || { echo "VIOLATIONS — see $OUT/sim.log" >&2; exit 1; }
+hello() {
+  local d="$REPO/flow/rocket-sram22/sim"
+  ( cd "$d" && clang --target=riscv32-unknown-elf -march=rv32imac_zicsr -mabi=ilp32 \
+      -O2 -nostdlib -ffreestanding -fuse-ld=lld -T link.ld crt0.S hello.c -o hello.riscv )
+  run "$d/hello.riscv"
+}
+
+case "${1:-}" in
+  build) build ;;
+  run) shift; run "$1" ;;
+  hello) hello ;;
+  *) echo "usage: $0 {build|run <elf>|hello}" >&2; exit 2 ;;
+esac

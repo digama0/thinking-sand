@@ -53,6 +53,16 @@ The layout the book's physical layers name: upstream's floorplan (3588 × 2992 �
 
 The signoff-coverage summary this adds to F8: for macro-bearing sky130 designs, open-tools signoff is one engine deep exactly where it claims to be redundant — Magic hard-stops on the macros, KLayout needs surgery and has no bitcell waiver mechanism, and LVS inherits Magic's limits.
 
+## The design executes
+
+The functional gap is closed: the generated SoC runs programs. Chipyard's Verilator harness (`tools/run-sim.sh`) simulates the full `ChipTop` with the `SimTSI` host model driving the **serial TileLink port** — L7/03's load path exercised literally — and the UART adapter echoing TX:
+
+- A bare-metal image (built with stock clang: `--target=riscv32`, freestanding, lld — no riscv-gcc needed) is loaded over the serial link into the DTIM at `0x8000_0000`; the core boots from the ROM, takes the TSI wake interrupt, jumps, and runs it.
+- The image prints **`hello from rocket`** over the UART and exits through the riscv-tests `tohost` protocol — pass signalled, `$finish`, exit 0. ~1 ms of simulated time, ~80 s of wall clock.
+- The B3 statement of L7/01 is thereby *instantiated end to end* (load path → execution → observable output → clean exit), and the scoreboard row `L7/b3-smoke` runs the simulation itself — the check is the execution.
+
+The harness rested on three small portability findings, recorded in `tools/run-sim.sh`: Spike v1.1.0 needs `-include cstdint` under GCC 13 and does not install `libriscv.a` (the simulator links it for trace disassembly); the `radiance` generator's make hook unconditionally injects GPU collateral from un-checked-out submodules into every config's simulator build; and Verilator bakes `$RISCV` include paths at Verilation time, so the env must be right *before* Verilating, not just at link.
+
 ## Signoff engines disagree (F8)
 
 On one and the same layout: **Magic DRC reported 0 violations; KLayout DRC reported 4** (2 × met4 minimum width, 2 × met4 minimum spacing). Netgen LVS meanwhile flagged the power short the geometric engines split on. Additional engine-behaviour findings from the same runs: Magic's GDS stream-out emitted the SRAM macro's internal subcells as 13 *top-level* cells (breaking any consumer that resolves a single top; KLayout's stream-out of the same design has exactly one), and the flow's nine-corner STA step runs all corners in parallel against the fill-expanded netlist — exhausting a 31 GB machine and dying on SIGKILL, with each corner completing cleanly when run alone. The register's conclusion (F8): a single engine's verdict is one witness, never the verdict.

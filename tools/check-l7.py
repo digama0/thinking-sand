@@ -99,6 +99,24 @@ def _(ctx):
     return PASS, msg + " — the standard RISC-V shape, all three lines live (no residue at the core, L6/01)"
 
 
+@L.check("b3-smoke", "the B3 instance: an image executes and the UART emits its message", doc="src/L7-system/01-boundary.md")
+def _(ctx):
+    import subprocess
+    from checklib import ROOT
+    sim = Path("/project/thinking-sand-tools/chipyard/sims/verilator/simulator-chipyard.harness-TinyRocketConfig")
+    elf = ROOT / "flow/rocket-sram22/sim/hello.riscv"
+    if not sim.exists() or not elf.exists():
+        return FINDING, "simulator or image absent (tools/run-sim.sh build; tools/run-sim.sh hello)"
+    r = subprocess.run([str(ROOT / "tools/run-sim.sh"), "run", str(elf)],
+                       capture_output=True, text=True, timeout=1200)
+    out = r.stdout + r.stderr
+    if r.returncode == 0 and "hello from rocket" in out:
+        return PASS, ("the design executes: SimTSI loads the image over the serial-TL port, the core boots "
+                      "from ROM, runs it, the UART emits 'hello from rocket', tohost signals pass — "
+                      "the B3 statement instantiated end to end (load path, execution, observable output)")
+    return FAIL, f"simulation rc={r.returncode}; output tail: {out.strip().splitlines()[-3:]}"
+
+
 L.todo("rtl-decode-diff", "the RTL's actual address decode diffed against the dts",
        doc="src/L7-system/03-memory-map-devices.md",
        blocked_on="a decode extractor over the TL fabric modules (the third leg of the diff)")

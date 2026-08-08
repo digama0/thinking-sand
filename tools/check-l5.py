@@ -86,9 +86,9 @@ L.todo("wcet-table", "the retirement-gap bounds (the measure read quantitatively
        doc="src/L5-microarchitecture/01-refinement.md", blocked_on="stage-graph")
 L.todo("bus-guarantees", "Gi/Gd clauses asserted over a real execution (simulation oracle)",
        doc="src/L5-microarchitecture/04-buses-debug.md",
-       blocked_on="the simulation harness (the design has never been executed — the functional gap)")
+       blocked_on="wiring the TileLink monitor assertions into the now-working harness (tools/run-sim.sh)")
 L.todo("trace-alpha", "α drafted against the core's trace port, checked on simulation traces",
-       doc="src/L5-microarchitecture/01-refinement.md", blocked_on="the simulation harness")
+       doc="src/L5-microarchitecture/01-refinement.md", blocked_on="enabling the trace-port dump in the now-working harness")
 L.todo("invariant", "the inductive invariant (the project's irreducible content)",
        doc="src/L5-microarchitecture/02-invariant.md", blocked_on="proof-phase start")
 
