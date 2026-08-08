@@ -6,17 +6,17 @@ Everything in this appendix was **measured on the artifacts this repository gene
 
 **The chain reproduces from pinned sources.** Chisel elaboration (Chipyard, pinned by commit) → FIRRTL → SystemVerilog (`firtool`, pinned release, checksum-verified) → synthesis (Yosys under Hammer) → place-and-route (OpenROAD) → signoff (Magic, KLayout, Netgen). Every stage runs from this repository; the [data-provenance appendix](data-provenance.md) carries the pins.
 
-**The elaboration declares the design's headline facts.** From the emitted device tree: ISA `rv32imaczicsr_zifencei_zihpm_xrocket`; one Rocket core; 4 KiB instruction cache (64 sets × 64 B); 16 KiB data memory at `0x8000_0000`; PMP with 8 regions at granularity 4; 1 hardware breakpoint; debug module at `0x0` (JTAG); CLINT at `0x200_0000`; PLIC at `0xC00_0000` with one device source; UART at `0x1002_0000`; 64 KiB boot ROM at `0x1_0000`. The `ChipTop` boundary is 19 signals: UART pair, `custom_boot`, JTAG ×5, `reset_io`, `clock_uncore`, `clock_tap`, and the serial TileLink port (32-bit phits + link clock).
+**The elaboration declares the design's headline facts.** From the emitted device tree: ISA `rv32imaczicsr_zifencei_zihpm_xrocket`; one Rocket core; 4 KiB instruction cache (64 sets × 64 B); 16 KiB data memory at `0x8000_0000`; PMP with 8 regions at granularity 4; 1 hardware breakpoint; debug module at `0x0` (JTAG); CLINT at `0x200_0000`; PLIC at `0xC00_0000` with one device source; UART at `0x1002_0000`; 64 KiB boot ROM at `0x1_0000`. The `ChipTop` boundary is 18 signals: UART pair, `custom_boot`, JTAG ×5, `reset_io`, `clock_uncore`, `clock_tap`, and the serial TileLink port (32-bit phits + link clock).
 
 ## The RTL, measured (L4)
 
 Census over the emitted SystemVerilog (322 files, 80 K lines including simulation collateral; the design cone is ~230 modules):
 
 - **Zero** `casex`/`casez`, `force`-class constructs, UDPs, `fork`, negedge blocks, delays-in-design.
-- **608** `always @(posedge …)` blocks, uniformly non-blocking; the census's four blocking-assignment sites are in one DPI harness file outside the design cone.
+- **303** `always @(posedge …)` blocks, uniformly non-blocking; the census's blocking-assignment sites are in one DPI harness file outside the design cone. (An earlier count of 608 also swept firtool's `end // always @(posedge)` closing comments — the census now strips comments, and the checker regression pins the honest number.)
 - **One** `always @*` block in the entire design — `EICG_wrapper`, the clock-gate model, a *deliberate* latch (the ICG primitive, L4/02).
 - **23** `'bx` literals, all one idiom: behavioural memory models yielding X on a disabled read.
-- **425** `initial` blocks, all one idiom: the register-randomization initializer, empty under synthesis — no register carries a power-up value.
+- **212** `initial` blocks, every one simulation-only (SYNTHESIS/RANDOMIZE-guarded or the initializer idiom) — no register carries a power-up value. (The earlier 425 double-counted closing comments, as above.)
 - **3,938** assertion mentions across 85 files (the TileLink monitors and friends) — generator-emitted verification collateral, an adequacy asset (L4/04).
 
 ## Synthesis (L3)

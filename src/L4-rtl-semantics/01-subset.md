@@ -17,11 +17,11 @@ A semantics for **the synthesisable subset this design actually uses** — not f
 | `force` / `release` / `deassign` | **0** | — |
 | UDPs, `fork`/`join`, events | **0** | — |
 | DPI imports | **0** in the cone (harness only) | — |
-| `always @(posedge …)` | 608 | the clocked bulk — uniformly non-blocking |
+| `always @(posedge …)` | 303 | the clocked bulk — uniformly non-blocking |
 | blocking `=` in clocked blocks | **0** in the cone (4 sites, all in one harness file) | the order-dependence class is *absent* |
 | `always @*` | **1** — the clock-gate wrapper | a *deliberate* latch: the ICG primitive ([02](02-comb-blocks.md)) |
 | X literals (`'bx`) | 23, **all one idiom** | `read_data = en ? mem[addr] : 'bx` — memory-read don't-cares ([03](03-x-and-reset.md)) |
-| `initial` | 425, **all one idiom** | the register-randomization initializer, whose synthesis-visible content is empty ([03](03-x-and-reset.md)) |
+| `initial` | 212, **all simulation-only** | the register-randomization initializer and SYNTHESIS-guarded sim hooks; synthesis-visible content empty ([03](03-x-and-reset.md)) |
 | `assert` and monitor modules | 3,938 mentions in 85 files | simulation-guarded verification collateral — an adequacy asset ([04](04-adequacy.md)) |
 
 The numbers say something structural: a compiler back end has *already done* the subset-discipline work. There is exactly one level-sensitive block in the entire design, one X-idiom, one initializer idiom — because one code generator emitted everything. The dark-corner constructs are not rare; they are absent, and absent *by construction* rather than by an author's care.

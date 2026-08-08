@@ -18,7 +18,7 @@ The remaining components of `Sys`: what each address means, what each device doe
 |---|---|---|
 | memory map | the elaboration (diplomacy) — realised as decode logic in the generated SystemVerilog | the generated device tree (`.dts`); per-device `regmap.json` files |
 | IRQ map | the elaboration — CLINT→(msip, mtip), PLIC→meip, PLIC source 1 = UART | `interrupts-extended` / `interrupt-parent` annotations in the device tree |
-| pad list | `ChipTop`'s port list — 19 signals: UART pair, `custom_boot`, JTAG ×5, reset, clock in, clock tap, serial TileLink (32-bit phits + link clock) | the generated top-level module |
+| pad list | `ChipTop`'s port list — 18 signals: UART pair, `custom_boot`, JTAG ×5, reset, clock in, clock tap, serial TileLink (32-bit phits + link clock) | the generated top-level module |
 | pad electrical behaviour | `sky130_fd_io` (PDK) — black-box IO macros | PDK io documentation |
 | boot devices | boot ROM (with its baked-in contents), boot-address register, `custom_boot` pin semantics | generated RTL + ROM image |
 | serial TileLink | the bridge RTL (phit serialisation); **the far agent is outside the chip** (X4 proper) | testchipip documentation |

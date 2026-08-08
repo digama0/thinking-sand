@@ -37,20 +37,34 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+import os
+
 DATA = ROOT / "data"
 
-# The TARGET core. The project pins the design it reasons about; that is the
-# 2026-generated core (tools/regenerate-core.sh, pinned generator + recovered
-# flags), which is reproducible from source. data/mgmt/VexRiscv_MinDebugCache.v
-# — the 2021 artifact shipped in the silicon repo — remains fetched, as the
-# provenance comparison. The two are configuration-identical; where they differ
-# (a much tighter decoder) the checks record it.
-def core_v():
-    target = DATA / "mgmt/VexRiscv_target.v"
-    return target if target.is_file() else DATA / "mgmt/VexRiscv_MinDebugCache.v"
+# ---- The generated-artifact anchors (the Chipyard target) ----
+# Every checker reads the flow's own outputs. All are regenerable
+# (tools/build-rocket.sh + the librelane run in flow/rocket-sram22); none are
+# fetched. Paths can be overridden by environment for out-of-tree runs.
+FLOW = ROOT / "flow/rocket-sram22"
+RUN = Path(os.environ.get("TS_RUN", FLOW / "runs/gds3"))
+RTL_SRC = FLOW / "src"                     # emitted SystemVerilog cone (regenerable)
+SYN_NL = RUN / "06-yosys-synthesis/ChipTop.nl.v"
+FINAL_NL = RUN / "43-openroad-detailedrouting/ChipTop.nl.v"
+FINAL_PNL = RUN / "43-openroad-detailedrouting/ChipTop.pnl.v"
+FINAL_SDC = RUN / "43-openroad-detailedrouting/ChipTop.sdc"
+GDS = RUN / "56-klayout-streamout/ChipTop.gds"
+STA_DIR = RUN / "55-openroad-stapostpnr"
+DRC_DB = RUN / "58-klayout-drc/reports/drc.klayout.beol2.lyrdb"
+GENSRC = Path(os.environ.get(
+    "TS_GENSRC",
+    "/project/thinking-sand-tools/chipyard/vlsi/generated-src/"
+    "chipyard.harness.TestHarness.TinyRocketConfig"))
+DTS = GENSRC / "chipyard.harness.TestHarness.TinyRocketConfig.dts"
+GEN_COLLATERAL = GENSRC / "gen-collateral"
+SRAM22 = Path(os.environ.get("TS_SRAM22", "/project/thinking-sand-tools/sram22_sky130_macros"))
 
-
-CORE_V = core_v()
+# SRAM macro kinds of this configuration: (name, instances-in-design)
+SRAM_KINDS = {"sram22_2048x32m8w8": 2, "sram22_512x32m4w8": 2, "sram22_64x32m4w8": 1}
 
 PASS, FAIL, FINDING, TODO, EXTERN = "PASS", "FAIL", "FINDING", "TODO", "EXTERN"
 _COLORS = {PASS: "32", FAIL: "31;1", FINDING: "33", TODO: "36", EXTERN: "35"}

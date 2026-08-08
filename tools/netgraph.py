@@ -18,6 +18,13 @@ import re, sys, collections
 OUT = {'X', 'Y', 'Q', 'Q_N', 'HI', 'LO', 'COUT', 'COUT_N', 'SUM', 'GCLK',
        'Z'}   # Z: output of einvn/einvp, the tri-state enabled inverters
 PWR = {'VPWR', 'VGND', 'VNB', 'VPB', 'KAPWR', 'LOWLVPWR', 'VPWRIN'}
+
+# SRAM22 hard-macro pins (the Chipyard target's memories). The macros are
+# sequential (clocked) — they cut the combinational graph like flops do.
+MACRO_OUT = {'dout'}
+MACRO_IN = {'clk', 'rstb', 'ce', 'we', 'wmask', 'addr', 'din'}
+MACRO_PWR = {'vdd', 'vss'}
+MACRO_PREFIX = 'sram22_'
 IN = {'A', 'A0', 'A1', 'A2', 'A3', 'A4', 'A_N', 'A1_N', 'A2_N', 'B', 'B1', 'B2',
       'B_N', 'B1_N', 'B2_N', 'C', 'C1', 'C_N', 'D', 'D1', 'D_N', 'S', 'S0', 'S1',
       'CLK', 'CLK_N', 'RESET_B', 'SET_B', 'GATE', 'GATE_N', 'SLEEP', 'SLEEP_B',
@@ -39,11 +46,21 @@ TRI = re.compile(r'__(einv|ebuf)')
 
 def parse(path):
     txt = open(path, errors='replace').read()
-    inst = re.compile(r'(sky130_\w+)\s+(\\?\S+?)\s*\(([^;]*?)\)\s*;', re.S)
+    inst = re.compile(r'((?:sky130|sram22)_\w+)\s+(\\?\S+?)\s*\(([^;]*?)\)\s*;', re.S)
     conn = re.compile(r'\.(\w+)\s*\(\s*([^)]*?)\s*\)')
     out = []
     for m in inst.finditer(txt):
-        pins = [(p, n.strip()) for p, n in conn.findall(m.group(3))]
+        pins = []
+        for pname, net in conn.findall(m.group(3)):
+            net = net.strip()
+            if net.startswith('{'):
+                # concatenation: register each element against the same pin
+                for i, elem in enumerate(net.strip('{}').split(',')):
+                    elem = elem.strip()
+                    if elem:
+                        pins.append((f"{pname}[{i}]", elem))
+            else:
+                pins.append((pname, net))
         out.append((m.group(1), m.group(2), pins))
     ports = set()
     pm = re.search(r'\bmodule\s+\w+\s*\((.*?)\)\s*;', txt, re.S)
@@ -65,12 +82,16 @@ def run(path):
     for cell, name, pins in insts:
         ncells[cell] += 1
         ins, outs = [], []
+        is_macro = cell.startswith(MACRO_PREFIX)
+        _out, _in, _pwr = (MACRO_OUT, MACRO_IN, MACRO_PWR) if is_macro else (OUT, IN, PWR)
         for p, net in pins:
-            if p in PWR:
+            # bus pins arrive as base names or base[idx]; normalise
+            base = p.split('[')[0] if is_macro else p
+            if base in _pwr:
                 continue
-            elif p in OUT:
+            elif base in _out:
                 outs.append(net); drivers[net].append((cell, name, p))
-            elif p in IN:
+            elif base in _in:
                 ins.append(net); readers[net].append((cell, name, p))
             else:
                 unknown[p] += 1
@@ -80,7 +101,7 @@ def run(path):
             sig = [p for p, _ in pins if p not in PWR and p != 'DIODE']
             if sig:
                 phys_bad.append((cell, name, sig))
-        if not SEQ.search(cell):
+        if not SEQ.search(cell) and not is_macro:
             for i in ins:
                 edges[i] |= set(outs)
 
@@ -90,9 +111,12 @@ def run(path):
     hard = {n: d for n, d in multi.items() if n not in tri}
 
     # W2 floating reads
+    def base(n):
+        return n.lstrip('\\').split('[')[0].strip()
     undriven = [n for n in readers
                 if n not in drivers and n.lstrip('\\') not in ports
-                and n not in ('1\'b0', '1\'b1') and not n.startswith('1\'b')]
+                and base(n) not in ports
+                and not n.startswith("1'b")]
 
     # W3 combinational cycles (iterative Tarjan)
     idx, low, on, stk, cyc = {}, {}, set(), [], []
